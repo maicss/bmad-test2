@@ -1,0 +1,359 @@
+import { redirect } from "next/navigation"
+import { headers } from "next/headers"
+import { getSession, isAdmin } from "@/lib/auth"
+import { getRawDb } from "@/database/db"
+import type { User } from "@/lib/db/schema"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { 
+  Shield, 
+  Users, 
+  Database,
+  Activity,
+  Settings,
+  LogOut
+} from "lucide-react"
+import Link from "next/link"
+import { LogoutButton } from "@/components/auth/logout-button"
+
+// Helper icon component
+function AdminIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+      <path d="M2 17l10 5 10-5" />
+      <path d="M2 12l10 5 10-5" />
+    </svg>
+  )
+}
+
+export default async function AdminDashboardPage() {
+  // Get current session
+  const headersList = await headers()
+  const session = await getSession(headersList)
+  
+  if (!session?.user) {
+    redirect("/admin/login")
+  }
+
+  if (!isAdmin(session.user as User)) {
+    redirect("/parent")
+  }
+
+  // 获取系统统计数据
+  const rawDb = getRawDb()
+  
+  // 用户统计
+  const userStats = rawDb.query(`
+    SELECT 
+      COUNT(*) as total_users,
+      SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admin_count,
+      SUM(CASE WHEN role = 'parent' THEN 1 ELSE 0 END) as parent_count,
+      SUM(CASE WHEN role = 'child' THEN 1 ELSE 0 END) as child_count
+    FROM user
+  `).get() as { 
+    total_users: number
+    admin_count: number
+    parent_count: number
+    child_count: number
+  }
+
+  // 家庭统计
+  const familyStats = rawDb.query(`
+    SELECT COUNT(*) as total_families
+    FROM family
+  `).get() as { total_families: number }
+
+  // 任务统计
+  const taskStats = rawDb.query(`
+    SELECT 
+      COUNT(*) as total_tasks,
+      SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_tasks
+    FROM task_definition
+  `).get() as { 
+    total_tasks: number
+    active_tasks: number
+  }
+
+  // 愿望统计
+  const wishStats = rawDb.query(`
+    SELECT 
+      COUNT(*) as total_wishes,
+      SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_wishes,
+      SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_wishes,
+      SUM(CASE WHEN status = 'redeemed' THEN 1 ELSE 0 END) as redeemed_wishes
+    FROM wish
+  `).get() as { 
+    total_wishes: number
+    pending_wishes: number
+    approved_wishes: number
+    redeemed_wishes: number
+  }
+
+  // 最近注册用户
+  const recentUsers = rawDb.query(`
+    SELECT id, name, role, phone, created_at
+    FROM user
+    ORDER BY created_at DESC
+    LIMIT 5
+  `).all() as Array<{
+    id: string
+    name: string
+    role: string
+    phone: string | null
+    created_at: string
+  }>
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-slate-900 border-b border-slate-800 px-4 py-4">
+        <div className="mx-auto max-w-7xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/20 p-2 rounded-lg border border-primary/30">
+              <Shield className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">系统管理控制台</h1>
+              <p className="text-sm text-slate-400">System Admin Dashboard</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm font-medium text-white">{session.user.name}</p>
+              <Badge variant="secondary" className="bg-primary/20 text-primary border-0">
+                管理员
+              </Badge>
+            </div>
+            <LogoutButton 
+              variant="outline" 
+              size="sm" 
+              className="border-slate-600 text-slate-300 hover:bg-slate-800"
+            />
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl p-4 space-y-6">
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-6 text-white border border-slate-700">
+          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+            <AdminIcon className="h-5 w-5" />
+            欢迎回来，管理员
+          </h2>
+          <p className="text-slate-400">
+            这里是系统管理控制台，您可以管理用户、家庭、监控统计数据等。
+          </p>
+        </div>
+
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="bg-white border-slate-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">总用户数</p>
+                  <p className="text-2xl font-bold text-slate-900">{userStats?.total_users || 0}</p>
+                </div>
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+              </div>
+              <div className="mt-2 flex gap-2 text-xs">
+                <span className="text-slate-400">
+                  家长: {userStats?.parent_count || 0}
+                </span>
+                <span className="text-slate-400">
+                  儿童: {userStats?.child_count || 0}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-slate-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">家庭总数</p>
+                  <p className="text-2xl font-bold text-slate-900">{familyStats?.total_families || 0}</p>
+                </div>
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <Database className="h-5 w-5 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-slate-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">任务定义</p>
+                  <p className="text-2xl font-bold text-slate-900">{taskStats?.total_tasks || 0}</p>
+                </div>
+                <div className="bg-purple-100 p-2 rounded-lg">
+                  <Activity className="h-5 w-5 text-purple-600" />
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-slate-400">
+                活跃: {taskStats?.active_tasks || 0}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-slate-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">愿望总数</p>
+                  <p className="text-2xl font-bold text-slate-900">{wishStats?.total_wishes || 0}</p>
+                </div>
+                <div className="bg-yellow-100 p-2 rounded-lg">
+                  <Settings className="h-5 w-5 text-yellow-600" />
+                </div>
+              </div>
+              <div className="mt-2 flex gap-2 text-xs">
+                <span className="text-orange-500">
+                  待审核: {wishStats?.pending_wishes || 0}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Recent Users */}
+          <Card className="bg-white border-slate-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-900">
+                <Users className="h-5 w-5" />
+                最近注册用户
+              </CardTitle>
+              <CardDescription>最新加入系统的用户</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {recentUsers && recentUsers.length > 0 ? (
+                <div className="space-y-3">
+                  {recentUsers.map((user: any) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="bg-slate-200 p-2 rounded-full">
+                          <Users className="h-4 w-4 text-slate-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900">{user.name}</p>
+                          <p className="text-xs text-slate-500">
+                            {user.role === "admin" ? "管理员" : 
+                             user.role === "parent" ? "家长" : "儿童"}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant={user.role === "admin" ? "destructive" : "secondary"}
+                        className="text-xs"
+                      >
+                        {user.role}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-slate-400 py-4">
+                  暂无用户数据
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="bg-white border-slate-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-900">
+                <Settings className="h-5 w-5" />
+                快速操作
+              </CardTitle>
+              <CardDescription>常用管理功能</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <Link href="/admin/users">
+                  <Button variant="outline" className="w-full h-20 flex flex-col gap-2 border-slate-200 hover:bg-slate-50">
+                    <Users className="h-5 w-5" />
+                    <span className="text-xs">用户管理</span>
+                  </Button>
+                </Link>
+                <Link href="/admin/families">
+                  <Button variant="outline" className="w-full h-20 flex flex-col gap-2 border-slate-200 hover:bg-slate-50">
+                    <Database className="h-5 w-5" />
+                    <span className="text-xs">家庭管理</span>
+                  </Button>
+                </Link>
+                <Link href="/admin/tasks">
+                  <Button variant="outline" className="w-full h-20 flex flex-col gap-2 border-slate-200 hover:bg-slate-50">
+                    <Activity className="h-5 w-5" />
+                    <span className="text-xs">任务管理</span>
+                  </Button>
+                </Link>
+                <Link href="/admin/settings">
+                  <Button variant="outline" className="w-full h-20 flex flex-col gap-2 border-slate-200 hover:bg-slate-50">
+                    <Settings className="h-5 w-5" />
+                    <span className="text-xs">系统设置</span>
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* System Status */}
+        <Card className="bg-white border-slate-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-slate-900">
+              <Activity className="h-5 w-5" />
+              系统状态
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                <div className="bg-green-500 w-3 h-3 rounded-full" />
+                <div>
+                  <p className="font-medium text-green-900">数据库连接</p>
+                  <p className="text-xs text-green-700">正常运行</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                <div className="bg-green-500 w-3 h-3 rounded-full" />
+                <div>
+                  <p className="font-medium text-green-900">认证服务</p>
+                  <p className="text-xs text-green-700">正常运行</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <div className="bg-blue-500 w-3 h-3 rounded-full" />
+                <div>
+                  <p className="font-medium text-blue-900">系统版本</p>
+                  <p className="text-xs text-blue-700">v1.0.0</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  )
+}

@@ -107,7 +107,6 @@ export const familyMembers = sqliteTable("family_member", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 }, (t) => ({
   pk: primaryKey({ columns: [t.familyId, t.userId] }),
-  uniqueUserFamily: primaryKey({ columns: [t.userId, t.familyId] }),
 }));
 
 /**

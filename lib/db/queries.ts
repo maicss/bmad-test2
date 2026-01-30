@@ -8,7 +8,7 @@
  */
 
 import { eq, and, desc, asc, sql, like, or, gt, lt, gte, lte, inArray } from "drizzle-orm";
-import { db, schema } from "@/database/db";
+import { getDb, schema } from "@/database/db";
 import type {
   User,
   Family,
@@ -36,6 +36,7 @@ import type {
  * 根据手机号获取用户
  */
 export async function getUserByPhone(phone: string): Promise<User | undefined> {
+  const db = getDb();
   const result = await db.query.users.findFirst({
     where: eq(schema.users.phone, phone),
   });
@@ -46,6 +47,7 @@ export async function getUserByPhone(phone: string): Promise<User | undefined> {
  * 根据 ID 获取用户
  */
 export async function getUserById(id: string): Promise<User | undefined> {
+  const db = getDb();
   const result = await db.query.users.findFirst({
     where: eq(schema.users.id, id),
     with: {
@@ -63,6 +65,7 @@ export async function getUserById(id: string): Promise<User | undefined> {
  * 创建新用户
  */
 export async function createUser(data: NewUser): Promise<User> {
+  const db = getDb();
   const [user] = await db.insert(schema.users).values(data).returning();
   return user;
 }
@@ -71,6 +74,7 @@ export async function createUser(data: NewUser): Promise<User> {
  * 更新用户信息
  */
 export async function updateUser(id: string, data: Partial<NewUser>): Promise<User | undefined> {
+  const db = getDb();
   const [user] = await db
     .update(schema.users)
     .set({ ...data, updatedAt: new Date() })
@@ -87,6 +91,7 @@ export async function updateUser(id: string, data: Partial<NewUser>): Promise<Us
  * 创建新家庭
  */
 export async function createFamily(data: NewFamily): Promise<Family> {
+  const db = getDb();
   const [family] = await db.insert(schema.families).values(data).returning();
   return family;
 }
@@ -95,6 +100,7 @@ export async function createFamily(data: NewFamily): Promise<Family> {
  * 根据 ID 获取家庭
  */
 export async function getFamilyById(id: string): Promise<Family | undefined> {
+  const db = getDb();
   const result = await db.query.families.findFirst({
     where: eq(schema.families.id, id),
     with: {
@@ -112,6 +118,7 @@ export async function getFamilyById(id: string): Promise<Family | undefined> {
  * 根据邀请码获取家庭
  */
 export async function getFamilyByInviteCode(inviteCode: string): Promise<Family | undefined> {
+  const db = getDb();
   const result = await db.query.families.findFirst({
     where: and(
       eq(schema.families.inviteCode, inviteCode),
@@ -132,6 +139,7 @@ export async function updateFamilyInviteCode(
   inviteCode: string,
   expiresAt?: Date
 ): Promise<Family | undefined> {
+  const db = getDb();
   const [family] = await db
     .update(schema.families)
     .set({
@@ -152,6 +160,7 @@ export async function updateFamilyInviteCode(
  * 添加家庭成员
  */
 export async function addFamilyMember(data: NewFamilyMember): Promise<FamilyMember> {
+  const db = getDb();
   const [member] = await db.insert(schema.familyMembers).values(data).returning();
   return member;
 }
@@ -163,6 +172,7 @@ export async function getFamilyMember(
   familyId: string,
   userId: string
 ): Promise<FamilyMember | undefined> {
+  const db = getDb();
   const result = await db.query.familyMembers.findFirst({
     where: and(
       eq(schema.familyMembers.familyId, familyId),
@@ -180,6 +190,7 @@ export async function getFamilyMember(
  * 获取家庭的所有成员
  */
 export async function getFamilyMembers(familyId: string): Promise<FamilyMember[]> {
+  const db = getDb();
   const results = await db.query.familyMembers.findMany({
     where: eq(schema.familyMembers.familyId, familyId),
     with: {
@@ -197,6 +208,7 @@ export async function updateMemberPoints(
   memberId: string,
   newPoints: number
 ): Promise<FamilyMember | undefined> {
+  const db = getDb();
   const [member] = await db
     .update(schema.familyMembers)
     .set({
@@ -215,6 +227,7 @@ export async function adjustMemberPoints(
   memberId: string,
   delta: number
 ): Promise<FamilyMember | undefined> {
+  const db = getDb();
   const [member] = await db
     .update(schema.familyMembers)
     .set({
@@ -234,6 +247,7 @@ export async function adjustMemberPoints(
  * 创建任务定义
  */
 export async function createTaskDefinition(data: NewTaskDefinition): Promise<TaskDefinition> {
+  const db = getDb();
   const [task] = await db.insert(schema.taskDefinitions).values(data).returning();
   return task;
 }
@@ -245,6 +259,7 @@ export async function getTaskDefinitions(
   familyId: string,
   options?: { activeOnly?: boolean; category?: "study" | "housework" | "behavior" | "health" | "custom" }
 ): Promise<TaskDefinition[]> {
+  const db = getDb();
   const conditions = [eq(schema.taskDefinitions.familyId, familyId)];
 
   if (options?.activeOnly) {
@@ -266,6 +281,7 @@ export async function getTaskDefinitions(
  * 根据 ID 获取任务定义
  */
 export async function getTaskDefinitionById(id: string): Promise<TaskDefinition | undefined> {
+  const db = getDb();
   const result = await db.query.taskDefinitions.findFirst({
     where: eq(schema.taskDefinitions.id, id),
   });
@@ -279,6 +295,7 @@ export async function updateTaskDefinition(
   id: string,
   data: Partial<NewTaskDefinition>
 ): Promise<TaskDefinition | undefined> {
+  const db = getDb();
   const [task] = await db
     .update(schema.taskDefinitions)
     .set({ ...data, updatedAt: new Date() })
@@ -291,6 +308,7 @@ export async function updateTaskDefinition(
  * 软删除任务定义（标记为不活跃）
  */
 export async function deactivateTaskDefinition(id: string): Promise<TaskDefinition | undefined> {
+  const db = getDb();
   const [task] = await db
     .update(schema.taskDefinitions)
     .set({ isActive: false, updatedAt: new Date() })
@@ -307,6 +325,7 @@ export async function deactivateTaskDefinition(id: string): Promise<TaskDefiniti
  * 记录行为
  */
 export async function recordBehavior(data: NewBehaviorLog): Promise<BehaviorLog> {
+  const db = getDb();
   const [log] = await db.insert(schema.behaviorLogs).values(data).returning();
   return log;
 }
@@ -323,6 +342,7 @@ export async function getBehaviorLogs(
     endDate?: Date;
   }
 ): Promise<BehaviorLog[]> {
+  const db = getDb();
   const conditions = [eq(schema.behaviorLogs.memberId, memberId)];
 
   if (options?.startDate) {
@@ -358,6 +378,7 @@ export async function getFamilyBehaviorLogs(
     endDate?: Date;
   }
 ): Promise<BehaviorLog[]> {
+  const db = getDb();
   const conditions = [eq(schema.behaviorLogs.familyId, familyId)];
 
   if (options?.startDate) {
@@ -394,6 +415,7 @@ export async function getBehaviorStats(
   startDate: Date,
   endDate: Date
 ): Promise<{ totalPoints: number; positiveCount: number; negativeCount: number }> {
+  const db = getDb();
   const logs = await db
     .select({
       points: schema.behaviorLogs.points,
@@ -425,6 +447,7 @@ export async function getBehaviorStats(
  * 创建积分交易记录
  */
 export async function createPointTransaction(data: NewPointTransaction): Promise<PointTransaction> {
+  const db = getDb();
   const [transaction] = await db.insert(schema.pointTransactions).values(data).returning();
   return transaction;
 }
@@ -440,6 +463,7 @@ export async function getPointTransactions(
     type?: "earn" | "spend" | "adjust" | "expire";
   }
 ): Promise<PointTransaction[]> {
+  const db = getDb();
   const conditions = [eq(schema.pointTransactions.memberId, memberId)];
 
   if (options?.type) {
@@ -461,6 +485,7 @@ export async function getPointTransactions(
 export async function getFamilyPointSummary(familyId: string): Promise<
   { memberId: string; totalEarned: number; totalSpent: number; balance: number }[]
 > {
+  const db = getDb();
   const results = await db
     .select({
       memberId: schema.pointTransactions.memberId,
@@ -483,6 +508,7 @@ export async function getFamilyPointSummary(familyId: string): Promise<
  * 创建愿望
  */
 export async function createWish(data: NewWish): Promise<Wish> {
+  const db = getDb();
   const [wish] = await db.insert(schema.wishes).values(data).returning();
   return wish;
 }
@@ -497,6 +523,7 @@ export async function getWishes(
     status?: "pending" | "approved" | "rejected" | "completed" | "cancelled";
   }
 ): Promise<Wish[]> {
+  const db = getDb();
   const conditions = [eq(schema.wishes.familyId, familyId)];
 
   if (options?.memberId) {
@@ -526,6 +553,7 @@ export async function getWishes(
  * 根据 ID 获取愿望
  */
 export async function getWishById(id: string): Promise<Wish | undefined> {
+  const db = getDb();
   const result = await db.query.wishes.findFirst({
     where: eq(schema.wishes.id, id),
     with: {
@@ -548,6 +576,7 @@ export async function approveWish(
   wishId: string,
   approvedBy: string
 ): Promise<Wish | undefined> {
+  const db = getDb();
   const [wish] = await db
     .update(schema.wishes)
     .set({
@@ -568,6 +597,7 @@ export async function rejectWish(
   wishId: string,
   note?: string
 ): Promise<Wish | undefined> {
+  const db = getDb();
   const [wish] = await db
     .update(schema.wishes)
     .set({
@@ -584,6 +614,7 @@ export async function rejectWish(
  * 完成愿望
  */
 export async function completeWish(wishId: string): Promise<Wish | undefined> {
+  const db = getDb();
   const [wish] = await db
     .update(schema.wishes)
     .set({
@@ -604,6 +635,7 @@ export async function completeWish(wishId: string): Promise<Wish | undefined> {
  * 创建愿望兑换记录
  */
 export async function createWishRedemption(data: NewWishRedemption): Promise<WishRedemption> {
+  const db = getDb();
   const [redemption] = await db.insert(schema.wishRedemptions).values(data).returning();
   return redemption;
 }
@@ -618,6 +650,7 @@ export async function getWishRedemptions(
     status?: "pending" | "fulfilled" | "cancelled";
   }
 ): Promise<WishRedemption[]> {
+  const db = getDb();
   const conditions = [];
 
   if (options?.memberId) {
@@ -655,6 +688,7 @@ export async function fulfillRedemption(
   redemptionId: string,
   fulfilledBy: string
 ): Promise<WishRedemption | undefined> {
+  const db = getDb();
   const [redemption] = await db
     .update(schema.wishRedemptions)
     .set({
@@ -681,6 +715,7 @@ export async function getFamilyDashboard(familyId: string): Promise<{
   pendingWishes: Wish[];
   topTasks: TaskDefinition[];
 }> {
+  const db = getDb();
   const family = await getFamilyById(familyId);
   if (!family) {
     throw new Error("Family not found");
@@ -716,6 +751,7 @@ export async function getFamilyDashboard(familyId: string): Promise<{
  * 搜索用户（用于添加家庭成员）
  */
 export async function searchUsers(query: string): Promise<User[]> {
+  const db = getDb();
   const results = await db.query.users.findMany({
     where: or(
       like(schema.users.name, `%${query}%`),
