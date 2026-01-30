@@ -1,33 +1,9 @@
-/**
- * OTP 发送验证码 API
- *
- * POST /api/auth/otp/send
- *
- * 请求体：
- * {
- *   phone: string;
- * }
- *
- * 响应：
- * {
- *   success: boolean;
- *   message?: string;
- *   error?: string;
- *   debugCode?: string;  // 仅开发/测试模式返回
- * }
- *
- * 服务提供商配置：
- * 通过环境变量 OTP_PROVIDER 切换：
- * - console (默认): 开发模式，验证码输出到控制台
- * - aliyun: 阿里云短信服务 (需要配置阿里云密钥)
- * - tencent: 腾讯云短信服务 (需要配置腾讯云密钥)
- */
-
 import { NextRequest } from "next/server";
 import { getRawDb } from "@/database/db";
 import { getOTPService, SendOTPResult } from "@/lib/otp-service";
 import { z } from "zod";
 
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 // 请求体验证 Schema
 const sendOTPSchema = z.object({
   phone: z.string().trim().regex(/^1[3-9]\d{9}$/, "请输入有效的手机号"),

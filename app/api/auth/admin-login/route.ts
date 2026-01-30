@@ -1,34 +1,8 @@
-/**
- * 管理员登录 API
- *
- * POST /api/auth/admin-login
- *
- * 支持两种登录方式：
- * 1. 手机号 + 密码
- * 2. 手机号 + OTP
- *
- * 仅限 role = 'admin' 的用户登录
- *
- * 请求体：
- * {
- *   phone: string;
- *   password?: string;
- *   otp?: string;
- *   loginType: 'password' | 'otp';
- * }
- *
- * 响应：
- * {
- *   success: boolean;
- *   user?: { id, name, role, phone };
- *   error?: string;
- * }
- */
-
 import { NextRequest } from "next/server";
 import { getRawDb } from "@/database/db";
 import { z } from "zod";
 
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 // 密码登录验证 Schema
 const passwordLoginSchema = z.object({
   phone: z.string().trim().regex(/^1[3-9]\d{9}$/, "请输入有效的手机号"),

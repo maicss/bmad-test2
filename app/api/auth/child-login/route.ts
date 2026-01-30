@@ -1,25 +1,3 @@
-/**
- * 儿童 PIN 码登录 API
- *
- * POST /api/auth/child-login
- *
- * 请求体：
- * {
- *   userId: string;    // 用户 ID
- *   pin: string;       // 4-6 位 PIN 码
- *   deviceId?: string; // 可选设备标识
- * }
- *
- * 响应：
- * {
- *   success: boolean;
- *   sessionId?: string;
- *   userId?: string;
- *   memberId?: string;
- *   error?: string;
- * }
- */
-
 import { NextRequest } from "next/server";
 import {
   verifyPINAndCreateSession,
@@ -28,6 +6,7 @@ import {
 } from "@/lib/pin-auth";
 import { z } from "zod";
 
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 // 确保 PIN 认证系统已初始化
 let initialized = false;
 
@@ -103,16 +82,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * 错误响应辅助函数
- */
-function createErrorResponse(error: string, status: number = 400) {
-  return Response.json(
-    {
-      success: false,
-      error,
-      timestamp: new Date().toISOString(),
-    },
-    { status }
-  );
-}
+

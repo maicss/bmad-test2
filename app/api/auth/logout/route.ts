@@ -1,14 +1,7 @@
-/**
- * Logout API
- * 
- * POST /api/auth/logout
- * 
- * 清除用户会话并删除cookie
- */
-
 import { NextRequest } from "next/server";
 import { getRawDb } from "@/database/db";
 
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 export async function POST(request: NextRequest) {
   try {
     // 1. 从cookie中获取session token

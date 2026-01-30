@@ -1,24 +1,3 @@
-/**
- * 会话状态检查 API
- *
- * POST /api/auth/session-check
- *
- * 用于检查儿童会话是否需要自动锁定
- *
- * 请求体：
- * {
- *   sessionId: string;
- * }
- *
- * 响应：
- * {
- *   valid: boolean;
- *   locked: boolean;
- *   expiresAt?: string;
- *   error?: string;
- * }
- */
-
 import { NextRequest } from "next/server";
 import {
   validateSession,
@@ -27,9 +6,10 @@ import {
   updateLastActive,
   initPINAuth,
 } from "@/lib/pin-auth";
+import { getSession } from "@/lib/auth";
 import { z } from "zod";
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 
-// 确保 PIN 认证系统已初始化
 let initialized = false;
 
 async function ensureInitialized() {
@@ -39,10 +19,43 @@ async function ensureInitialized() {
   }
 }
 
-// 请求体验证 Schema
 const checkSchema = z.object({
   sessionId: z.string().min(1, "会话ID不能为空"),
 });
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getSession(request.headers);
+
+    if (!session?.user) {
+      return Response.json(
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "未登录"),
+        { status: 401 }
+      );
+    }
+
+    return Response.json(
+      createSuccessResponse({
+        user: {
+          id: session.user.id,
+          name: session.user.name,
+          email: session.user.email,
+          role: session.user.role,
+        },
+        session: {
+          id: session.session.id,
+          expiresAt: session.session.expiresAt,
+        },
+      })
+    );
+  } catch (error) {
+    console.error("Session check GET error:", error);
+    return Response.json(
+      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "服务器内部错误"),
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
