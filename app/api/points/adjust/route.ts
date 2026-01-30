@@ -1,9 +1,3 @@
-/**
- * Points Adjustment API
- *
- * POST /api/points/adjust - Manually adjust member points (parents only)
- */
-
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSession, isParent } from "@/lib/auth";
@@ -15,6 +9,7 @@ import {
 import type { NewPointTransaction, User } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 const adjustSchema = z.object({
   familyId: z.string().min(1, "Family ID is required"),
   memberId: z.string().min(1, "Member ID is required"),
@@ -32,7 +27,7 @@ export async function POST(request: NextRequest) {
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -40,7 +35,7 @@ export async function POST(request: NextRequest) {
     // Only parents can adjust points
     if (!isParent(session.user as User)) {
       return Response.json(
-        { success: false, error: "Only parents can adjust points" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Only parents can adjust points"),
         { status: 403 }
       );
     }
@@ -62,7 +57,7 @@ export async function POST(request: NextRequest) {
     const membership = await getFamilyMember(familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -71,7 +66,7 @@ export async function POST(request: NextRequest) {
     const targetMember = await getFamilyMember(familyId, memberId);
     if (!targetMember) {
       return Response.json(
-        { success: false, error: "Member not found in this family" },
+        createErrorResponse(ErrorCodes.NOT_FOUND, "Member not found in this family"),
         { status: 404 }
       );
     }
@@ -79,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Check if there's enough points for deduction
     if (amount < 0 && targetMember.currentPoints + amount < 0) {
       return Response.json(
-        { success: false, error: "Insufficient points for this deduction" },
+        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Insufficient points for this deduction"),
         { status: 400 }
       );
     }
@@ -89,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     if (!updatedMember) {
       return Response.json(
-        { success: false, error: "Failed to update points" },
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to update points"),
         { status: 500 }
       );
     }
@@ -120,8 +115,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("POST /api/points/adjust error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }

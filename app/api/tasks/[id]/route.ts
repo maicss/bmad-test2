@@ -1,11 +1,3 @@
-/**
- * Task Detail API
- *
- * GET /api/tasks/[id] - Get task definition details
- * PUT /api/tasks/[id] - Update task definition
- * DELETE /api/tasks/[id] - Deactivate task definition (soft delete)
- */
-
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSession, isParent } from "@/lib/auth";
@@ -16,6 +8,7 @@ import {
   deactivateTaskDefinition,
   getFamilyMember,
 } from "@/lib/db/queries";
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 
 // Validation schema for updating a task
 const updateTaskSchema = z.object({
@@ -42,7 +35,7 @@ export async function GET(
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -52,7 +45,7 @@ export async function GET(
 
     if (!task) {
       return Response.json(
-        { success: false, error: "Task not found" },
+        createErrorResponse(ErrorCodes.NOT_FOUND, "Task not found"),
         { status: 404 }
       );
     }
@@ -61,18 +54,18 @@ export async function GET(
     const membership = await getFamilyMember(task.familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
 
-    return Response.json({ success: true, data: task });
+    return Response.json(createSuccessResponse(task ));
   } catch (error) {
     console.error("GET /api/tasks/[id] error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }
 
@@ -89,7 +82,7 @@ export async function PUT(
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -97,7 +90,7 @@ export async function PUT(
     // Only parents can update tasks
     if (!isParent(session.user as User)) {
       return Response.json(
-        { success: false, error: "Only parents can update tasks" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Only parents can update tasks"),
         { status: 403 }
       );
     }
@@ -107,7 +100,7 @@ export async function PUT(
 
     if (!task) {
       return Response.json(
-        { success: false, error: "Task not found" },
+        createErrorResponse(ErrorCodes.NOT_FOUND, "Task not found"),
         { status: 404 }
       );
     }
@@ -116,7 +109,7 @@ export async function PUT(
     const membership = await getFamilyMember(task.familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -134,13 +127,13 @@ export async function PUT(
 
     const updatedTask = await updateTaskDefinition(id, validation.data);
 
-    return Response.json({ success: true, data: updatedTask });
+    return Response.json(createSuccessResponse(updatedTask ));
   } catch (error) {
     console.error("PUT /api/tasks/[id] error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }
 
@@ -157,7 +150,7 @@ export async function DELETE(
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -165,7 +158,7 @@ export async function DELETE(
     // Only parents can delete tasks
     if (!isParent(session.user as User)) {
       return Response.json(
-        { success: false, error: "Only parents can delete tasks" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Only parents can delete tasks"),
         { status: 403 }
       );
     }
@@ -175,7 +168,7 @@ export async function DELETE(
 
     if (!task) {
       return Response.json(
-        { success: false, error: "Task not found" },
+        createErrorResponse(ErrorCodes.NOT_FOUND, "Task not found"),
         { status: 404 }
       );
     }
@@ -184,23 +177,22 @@ export async function DELETE(
     const membership = await getFamilyMember(task.familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
 
     const deactivatedTask = await deactivateTaskDefinition(id);
 
-    return Response.json({ 
-      success: true, 
-      data: deactivatedTask,
-      message: "Task deactivated successfully" 
-    });
+    return Response.json(createSuccessResponse({
+      task: deactivatedTask,
+      message: "Task deactivated successfully"
+    }));
   } catch (error) {
     console.error("DELETE /api/tasks/[id] error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }

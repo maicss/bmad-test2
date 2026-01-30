@@ -1,9 +1,3 @@
-/**
- * Wish Approval API
- *
- * POST /api/wishes/[id]/approve - Approve or reject a wish (parents only)
- */
-
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSession, isParent } from "@/lib/auth";
@@ -14,6 +8,7 @@ import {
   approveWish,
   rejectWish,
 } from "@/lib/db/queries";
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 
 const approveSchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -33,7 +28,7 @@ export async function POST(
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -41,7 +36,7 @@ export async function POST(
     // Only parents can approve/reject wishes
     if (!isParent(session.user as User)) {
       return Response.json(
-        { success: false, error: "Only parents can approve or reject wishes" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Only parents can approve or reject wishes"),
         { status: 403 }
       );
     }
@@ -51,7 +46,7 @@ export async function POST(
 
     if (!wish) {
       return Response.json(
-        { success: false, error: "Wish not found" },
+        createErrorResponse(ErrorCodes.NOT_FOUND, "Wish not found"),
         { status: 404 }
       );
     }
@@ -60,7 +55,7 @@ export async function POST(
     const membership = await getFamilyMember(wish.familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -68,7 +63,7 @@ export async function POST(
     // Can only approve/reject pending wishes
     if (wish.status !== "pending") {
       return Response.json(
-        { success: false, error: "Can only approve or reject pending wishes" },
+        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Can only approve or reject pending wishes"),
         { status: 400 }
       );
     }
@@ -93,16 +88,15 @@ export async function POST(
       updatedWish = await rejectWish(id, note);
     }
 
-    return Response.json({
-      success: true,
-      data: updatedWish,
-      message: action === "approve" ? "Wish approved" : "Wish rejected",
-    });
+    return Response.json(createSuccessResponse({
+      wish: updatedWish,
+      message: action === "approve" ? "Wish approved" : "Wish rejected"
+    }));
   } catch (error) {
     console.error("POST /api/wishes/[id]/approve error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }

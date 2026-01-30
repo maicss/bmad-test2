@@ -1,10 +1,3 @@
-/**
- * Wishes API
- *
- * GET /api/wishes - List all wishes for the family
- * POST /api/wishes - Create a new wish
- */
-
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
@@ -16,6 +9,7 @@ import {
 import type { NewWish } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 // Validation schema for creating a wish
 const createWishSchema = z.object({
   familyId: z.string().min(1, "Family ID is required"),
@@ -36,7 +30,7 @@ export async function GET(request: NextRequest) {
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -48,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     if (!familyId) {
       return Response.json(
-        { success: false, error: "Family ID is required" },
+        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Family ID is required"),
         { status: 400 }
       );
     }
@@ -57,7 +51,7 @@ export async function GET(request: NextRequest) {
     const membership = await getFamilyMember(familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -67,13 +61,13 @@ export async function GET(request: NextRequest) {
       status: status || undefined,
     });
 
-    return Response.json({ success: true, data: wishes });
+    return Response.json(createSuccessResponse(wishes ));
   } catch (error) {
     console.error("GET /api/wishes error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }
 
@@ -87,7 +81,7 @@ export async function POST(request: NextRequest) {
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -109,7 +103,7 @@ export async function POST(request: NextRequest) {
     const membership = await getFamilyMember(familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -124,12 +118,12 @@ export async function POST(request: NextRequest) {
 
     const wish = await createWish(newWishData);
 
-    return Response.json({ success: true, data: wish }, { status: 201 });
+    return Response.json(createSuccessResponse(wish ), { status: 201 });
   } catch (error) {
     console.error("POST /api/wishes error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }

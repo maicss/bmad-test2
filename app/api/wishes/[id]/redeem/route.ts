@@ -1,9 +1,3 @@
-/**
- * Wish Redeem API
- *
- * POST /api/wishes/[id]/redeem - Redeem an approved wish
- */
-
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
@@ -18,6 +12,7 @@ import {
 import type { NewWishRedemption, NewPointTransaction } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 const redeemSchema = z.object({
   note: z.string().max(500, "Note too long").optional(),
 });
@@ -35,7 +30,7 @@ export async function POST(
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -45,7 +40,7 @@ export async function POST(
 
     if (!wish) {
       return Response.json(
-        { success: false, error: "Wish not found" },
+        createErrorResponse(ErrorCodes.NOT_FOUND, "Wish not found"),
         { status: 404 }
       );
     }
@@ -54,7 +49,7 @@ export async function POST(
     const membership = await getFamilyMember(wish.familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -62,7 +57,7 @@ export async function POST(
     // Can only redeem approved wishes
     if (wish.status !== "approved") {
       return Response.json(
-        { success: false, error: "Wish must be approved before redemption" },
+        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Wish must be approved before redemption"),
         { status: 400 }
       );
     }
@@ -70,7 +65,7 @@ export async function POST(
     // Only the wish owner can redeem their own wish
     if (wish.memberId !== membership.id) {
       return Response.json(
-        { success: false, error: "Can only redeem your own wishes" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Can only redeem your own wishes"),
         { status: 403 }
       );
     }
@@ -109,7 +104,7 @@ export async function POST(
 
     if (!updatedMember) {
       return Response.json(
-        { success: false, error: "Failed to deduct points" },
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to deduct points"),
         { status: 500 }
       );
     }
@@ -159,8 +154,8 @@ export async function POST(
   } catch (error) {
     console.error("POST /api/wishes/[id]/redeem error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }

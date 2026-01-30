@@ -1,9 +1,3 @@
-/**
- * Points API
- *
- * GET /api/points - Get points summary for the family
- */
-
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
@@ -12,6 +6,7 @@ import {
   getFamilyMember,
   getFamilyMembers,
 } from "@/lib/db/queries";
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 
 /**
  * GET /api/points
@@ -23,7 +18,7 @@ export async function GET(request: NextRequest) {
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -33,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     if (!familyId) {
       return Response.json(
-        { success: false, error: "Family ID is required" },
+        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Family ID is required"),
         { status: 400 }
       );
     }
@@ -42,7 +37,7 @@ export async function GET(request: NextRequest) {
     const membership = await getFamilyMember(familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -91,8 +86,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("GET /api/points error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }

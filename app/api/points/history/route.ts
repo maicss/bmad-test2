@@ -1,9 +1,3 @@
-/**
- * Points History API
- *
- * GET /api/points/history - Get points transaction history for a member
- */
-
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
@@ -11,6 +5,7 @@ import {
   getPointTransactions,
   getFamilyMember,
 } from "@/lib/db/queries";
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 
 const querySchema = z.object({
   memberId: z.string().min(1, "Member ID is required"),
@@ -30,7 +25,7 @@ export async function GET(request: NextRequest) {
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -59,7 +54,7 @@ export async function GET(request: NextRequest) {
     const membership = await getFamilyMember(familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -85,8 +80,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("GET /api/points/history error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }

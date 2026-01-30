@@ -1,10 +1,3 @@
-/**
- * Task Management API
- *
- * GET /api/tasks - List all tasks for the family
- * POST /api/tasks - Create a new task definition
- */
-
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSession, isParent } from "@/lib/auth";
@@ -16,6 +9,7 @@ import {
 import type { NewTaskDefinition, User } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 // Validation schema for creating a task
 const createTaskSchema = z.object({
   familyId: z.string().min(1, "Family ID is required"),
@@ -38,7 +32,7 @@ export async function GET(request: NextRequest) {
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -50,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     if (!familyId) {
       return Response.json(
-        { success: false, error: "Family ID is required" },
+        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Family ID is required"),
         { status: 400 }
       );
     }
@@ -59,7 +53,7 @@ export async function GET(request: NextRequest) {
     const membership = await getFamilyMember(familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -69,13 +63,13 @@ export async function GET(request: NextRequest) {
       category: category || undefined,
     });
 
-    return Response.json({ success: true, data: tasks });
+    return Response.json(createSuccessResponse(tasks ));
   } catch (error) {
     console.error("GET /api/tasks error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }
 
@@ -89,7 +83,7 @@ export async function POST(request: NextRequest) {
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -97,7 +91,7 @@ export async function POST(request: NextRequest) {
     // Only parents can create tasks
     if (!isParent(session.user as User)) {
       return Response.json(
-        { success: false, error: "Only parents can create tasks" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Only parents can create tasks"),
         { status: 403 }
       );
     }
@@ -119,7 +113,7 @@ export async function POST(request: NextRequest) {
     const membership = await getFamilyMember(familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -134,12 +128,12 @@ export async function POST(request: NextRequest) {
 
     const task = await createTaskDefinition(newTaskData);
 
-    return Response.json({ success: true, data: task }, { status: 201 });
+    return Response.json(createSuccessResponse(task ), { status: 201 });
   } catch (error) {
     console.error("POST /api/tasks error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }

@@ -1,9 +1,3 @@
-/**
- * Task Complete API
- *
- * POST /api/tasks/[id]/complete - Record a task completion (create behavior log)
- */
-
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
@@ -17,6 +11,7 @@ import {
 import type { NewBehaviorLog, NewPointTransaction } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 // Validation schema for completing a task
 const completeTaskSchema = z.object({
   memberId: z.string().min(1, "Member ID is required"),
@@ -36,7 +31,7 @@ export async function POST(
     
     if (!session?.user) {
       return Response.json(
-        { success: false, error: "Unauthorized" },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
         { status: 401 }
       );
     }
@@ -46,7 +41,7 @@ export async function POST(
 
     if (!task) {
       return Response.json(
-        { success: false, error: "Task not found" },
+        createErrorResponse(ErrorCodes.NOT_FOUND, "Task not found"),
         { status: 404 }
       );
     }
@@ -55,7 +50,7 @@ export async function POST(
     const membership = await getFamilyMember(task.familyId, session.user.id);
     if (!membership) {
       return Response.json(
-        { success: false, error: "Access denied" },
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Access denied"),
         { status: 403 }
       );
     }
@@ -77,7 +72,7 @@ export async function POST(
     const targetMember = await getFamilyMember(task.familyId, memberId);
     if (!targetMember) {
       return Response.json(
-        { success: false, error: "Member not found in this family" },
+        createErrorResponse(ErrorCodes.NOT_FOUND, "Member not found in this family"),
         { status: 404 }
       );
     }
@@ -102,7 +97,7 @@ export async function POST(
 
     if (!updatedMember) {
       return Response.json(
-        { success: false, error: "Failed to update member points" },
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to update member points"),
         { status: 500 }
       );
     }
@@ -134,8 +129,8 @@ export async function POST(
   } catch (error) {
     console.error("POST /api/tasks/[id]/complete error:", error);
     return Response.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
+        { status: 500 }
+      );
   }
 }
