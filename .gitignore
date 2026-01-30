@@ -43,3 +43,7 @@ tmp
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# SQLite temporary files
+database/*.sqlite-shm
+database/*.sqlite-wal
