@@ -77,10 +77,18 @@ export const verifications = sqliteTable("verification", {
  */
 export const families = sqliteTable("family", {
   id: text("id").primaryKey(),
-  name: text("name").notNull(), // 家庭名称，如 "张家"
-  inviteCode: text("invite_code").unique(), // 邀请码，用于加入家庭
+  name: text("name").notNull(),
+  inviteCode: text("invite_code").unique(),
   inviteCodeExpiresAt: integer("invite_code_expires_at", { mode: "timestamp" }),
-  settings: blob("settings", { mode: "json" }), // 家庭设置 JSON
+  maxParents: integer("max_parents").notNull().default(2),
+  maxChildren: integer("max_children").notNull().default(1),
+  validityMonths: integer("validity_months").notNull().default(12),
+  registrationType: text("registration_type", { enum: ["self", "admin"] }).notNull().default("self"),
+  status: text("status", { enum: ["pending", "approved", "rejected"] }).notNull().default("pending"),
+  submittedAt: integer("submitted_at", { mode: "timestamp" }),
+  reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
+  reviewedBy: text("reviewed_by"),
+  rejectionReason: text("rejection_reason"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
