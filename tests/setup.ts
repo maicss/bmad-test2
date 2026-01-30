@@ -57,7 +57,16 @@ export function initTestSchema(db: Database): void {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       invite_code TEXT UNIQUE,
-      settings BLOB,
+      invite_code_expires_at INTEGER,
+      max_parents INTEGER DEFAULT 2 NOT NULL,
+      max_children INTEGER DEFAULT 1 NOT NULL,
+      validity_months INTEGER DEFAULT 12 NOT NULL,
+      registration_type TEXT DEFAULT 'self' NOT NULL,
+      status TEXT DEFAULT 'pending' NOT NULL,
+      submitted_at INTEGER,
+      reviewed_at INTEGER,
+      reviewed_by TEXT,
+      rejection_reason TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     )
