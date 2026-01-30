@@ -12,10 +12,13 @@ import {
   Database,
   Activity,
   Settings,
-  LogOut
+  LogOut,
+  Home,
+  Plus
 } from "lucide-react"
 import Link from "next/link"
 import { LogoutButton } from "@/components/auth/logout-button"
+import { PendingFamiliesList } from "./components/pending-families-list"
 
 // Helper icon component
 function AdminIcon({ className }: { className?: string }) {
@@ -100,18 +103,49 @@ export default async function AdminDashboardPage() {
     redeemed_wishes: number
   }
 
-  // 最近注册用户
-  const recentUsers = rawDb.query(`
-    SELECT id, name, role, phone, created_at
-    FROM user
-    ORDER BY created_at DESC
+  const pendingFamilies = rawDb.query(`
+    SELECT 
+      f.id, 
+      f.name, 
+      f.max_parents,
+      f.max_children,
+      f.registration_type,
+      f.status,
+      f.submitted_at,
+      f.created_at
+    FROM family f
+    WHERE f.status = 'pending'
+    ORDER BY f.submitted_at DESC
+  `).all() as Array<{
+    id: string
+    name: string
+    max_parents: number
+    max_children: number
+    registration_type: string
+    status: string
+    submitted_at: string
+    created_at: string
+  }>
+
+  const approvedFamilies = rawDb.query(`
+    SELECT 
+      f.id, 
+      f.name, 
+      f.invite_code,
+      f.updated_at,
+      COUNT(fm.id) as member_count
+    FROM family f
+    LEFT JOIN family_member fm ON f.id = fm.family_id
+    WHERE f.status = 'approved'
+    GROUP BY f.id
+    ORDER BY f.updated_at DESC
     LIMIT 5
   `).all() as Array<{
     id: string
     name: string
-    role: string
-    phone: string | null
-    created_at: string
+    invite_code: string | null
+    updated_at: string
+    member_count: number
   }>
 
   return (
@@ -131,14 +165,14 @@ export default async function AdminDashboardPage() {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm font-medium text-white">{session.user.name}</p>
-              <Badge variant="secondary" className="bg-primary/20 text-primary border-0">
+              <Badge className="bg-blue-600 text-white border-0 hover:bg-blue-700">
                 管理员
               </Badge>
             </div>
             <LogoutButton 
               variant="outline" 
               size="sm" 
-              className="border-slate-600 text-slate-300 hover:bg-slate-800"
+              className="border-slate-400 text-slate-200 hover:bg-slate-700 hover:text-white hover:border-slate-500"
             />
           </div>
         </div>
@@ -231,49 +265,66 @@ export default async function AdminDashboardPage() {
           </Card>
         </div>
 
+        <PendingFamiliesList initialFamilies={pendingFamilies} />
+
         {/* Main Content Grid */}
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Recent Users */}
+          {/* Approved Family List */}
           <Card className="bg-white border-slate-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-slate-900">
-                <Users className="h-5 w-5" />
-                最近注册用户
-              </CardTitle>
-              <CardDescription>最新加入系统的用户</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-slate-900">
+                  <Home className="h-5 w-5" />
+                  已批准家庭
+                </CardTitle>
+                <CardDescription className="mt-1">最近更新的家庭</CardDescription>
+              </div>
+              <Link href="/admin/families/new">
+                <Button size="sm" className="flex items-center gap-1">
+                  <Plus className="h-4 w-4" />
+                  创建
+                </Button>
+              </Link>
             </CardHeader>
-            <CardContent>
-              {recentUsers && recentUsers.length > 0 ? (
+            <CardContent className="pt-4">
+              {approvedFamilies && approvedFamilies.length > 0 ? (
                 <div className="space-y-3">
-                  {recentUsers.map((user: any) => (
+                  {approvedFamilies.map((family: any) => (
                     <div
-                      key={user.id}
+                      key={family.id}
                       className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="bg-slate-200 p-2 rounded-full">
-                          <Users className="h-4 w-4 text-slate-600" />
+                        <div className="bg-blue-100 p-2 rounded-full">
+                          <Home className="h-4 w-4 text-blue-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">{user.name}</p>
-                          <p className="text-xs text-slate-500">
-                            {user.role === "admin" ? "管理员" : 
-                             user.role === "parent" ? "家长" : "儿童"}
-                          </p>
+                          <p className="font-medium text-slate-900">{family.name}</p>
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              {family.member_count} 成员
+                            </span>
+                            {family.invite_code && (
+                              <span className="text-green-600">
+                                邀请码: {family.invite_code}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <Badge 
-                        variant={user.role === "admin" ? "destructive" : "secondary"}
+                        variant="secondary"
                         className="text-xs"
                       >
-                        {user.role}
+                        {new Date(family.updated_at).toLocaleDateString('zh-CN')}
                       </Badge>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-center text-slate-400 py-4">
-                  暂无用户数据
+                  暂无已批准家庭
                 </p>
               )}
             </CardContent>
