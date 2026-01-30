@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { UserCircle, Users, Lock, Smartphone, KeyRound, MessageSquare, Shield, ArrowRight } from "lucide-react"
+import { UserCircle, Users, Lock, Smartphone, KeyRound, MessageSquare, Shield, ArrowRight, Loader2 } from "lucide-react"
 
 interface ChildUser {
   id: string
@@ -20,26 +20,55 @@ interface ChildUser {
 export default function LoginPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [error, setError] = useState("")
 
-  // Parent password login state
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
 
-  // Parent OTP login state
   const [otpPhone, setOtpPhone] = useState("")
   const [otpCode, setOtpCode] = useState("")
   const [otpSent, setOtpSent] = useState(false)
   const [otpCountdown, setOtpCountdown] = useState(0)
   const [debugOtpCode, setDebugOtpCode] = useState<string | null>(null)
 
-  // Child login state
   const [selectedChild, setSelectedChild] = useState("")
   const [pin, setPin] = useState("")
   const [children] = useState<ChildUser[]>([
     { id: "child-001", name: "Zhang 3", displayName: "小明" },
     { id: "child-002", name: "Li 3", displayName: "小红" },
   ])
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/auth/session-check", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            const role = data.data?.user?.role
+            if (role === "parent" || role === "admin") {
+              router.push("/parent")
+              return
+            } else if (role === "child") {
+              router.push("/child")
+              return
+            }
+          }
+        }
+      } catch {
+        // Silently fail
+      } finally {
+        setIsCheckingSession(false)
+      }
+    }
+
+    checkSession()
+  }, [router])
 
   const handleParentLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -208,6 +237,19 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isCheckingSession) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+            <p className="text-slate-600">检查登录状态...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
