@@ -307,6 +307,28 @@ export default async function FamilyDetailPage({ params }: PageProps) {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="bg-white border-slate-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-900">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="6"/>
+                  <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>
+                </svg>
+                徽章统计
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-500">获得徽章</span>
+                <span className="font-medium text-lg text-orange-600">0</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-500">待解锁徽章</span>
+                <span className="font-medium text-lg">0</span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Card className="bg-white border-slate-200">

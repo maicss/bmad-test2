@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Pause, Clock, Trash2, Loader2 } from "lucide-react"
+import { Pause, Clock, Trash2, Loader2, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface FamilyOperationsProps {
@@ -101,7 +101,11 @@ export function FamilyOperations({ familyId, currentStatus }: FamilyOperationsPr
 
       if (response.ok) {
         setShowDeleteDialog(false)
-        router.push("/admin")
+        if (isDeleted) {
+          router.refresh()
+        } else {
+          router.push("/admin")
+        }
       } else {
         const error = await response.json()
         alert(error.message || "操作失败")
@@ -119,35 +123,48 @@ export function FamilyOperations({ familyId, currentStatus }: FamilyOperationsPr
   return (
     <>
       <div className="flex gap-2 pt-2">
+        {!isDeleted && (
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn("flex-1", isSuspended && "bg-yellow-50 border-yellow-300")}
+            onClick={() => setShowSuspendDialog(true)}
+            disabled={isLoading}
+          >
+            <Pause className="h-4 w-4 mr-1" />
+            {isSuspended ? "恢复家庭" : "挂起家庭"}
+          </Button>
+        )}
+        {!isDeleted && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => setShowExtendDialog(true)}
+            disabled={isSuspended || isLoading}
+          >
+            <Clock className="h-4 w-4 mr-1" />
+            延期
+          </Button>
+        )}
         <Button
           variant="outline"
           size="sm"
-          className={cn("flex-1", isSuspended && "bg-yellow-50 border-yellow-300")}
-          onClick={() => setShowSuspendDialog(true)}
-          disabled={isDeleted || isLoading}
-        >
-          <Pause className="h-4 w-4 mr-1" />
-          {isSuspended ? "恢复家庭" : "挂起家庭"}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
-          onClick={() => setShowExtendDialog(true)}
-          disabled={isDeleted || isSuspended || isLoading}
-        >
-          <Clock className="h-4 w-4 mr-1" />
-          延期
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 border-red-200 hover:bg-red-50"
+          className={cn("flex-1", isDeleted ? "bg-green-50 border-green-200 hover:bg-green-100" : "border-red-200 hover:bg-red-50")}
           onClick={() => setShowDeleteDialog(true)}
-          disabled={isDeleted || isLoading}
+          disabled={isLoading}
         >
-          <Trash2 className="h-4 w-4 mr-1 text-red-500" />
-          <span className="text-red-500">删除</span>
+          {isDeleted ? (
+            <>
+              <RefreshCw className="h-4 w-4 mr-1 text-green-600" />
+              <span className="text-green-600">激活</span>
+            </>
+          ) : (
+            <>
+              <Trash2 className="h-4 w-4 mr-1 text-red-500" />
+              <span className="text-red-500">删除</span>
+            </>
+          )}
         </Button>
       </div>
 
@@ -214,9 +231,14 @@ export function FamilyOperations({ familyId, currentStatus }: FamilyOperationsPr
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-red-600">删除家庭</DialogTitle>
-            <DialogDescription className="text-red-600">
-              此操作会删除家庭和所有家庭成员，确认删除吗？
+            <DialogTitle className={isDeleted ? "text-green-600" : "text-red-600"}>
+              {isDeleted ? "激活家庭" : "删除家庭"}
+            </DialogTitle>
+            <DialogDescription className={isDeleted ? "text-green-600" : "text-red-600"}>
+              {isDeleted 
+                ? "确定要激活这个家庭吗？激活后家庭将恢复正常使用。"
+                : "此操作会删除家庭和所有家庭成员，确认删除吗？"
+              }
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -226,9 +248,10 @@ export function FamilyOperations({ familyId, currentStatus }: FamilyOperationsPr
             <Button 
               onClick={handleDelete} 
               disabled={isLoading}
-              variant="destructive"
+              variant={isDeleted ? "default" : "destructive"}
+              className={cn(isDeleted && "bg-green-600 hover:bg-green-700")}
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "确认删除"}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (isDeleted ? "确认激活" : "确认删除")}
             </Button>
           </DialogFooter>
         </DialogContent>
