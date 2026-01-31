@@ -9,20 +9,15 @@ import { Badge } from "@/components/ui/badge"
 import { 
   ArrowLeft, 
   Home, 
-  Users, 
   User as UserIcon, 
-  Phone, 
   Calendar, 
   CheckCircle2,
-  XCircle,
-  Pause,
-  Clock,
   Award,
-  Trash2,
   RefreshCw,
   Edit
 } from "lucide-react"
 import Link from "next/link"
+import { FamilyOperations } from "./components/family-operations"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -226,6 +221,7 @@ export default async function FamilyDetailPage({ params }: PageProps) {
                 <span className="text-sm text-slate-500">当前成员</span>
                 <span className="font-medium">{stats.total_members} 人</span>
               </div>
+              <FamilyOperations familyId={family.id} currentStatus={family.status} />
             </CardContent>
           </Card>
         </div>
@@ -350,30 +346,6 @@ export default async function FamilyDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-900">
-              <Users className="h-5 w-5" />
-              操作
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Button variant="outline" className="h-20 flex flex-col gap-2">
-                <Pause className="h-5 w-5" />
-                <span className="text-xs">挂起家庭</span>
-              </Button>
-              <Button variant="outline" className="h-20 flex flex-col gap-2">
-                <Clock className="h-5 w-5" />
-                <span className="text-xs">延期</span>
-              </Button>
-              <Button variant="outline" className="h-20 flex flex-col gap-2 border-red-200 hover:bg-red-50">
-                <Trash2 className="h-5 w-5 text-red-500" />
-                <span className="text-xs text-red-500">删除</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </main>
     </div>
   )
