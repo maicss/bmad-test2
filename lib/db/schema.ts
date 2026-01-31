@@ -85,6 +85,8 @@ export const families = sqliteTable("family", {
   validityMonths: integer("validity_months").notNull().default(12),
   registrationType: text("registration_type", { enum: ["self", "admin"] }).notNull().default("self"),
   status: text("status", { enum: ["pending", "approved", "suspended", "deleted"] }).notNull().default("pending"),
+  province: text("province"),
+  city: text("city"),
   previousStatus: text("previous_status", { enum: ["pending", "approved", "suspended"] }),
   submittedAt: integer("submitted_at", { mode: "timestamp" }),
   reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
