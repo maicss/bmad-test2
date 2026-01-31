@@ -109,8 +109,8 @@ export default async function FamilyDetailPage({ params }: PageProps) {
     .query(
       `
       SELECT 
-        COUNT(DISTINCT t.id) as task_count,
-        COUNT(DISTINCT CASE WHEN t.status = 'completed' THEN t.id END) as completed_tasks,
+        COUNT(DISTINCT bl.id) as task_count,
+        COUNT(DISTINCT CASE WHEN bl.action = 'completed' THEN bl.id END) as completed_tasks,
         COUNT(DISTINCT w.id) as wish_count,
         COUNT(DISTINCT CASE WHEN w.status = 'redeemed' THEN w.id END) as redeemed_wishes,
         MAX(u.updated_at) as last_active_at,
@@ -118,8 +118,7 @@ export default async function FamilyDetailPage({ params }: PageProps) {
       FROM family f
       LEFT JOIN family_member fm ON f.id = fm.family_id
       LEFT JOIN user u ON fm.user_id = u.id
-      LEFT JOIN task_completion tc ON u.id = tc.user_id
-      LEFT JOIN task t ON tc.task_id = t.id
+      LEFT JOIN behavior_log bl ON fm.id = bl.member_id
       LEFT JOIN wish w ON w.family_member_id = fm.id
       WHERE f.id = ?
     `
