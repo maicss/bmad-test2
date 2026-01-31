@@ -12,9 +12,7 @@ import {
   User as UserIcon, 
   Calendar, 
   CheckCircle2,
-  Award,
-  RefreshCw,
-  Edit
+  Award
 } from "lucide-react"
 import Link from "next/link"
 import { FamilyOperations } from "./components/family-operations"
@@ -184,16 +182,6 @@ export default async function FamilyDetailPage({ params }: PageProps) {
                   }
                 </span>
               </div>
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" className="flex-1">
-                  <Edit className="h-4 w-4 mr-1" />
-                  修改手机号
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  <RefreshCw className="h-4 w-4 mr-1" />
-                  重置密码
-                </Button>
-              </div>
             </CardContent>
           </Card>
 
@@ -221,7 +209,11 @@ export default async function FamilyDetailPage({ params }: PageProps) {
                 <span className="text-sm text-slate-500">当前成员</span>
                 <span className="font-medium">{stats.total_members} 人</span>
               </div>
-              <FamilyOperations familyId={family.id} currentStatus={family.status} />
+              <FamilyOperations 
+                familyId={family.id} 
+                currentStatus={family.status} 
+                primaryParentPhone={primaryParent?.phone}
+              />
             </CardContent>
           </Card>
         </div>
