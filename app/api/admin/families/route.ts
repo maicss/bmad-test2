@@ -111,6 +111,8 @@ const createFamilySchema = z.object({
   parentCount: z.number().int().min(2).max(10),
   childCount: z.number().int().min(1).max(10),
   validityMonths: z.number().int().min(1).max(36),
+  province: z.string().min(1, "Province is required"),
+  city: z.string().min(1, "City is required"),
 });
 
 function generateFamilyId(): string {
@@ -212,9 +214,9 @@ export async function POST(request: NextRequest) {
           `
           INSERT INTO family (
             id, name, invite_code, invite_code_expires_at, max_parents, max_children, validity_months,
-            registration_type, status, reviewed_at, reviewed_by, created_at, updated_at
+            registration_type, status, province, city, reviewed_at, reviewed_by, created_at, updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
         )
         .run(
@@ -227,6 +229,8 @@ export async function POST(request: NextRequest) {
           validityMonths,
           "admin",
           "approved",
+          validation.data.province,
+          validation.data.city,
           now.toISOString(),
           session.user.id,
           now.toISOString(),

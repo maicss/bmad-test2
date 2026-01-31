@@ -25,6 +25,7 @@ import {
 import { ArrowLeft, Copy, Check, Home, Users, Calendar, Phone, User, Shield } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { CitySelector } from "@/components/city-selector"
 
 interface CreateFamilyForm {
   parentPhone: string
@@ -35,6 +36,8 @@ interface CreateFamilyForm {
   parentCount: string
   childCount: string
   validityMonths: number
+  province: string
+  city: string
 }
 
 interface CreateResult {
@@ -60,6 +63,8 @@ export default function CreateFamilyPage() {
     parentCount: "2",
     childCount: "1",
     validityMonths: 12,
+    province: "",
+    city: "",
   })
   const [errors, setErrors] = useState<Partial<Record<keyof CreateFamilyForm, string>>>({})
 
@@ -86,6 +91,14 @@ export default function CreateFamilyPage() {
     const childCount = parseInt(formData.childCount)
     if (isNaN(childCount) || childCount < 1 || childCount > 10) {
       newErrors.childCount = "儿童人数必须在1-10之间"
+    }
+
+    if (!formData.province) {
+      newErrors.province = "请选择省份"
+    }
+
+    if (!formData.city) {
+      newErrors.city = "请选择城市"
     }
 
     setErrors(newErrors)
@@ -293,6 +306,17 @@ export default function CreateFamilyPage() {
                   </Select>
                 </div>
               </div>
+
+              <CitySelector
+                value={{ province: formData.province, city: formData.city }}
+                onChange={(value) =>
+                  setFormData({ ...formData, province: value.province, city: value.city })
+                }
+                error={{
+                  province: errors.province,
+                  city: errors.city,
+                }}
+              />
 
               {/* Parent Count */}
               <div className="space-y-2">
