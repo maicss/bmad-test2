@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { FamilyOperations } from "./components/family-operations"
+import { ParentOperations } from "./components/parent-operations"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -182,6 +183,12 @@ export default async function FamilyDetailPage({ params }: PageProps) {
                   }
                 </span>
               </div>
+              {primaryParent && (
+                <ParentOperations 
+                  familyId={family.id} 
+                  primaryParentPhone={primaryParent.phone}
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -211,8 +218,7 @@ export default async function FamilyDetailPage({ params }: PageProps) {
               </div>
               <FamilyOperations 
                 familyId={family.id} 
-                currentStatus={family.status} 
-                primaryParentPhone={primaryParent?.phone}
+                currentStatus={family.status}
               />
             </CardContent>
           </Card>
