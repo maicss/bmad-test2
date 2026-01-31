@@ -119,7 +119,7 @@ export default async function FamilyDetailPage({ params }: PageProps) {
       LEFT JOIN family_member fm ON f.id = fm.family_id
       LEFT JOIN user u ON fm.user_id = u.id
       LEFT JOIN behavior_log bl ON fm.id = bl.member_id
-      LEFT JOIN wish w ON w.family_member_id = fm.id
+      LEFT JOIN wish w ON w.member_id = fm.id
       WHERE f.id = ?
     `
     )
