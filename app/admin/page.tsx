@@ -12,15 +12,17 @@ import {
   Database,
   Activity,
   Settings,
-  LogOut,
   Home,
-  Plus
+  Plus,
+  CheckCircle2,
+  Award,
+  Star,
+  MapPin
 } from "lucide-react"
 import Link from "next/link"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { PendingFamiliesList } from "./components/pending-families-list"
 
-// Helper icon component
 function AdminIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -41,7 +43,6 @@ function AdminIcon({ className }: { className?: string }) {
 }
 
 export default async function AdminDashboardPage() {
-  // Get current session
   const headersList = await headers()
   const session = await getSession(headersList)
   
@@ -53,10 +54,8 @@ export default async function AdminDashboardPage() {
     redirect("/parent")
   }
 
-  // 获取系统统计数据
   const rawDb = getRawDb()
   
-  // 用户统计
   const userStats = rawDb.query(`
     SELECT 
       COUNT(*) as total_users,
@@ -71,13 +70,11 @@ export default async function AdminDashboardPage() {
     child_count: number
   }
 
-  // 家庭统计
   const familyStats = rawDb.query(`
     SELECT COUNT(*) as total_families
     FROM family
   `).get() as { total_families: number }
 
-  // 任务统计
   const taskStats = rawDb.query(`
     SELECT 
       COUNT(*) as total_tasks,
@@ -88,7 +85,6 @@ export default async function AdminDashboardPage() {
     active_tasks: number
   }
 
-  // 愿望统计
   const wishStats = rawDb.query(`
     SELECT 
       COUNT(*) as total_wishes,
@@ -148,9 +144,32 @@ export default async function AdminDashboardPage() {
     member_count: number
   }>
 
+  const taskTemplates = [
+    { id: "1", name: "按时完成作业", category: "study", is_active: true },
+    { id: "2", name: "整理房间", category: "housework", is_active: true },
+    { id: "3", name: "早起晨练", category: "health", is_active: true },
+    { id: "4", name: "阅读30分钟", category: "study", is_active: true },
+    { id: "5", name: "帮忙洗碗", category: "housework", is_active: false },
+  ]
+
+  const wishTemplates = [
+    { id: "1", name: "去游乐园", type: "activity", points: 100 },
+    { id: "2", name: "买新玩具", type: "item", points: 50 },
+    { id: "3", name: "看电影", type: "activity", points: 80 },
+    { id: "4", name: "吃冰淇淋", type: "item", points: 30 },
+    { id: "5", name: "露营", type: "activity", points: 200 },
+  ]
+
+  const badgeTemplates = [
+    { id: "1", name: "学习之星", description: "连续7天完成作业", level: "gold" },
+    { id: "2", name: "家务能手", description: "完成10次家务任务", level: "silver" },
+    { id: "3", name: "早起达人", description: "连续14天早起", level: "gold" },
+    { id: "4", name: "阅读爱好者", description: "阅读20本书", level: "bronze" },
+    { id: "5", name: "运动健将", description: "运动30天", level: "silver" },
+  ]
+
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
       <header className="bg-slate-900 border-b border-slate-800 px-4 py-4">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -163,6 +182,15 @@ export default async function AdminDashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <Link href="/admin/settings">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+            </Link>
             <div className="text-right">
               <p className="text-sm font-medium text-white">{session.user.name}</p>
               <Badge className="bg-blue-600 text-white border-0 hover:bg-blue-700">
@@ -179,7 +207,6 @@ export default async function AdminDashboardPage() {
       </header>
 
       <main className="mx-auto max-w-7xl p-4 space-y-6">
-        {/* Welcome Banner */}
         <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-6 text-white border border-slate-700">
           <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
             <AdminIcon className="h-5 w-5" />
@@ -190,43 +217,46 @@ export default async function AdminDashboardPage() {
           </p>
         </div>
 
-        {/* Quick Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-white border-slate-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">总用户数</p>
-                  <p className="text-2xl font-bold text-slate-900">{userStats?.total_users || 0}</p>
+          <Link href="/admin/users">
+            <Card className="bg-white border-slate-200 hover:border-blue-300 transition-colors cursor-pointer">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-500">总用户数</p>
+                    <p className="text-2xl font-bold text-slate-900">{userStats?.total_users || 0}</p>
+                  </div>
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <Users className="h-5 w-5 text-blue-600" />
+                  </div>
                 </div>
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <Users className="h-5 w-5 text-blue-600" />
+                <div className="mt-2 flex gap-2 text-xs">
+                  <span className="text-slate-400">
+                    家长: {userStats?.parent_count || 0}
+                  </span>
+                  <span className="text-slate-400">
+                    儿童: {userStats?.child_count || 0}
+                  </span>
                 </div>
-              </div>
-              <div className="mt-2 flex gap-2 text-xs">
-                <span className="text-slate-400">
-                  家长: {userStats?.parent_count || 0}
-                </span>
-                <span className="text-slate-400">
-                  儿童: {userStats?.child_count || 0}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="bg-white border-slate-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">家庭总数</p>
-                  <p className="text-2xl font-bold text-slate-900">{familyStats?.total_families || 0}</p>
+          <Link href="/admin/families">
+            <Card className="bg-white border-slate-200 hover:border-green-300 transition-colors cursor-pointer">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-500">家庭总数</p>
+                    <p className="text-2xl font-bold text-slate-900">{familyStats?.total_families || 0}</p>
+                  </div>
+                  <div className="bg-green-100 p-2 rounded-lg">
+                    <Home className="h-5 w-5 text-green-600" />
+                  </div>
                 </div>
-                <div className="bg-green-100 p-2 rounded-lg">
-                  <Database className="h-5 w-5 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="bg-white border-slate-200">
             <CardContent className="p-4">
@@ -253,7 +283,7 @@ export default async function AdminDashboardPage() {
                   <p className="text-2xl font-bold text-slate-900">{wishStats?.total_wishes || 0}</p>
                 </div>
                 <div className="bg-yellow-100 p-2 rounded-lg">
-                  <Settings className="h-5 w-5 text-yellow-600" />
+                  <Star className="h-5 w-5 text-yellow-600" />
                 </div>
               </div>
               <div className="mt-2 flex gap-2 text-xs">
@@ -267,9 +297,7 @@ export default async function AdminDashboardPage() {
 
         <PendingFamiliesList initialFamilies={pendingFamilies} />
 
-        {/* Main Content Grid */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Approved Family List */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="bg-white border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div>
@@ -331,47 +359,153 @@ export default async function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
           <Card className="bg-white border-slate-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-slate-900">
-                <Settings className="h-5 w-5" />
-                快速操作
-              </CardTitle>
-              <CardDescription>常用管理功能</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-slate-900">
+                  <CheckCircle2 className="h-5 w-5" />
+                  计划任务模板
+                </CardTitle>
+                <CardDescription className="mt-1">管理任务模板</CardDescription>
+              </div>
+              <Link href="/admin/task-templates/new">
+                <Button size="sm" className="flex items-center gap-1">
+                  <Plus className="h-4 w-4" />
+                  创建
+                </Button>
+              </Link>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                <Link href="/admin/users">
-                  <Button variant="outline" className="w-full h-20 flex flex-col gap-2 border-slate-200 hover:bg-slate-50">
-                    <Users className="h-5 w-5" />
-                    <span className="text-xs">用户管理</span>
-                  </Button>
-                </Link>
-                <Link href="/admin/families">
-                  <Button variant="outline" className="w-full h-20 flex flex-col gap-2 border-slate-200 hover:bg-slate-50">
-                    <Database className="h-5 w-5" />
-                    <span className="text-xs">家庭管理</span>
-                  </Button>
-                </Link>
-                <Link href="/admin/tasks">
-                  <Button variant="outline" className="w-full h-20 flex flex-col gap-2 border-slate-200 hover:bg-slate-50">
-                    <Activity className="h-5 w-5" />
-                    <span className="text-xs">任务管理</span>
-                  </Button>
-                </Link>
-                <Link href="/admin/settings">
-                  <Button variant="outline" className="w-full h-20 flex flex-col gap-2 border-slate-200 hover:bg-slate-50">
-                    <Settings className="h-5 w-5" />
-                    <span className="text-xs">系统设置</span>
-                  </Button>
-                </Link>
+            <CardContent className="pt-4">
+              <div className="space-y-3">
+                {taskTemplates.map((template) => (
+                  <Link
+                    key={template.id}
+                    href={`/admin/task-templates/${template.id}`}
+                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="bg-purple-100 p-2 rounded-full">
+                        <Activity className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900">{template.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {template.category === 'study' ? '学习' : 
+                           template.category === 'housework' ? '家务' : 
+                           template.category === 'health' ? '健康' : '其他'}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge 
+                      variant={template.is_active ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {template.is_active ? "启用" : "禁用"}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-slate-900">
+                  <Star className="h-5 w-5" />
+                  愿望模板
+                </CardTitle>
+                <CardDescription className="mt-1">管理愿望模板</CardDescription>
+              </div>
+              <Link href="/admin/wish-templates/new">
+                <Button size="sm" className="flex items-center gap-1">
+                  <Plus className="h-4 w-4" />
+                  创建
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-3">
+                {wishTemplates.map((template) => (
+                  <Link
+                    key={template.id}
+                    href={`/admin/wish-templates/${template.id}`}
+                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="bg-yellow-100 p-2 rounded-full">
+                        <Star className="h-4 w-4 text-yellow-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900">{template.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {template.type === 'activity' ? '活动' : '物品'} · {template.points}积分
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-slate-200 md:col-span-2 lg:col-span-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-slate-900">
+                  <Award className="h-5 w-5" />
+                  徽章模板
+                </CardTitle>
+                <CardDescription className="mt-1">管理徽章模板和成就系统</CardDescription>
+              </div>
+              <Link href="/admin/badge-templates/new">
+                <Button size="sm" className="flex items-center gap-1">
+                  <Plus className="h-4 w-4" />
+                  创建
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {badgeTemplates.map((template) => (
+                  <Link
+                    key={template.id}
+                    href={`/admin/badge-templates/${template.id}`}
+                    className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    <div className={`p-2 rounded-full ${
+                      template.level === 'gold' ? 'bg-yellow-100' : 
+                      template.level === 'silver' ? 'bg-slate-200' : 
+                      'bg-orange-100'
+                    }`}>
+                      <Award className={`h-4 w-4 ${
+                        template.level === 'gold' ? 'text-yellow-600' : 
+                        template.level === 'silver' ? 'text-slate-600' : 
+                        'text-orange-600'
+                      }`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-slate-900 truncate">{template.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{template.description}</p>
+                    </div>
+                    <Badge 
+                      variant="outline"
+                      className={`text-xs shrink-0 ${
+                        template.level === 'gold' ? 'border-yellow-400 text-yellow-700' : 
+                        template.level === 'silver' ? 'border-slate-400 text-slate-700' : 
+                        'border-orange-400 text-orange-700'
+                      }`}
+                    >
+                      {template.level === 'gold' ? '金牌' : 
+                       template.level === 'silver' ? '银牌' : '铜牌'}
+                    </Badge>
+                  </Link>
+                ))}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* System Status */}
         <Card className="bg-white border-slate-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-slate-900">
