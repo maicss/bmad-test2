@@ -23,6 +23,8 @@ const registerSchema = z.object({
   parentCount: z.number().int().min(2).max(10),
   childCount: z.number().int().min(1).max(10),
   inviteCode: z.string().optional(),
+  province: z.string().min(1, "请选择省份"),
+  city: z.string().min(1, "请选择城市"),
 });
 
 export async function POST(request: NextRequest) {
@@ -98,8 +100,8 @@ export async function POST(request: NextRequest) {
       `
       INSERT INTO family (
         id, name, max_parents, max_children, validity_months,
-        registration_type, status, submitted_at, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        registration_type, status, province, city, submitted_at, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       [
         familyId,
@@ -109,6 +111,8 @@ export async function POST(request: NextRequest) {
         12,
         "self",
         "pending",
+        body.province,
+        body.city,
         now.toISOString(),
         now.toISOString(),
         now.toISOString(),

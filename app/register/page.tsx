@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { CitySelector } from "@/components/city-selector"
 
 interface RegisterFormData {
   familyName: string
@@ -33,6 +34,8 @@ interface RegisterFormData {
   parentCount: string
   childCount: string
   inviteCode: string
+  province: string
+  city: string
 }
 
 export default function RegisterPage() {
@@ -50,6 +53,8 @@ export default function RegisterPage() {
     parentCount: "2",
     childCount: "1",
     inviteCode: "",
+    province: "",
+    city: "",
   })
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({})
 
@@ -127,6 +132,14 @@ export default function RegisterPage() {
     const childCount = parseInt(formData.childCount)
     if (isNaN(childCount) || childCount < 1 || childCount > 10) {
       newErrors.childCount = "儿童人数必须在1-10之间"
+    }
+
+    if (!formData.province) {
+      newErrors.province = "请选择省份"
+    }
+
+    if (!formData.city) {
+      newErrors.city = "请选择城市"
     }
 
     setErrors(newErrors)
@@ -353,6 +366,17 @@ export default function RegisterPage() {
                   {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
                 </div>
               </div>
+
+              <CitySelector
+                value={{ province: formData.province, city: formData.city }}
+                onChange={(value) =>
+                  setFormData({ ...formData, province: value.province, city: value.city })
+                }
+                error={{
+                  province: errors.province,
+                  city: errors.city,
+                }}
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="parentCount" className="flex items-center gap-2">
