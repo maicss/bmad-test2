@@ -275,9 +275,9 @@ export default async function AdminDashboardPage() {
               <div>
                 <CardTitle className="flex items-center gap-2 text-slate-900">
                   <Home className="h-5 w-5" />
-                  已批准家庭
+                  家庭列表
                 </CardTitle>
-                <CardDescription className="mt-1">最近更新的家庭</CardDescription>
+                <CardDescription className="mt-1">点击家庭查看详情</CardDescription>
               </div>
               <Link href="/admin/families/new">
                 <Button size="sm" className="flex items-center gap-1">
@@ -290,9 +290,10 @@ export default async function AdminDashboardPage() {
               {approvedFamilies && approvedFamilies.length > 0 ? (
                 <div className="space-y-3">
                   {approvedFamilies.map((family: any) => (
-                    <div
+                    <Link
                       key={family.id}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
+                      href={`/admin/families/${family.id}`}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
                         <div className="bg-blue-100 p-2 rounded-full">
@@ -319,12 +320,12 @@ export default async function AdminDashboardPage() {
                       >
                         {new Date(family.updated_at).toLocaleDateString('zh-CN')}
                       </Badge>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : (
                 <p className="text-center text-slate-400 py-4">
-                  暂无已批准家庭
+                  暂无家庭数据
                 </p>
               )}
             </CardContent>
