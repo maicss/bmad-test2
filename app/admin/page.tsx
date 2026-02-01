@@ -17,11 +17,13 @@ import {
   CheckCircle2,
   Award,
   Star,
-  MapPin
+  MapPin,
+  Image
 } from "lucide-react"
 import Link from "next/link"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { PendingFamiliesList } from "./components/pending-families-list"
+import { DateStrategySection } from "@/components/date-strategy-section"
 
 function AdminIcon({ className }: { className?: string }) {
   return (
@@ -144,13 +146,24 @@ export default async function AdminDashboardPage() {
     member_count: number
   }>
 
-  const taskTemplates = [
-    { id: "1", name: "按时完成作业", category: "study", is_active: true },
-    { id: "2", name: "整理房间", category: "housework", is_active: true },
-    { id: "3", name: "早起晨练", category: "health", is_active: true },
-    { id: "4", name: "阅读30分钟", category: "study", is_active: true },
-    { id: "5", name: "帮忙洗碗", category: "housework", is_active: false },
-  ]
+  const taskTemplates = rawDb.query(`
+    SELECT id, name, category, is_active, template_name, combo_strategy_type
+    FROM task_definition 
+    WHERE is_template = 1 
+    ORDER BY created_at DESC 
+    LIMIT 5
+  `).all() as Array<{
+    id: string;
+    name: string;
+    category: string;
+    is_active: number;
+    template_name: string;
+    combo_strategy_type: string;
+  }>
+  
+  const taskTemplateCount = rawDb.query(`
+    SELECT COUNT(*) as count FROM task_definition WHERE is_template = 1
+  `).get() as { count: number }
 
   const wishTemplates = [
     { id: "1", name: "去游乐园", type: "activity", points: 100 },
@@ -182,6 +195,16 @@ export default async function AdminDashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <Link href="/admin/image-bed">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-slate-400 hover:text-white hover:bg-slate-800"
+                title="图床管理"
+              >
+                <Image className="h-5 w-5" />
+              </Button>
+            </Link>
             <Link href="/admin/settings">
               <Button 
                 variant="ghost" 
@@ -238,66 +261,65 @@ export default async function AdminDashboardPage() {
                     儿童: {userStats?.child_count || 0}
                   </span>
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
+            </CardContent>
+          </Card>
+        </Link>
 
-          <Link href="/admin/families">
-            <Card className="bg-white border-slate-200 hover:border-green-300 transition-colors cursor-pointer">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-500">家庭总数</p>
-                    <p className="text-2xl font-bold text-slate-900">{familyStats?.total_families || 0}</p>
-                  </div>
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <Home className="h-5 w-5 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Card className="bg-white border-slate-200">
+        <Link href="/admin/families">
+          <Card className="bg-white border-slate-200 hover:border-green-300 transition-colors cursor-pointer">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500">任务定义</p>
-                  <p className="text-2xl font-bold text-slate-900">{taskStats?.total_tasks || 0}</p>
+                  <p className="text-sm text-slate-500">家庭总数</p>
+                  <p className="text-2xl font-bold text-slate-900">{familyStats?.total_families || 0}</p>
                 </div>
-                <div className="bg-purple-100 p-2 rounded-lg">
-                  <Activity className="h-5 w-5 text-purple-600" />
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <Home className="h-5 w-5 text-green-600" />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-slate-400">
-                活跃: {taskStats?.active_tasks || 0}
-              </p>
             </CardContent>
           </Card>
+        </Link>
 
-          <Card className="bg-white border-slate-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">愿望总数</p>
-                  <p className="text-2xl font-bold text-slate-900">{wishStats?.total_wishes || 0}</p>
-                </div>
-                <div className="bg-yellow-100 p-2 rounded-lg">
-                  <Star className="h-5 w-5 text-yellow-600" />
-                </div>
+        <Card className="bg-white border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">任务定义</p>
+                <p className="text-2xl font-bold text-slate-900">{taskStats?.total_tasks || 0}</p>
               </div>
-              <div className="mt-2 flex gap-2 text-xs">
-                <span className="text-orange-500">
-                  待审核: {wishStats?.pending_wishes || 0}
-                </span>
+              <div className="bg-purple-100 p-2 rounded-lg">
+                <Activity className="h-5 w-5 text-purple-600" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              活跃: {taskStats?.active_tasks || 0}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">愿望总数</p>
+                <p className="text-2xl font-bold text-slate-900">{wishStats?.total_wishes || 0}</p>
+              </div>
+              <div className="bg-yellow-100 p-2 rounded-lg">
+                <Star className="h-5 w-5 text-yellow-600" />
+              </div>
+            </div>
+            <div className="mt-2 flex gap-2 text-xs">
+              <span className="text-orange-500">
+                待审核: {wishStats?.pending_wishes || 0}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
         <PendingFamiliesList initialFamilies={pendingFamilies} />
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="bg-white border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div>
@@ -358,6 +380,7 @@ export default async function AdminDashboardPage() {
               )}
             </CardContent>
           </Card>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 
           <Card className="bg-white border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -376,34 +399,48 @@ export default async function AdminDashboardPage() {
               </Link>
             </CardHeader>
             <CardContent className="pt-4">
-              <div className="space-y-3">
-                {taskTemplates.map((template) => (
-                  <Link
-                    key={template.id}
-                    href={`/admin/task-templates/${template.id}`}
-                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-purple-100 p-2 rounded-full">
-                        <Activity className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-900">{template.name}</p>
-                        <p className="text-xs text-slate-500">
-                          {template.category === 'study' ? '学习' : 
-                           template.category === 'housework' ? '家务' : 
-                           template.category === 'health' ? '健康' : '其他'}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge 
-                      variant={template.is_active ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {template.is_active ? "启用" : "禁用"}
-                    </Badge>
-                  </Link>
-                ))}
+               <div className="space-y-3">
+                {taskTemplates.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-4">暂无任务模板</p>
+                ) : (
+                  <>
+                    {taskTemplates.map((template) => (
+                      <Link
+                        key={template.id}
+                        href={`/admin/task-templates/${template.id}`}
+                        className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="bg-purple-100 p-2 rounded-full">
+                            <Activity className="h-4 w-4 text-purple-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900">{template.template_name || template.name}</p>
+                            <p className="text-xs text-slate-500">
+                              {template.category === 'study' ? '学习' : 
+                               template.category === 'housework' ? '家务' : 
+                               template.category === 'health' ? '健康' : '其他'}
+                              {template.combo_strategy_type === 'linear' ? ' · 线性连击' : ' · 阶梯连击'}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge 
+                          variant={template.is_active ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {template.is_active ? "启用" : "禁用"}
+                        </Badge>
+                      </Link>
+                    ))}
+                    {taskTemplateCount.count > 5 && (
+                      <Link href="/admin/task-templates">
+                        <Button variant="ghost" className="w-full text-muted-foreground">
+                          查看更多 ({taskTemplateCount.count - 5})
+                        </Button>
+                      </Link>
+                    )}
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -449,7 +486,7 @@ export default async function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-slate-200 md:col-span-2 lg:col-span-3">
+          <Card className="bg-white border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div>
                 <CardTitle className="flex items-center gap-2 text-slate-900">
@@ -504,6 +541,10 @@ export default async function AdminDashboardPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <DateStrategySection />
         </div>
 
         <Card className="bg-white border-slate-200">

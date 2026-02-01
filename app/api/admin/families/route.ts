@@ -93,7 +93,23 @@ export async function GET(request: NextRequest) {
       member_count: number;
     }>;
 
-    return Response.json(createSuccessResponse(families));
+    // Get primary parent info for each family
+    const familiesWithParents = families.map((family) => {
+      const primaryParent = rawDb.query(`
+        SELECT u.name, u.phone
+        FROM family_member fm
+        JOIN user u ON fm.user_id = u.id
+        WHERE fm.family_id = ? AND fm.role = 'primary'
+        LIMIT 1
+      `).get(family.id) as { name: string; phone: string } | null;
+
+      return {
+        ...family,
+        primaryParent: primaryParent || null,
+      };
+    });
+
+    return Response.json(createSuccessResponse(familiesWithParents));
   } catch (error) {
     console.error("GET /api/admin/families error:", error);
     return Response.json(
