@@ -131,7 +131,7 @@ export function FamilyOperations({ familyId, currentStatus }: FamilyOperationsPr
             disabled={isLoading}
           >
             <Pause className="h-4 w-4 mr-1" />
-            {isSuspended ? "恢复家庭" : "挂起家庭"}
+            {isSuspended ? "恢复" : "挂起"}
           </Button>
         )}
         {!isDeleted && (
@@ -170,7 +170,7 @@ export function FamilyOperations({ familyId, currentStatus }: FamilyOperationsPr
       <Dialog open={showSuspendDialog} onOpenChange={setShowSuspendDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{isSuspended ? "恢复家庭" : "挂起家庭"}</DialogTitle>
+            <DialogTitle>{isSuspended ? "恢复" : "挂起"}</DialogTitle>
             <DialogDescription>
               {isSuspended 
                 ? "确定要恢复这个家庭吗？恢复后家庭将回到之前的状态。"
