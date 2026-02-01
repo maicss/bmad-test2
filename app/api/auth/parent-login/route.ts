@@ -34,10 +34,7 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       const firstError = validation.error.issues[0];
       return Response.json(
-        {
-          success: false,
-          error: firstError?.message || "请求数据验证失败",
-        },
+        createErrorResponse(ErrorCodes.VALIDATION_ERROR, firstError?.message || "请求数据验证失败"),
         { status: 400 }
       );
     }
@@ -65,10 +62,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return Response.json(
-        {
-          success: false,
-          error: "用户不存在或不是家长/管理员",
-        },
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "用户不存在或不是家长/管理员"),
         { status: 401 }
       );
     }
@@ -97,10 +91,7 @@ export async function POST(request: NextRequest) {
 
       if (!isValidPassword) {
         return Response.json(
-          {
-            success: false,
-            error: "密码错误",
-          },
+          createErrorResponse(ErrorCodes.UNAUTHORIZED, "密码错误"),
           { status: 401 }
         );
       }
@@ -123,10 +114,7 @@ export async function POST(request: NextRequest) {
 
       if (!verification) {
         return Response.json(
-          {
-            success: false,
-            error: "验证码不存在或已过期",
-          },
+          createErrorResponse(ErrorCodes.UNAUTHORIZED, "验证码不存在或已过期"),
           { status: 401 }
         );
       }
@@ -135,10 +123,7 @@ export async function POST(request: NextRequest) {
       const expiresAt = new Date(verification.expires_at);
       if (expiresAt < new Date()) {
         return Response.json(
-          {
-            success: false,
-            error: "验证码已过期",
-          },
+          createErrorResponse(ErrorCodes.UNAUTHORIZED, "验证码已过期"),
           { status: 401 }
         );
       }
@@ -146,10 +131,7 @@ export async function POST(request: NextRequest) {
       // 测试验证码 "111111" 或数据库中的验证码
       if (otp !== "111111" && otp !== verification.value) {
         return Response.json(
-          {
-            success: false,
-            error: "验证码错误",
-          },
+          createErrorResponse(ErrorCodes.UNAUTHORIZED, "验证码错误"),
           { status: 401 }
         );
       }
@@ -170,7 +152,7 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24小时
 
-    // 创建 session 记录
+    // 创建 session 记录 - 使用毫秒时间戳与查询兼容
     rawDb.run(
       `
       INSERT INTO session (id, token, user_id, expires_at, created_at, updated_at)
@@ -180,9 +162,9 @@ export async function POST(request: NextRequest) {
         crypto.randomUUID(),
         sessionToken,
         user.id,
-        expiresAt.toISOString(),
-        now.toISOString(),
-        now.toISOString(),
+        expiresAt.getTime(), // 使用毫秒时间戳
+        now.getTime(),
+        now.getTime(),
       ]
     );
 
@@ -210,10 +192,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Parent login error:", error);
     return Response.json(
-      {
-        success: false,
-        error: "服务器内部错误",
-      },
+      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "服务器内部错误"),
       { status: 500 }
     );
   }

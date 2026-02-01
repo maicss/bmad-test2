@@ -124,9 +124,13 @@ export const auth = betterAuth({
  */
 export async function getSession(headers: Headers) {
   // 1. 首先尝试 Better-Auth 的标准方法
-  const session = await auth.api.getSession({ headers });
-  if (session) {
-    return session;
+  try {
+    const session = await auth.api.getSession({ headers });
+    if (session) {
+      return session;
+    }
+  } catch {
+    // Better-Auth failed, continue to fallback
   }
 
   // 2. 如果 Better-Auth 失败，尝试手动解析自定义 session token
@@ -154,7 +158,7 @@ export async function getSession(headers: Headers) {
                u.id as user_id, u.name, u.email, u.role, u.phone, u.image
         FROM session s
         JOIN user u ON s.user_id = u.id
-        WHERE s.token = ? AND s.expires_at > datetime('now')
+        WHERE s.token = ? AND s.expires_at > unixepoch('now') * 1000
       `
       )
       .get(sessionToken) as {
