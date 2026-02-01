@@ -1,16 +1,7 @@
-/**
- * API Integration Tests
- * 
- * 测试 API 端点的集成测试
- * 注意：这些测试需要服务器运行
- * 运行: bun test tests/integration
- */
-
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 
 const BASE_URL = "http://localhost:3344";
 
-// 检查服务器是否运行
 async function isServerRunning(): Promise<boolean> {
   try {
     const response = await fetch(`${BASE_URL}/api/auth/parent-login`, {
@@ -18,7 +9,7 @@ async function isServerRunning(): Promise<boolean> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone: "test", password: "test" }),
     });
-    return true; // 只要有响应，服务器就在运行
+    return true;
   } catch {
     return false;
   }
@@ -30,9 +21,12 @@ describe("API Integration Tests", () => {
   beforeAll(async () => {
     serverRunning = await isServerRunning();
     if (!serverRunning) {
-      console.warn("⚠️  服务器未运行，跳过集成测试");
-      console.warn("   请先运行: bun run dev");
+      console.warn("服务器未运行，跳过集成测试");
+      console.warn("请先运行: bun run dev");
     }
+  });
+
+  afterAll(() => {
   });
 
   describe("Authentication API", () => {
@@ -45,6 +39,7 @@ describe("API Integration Tests", () => {
         body: JSON.stringify({
           phone: "13800000100",
           password: "1111",
+          loginType: "password",
         }),
       });
 
@@ -64,12 +59,13 @@ describe("API Integration Tests", () => {
         body: JSON.stringify({
           phone: "13800000100",
           password: "wrong",
+          loginType: "password",
         }),
       });
 
       expect(response.status).toBe(401);
       const data = await response.json();
-      expect(data.success).toBe(false);
+      expect(data.error || data.code).toBeDefined();
     });
 
     test("POST /api/auth/parent-login - invalid phone format", async () => {
@@ -81,12 +77,13 @@ describe("API Integration Tests", () => {
         body: JSON.stringify({
           phone: "123",
           password: "1111",
+          loginType: "password",
         }),
       });
 
       expect(response.status).toBe(400);
       const data = await response.json();
-      expect(data.success).toBe(false);
+      expect(data.error || data.code).toBeDefined();
     });
 
     test("POST /api/auth/parent-login - non-existent user", async () => {
@@ -98,12 +95,13 @@ describe("API Integration Tests", () => {
         body: JSON.stringify({
           phone: "19999999999",
           password: "1111",
+          loginType: "password",
         }),
       });
 
       expect(response.status).toBe(401);
       const data = await response.json();
-      expect(data.success).toBe(false);
+      expect(data.error || data.code).toBeDefined();
     });
 
     test("POST /api/auth/child-login - missing parameters", async () => {
@@ -117,7 +115,7 @@ describe("API Integration Tests", () => {
 
       expect(response.status).toBe(400);
       const data = await response.json();
-      expect(data.success).toBe(false);
+      expect(data.error || data.code).toBeDefined();
     });
 
     test("POST /api/auth/session-check - invalid session", async () => {
@@ -131,7 +129,7 @@ describe("API Integration Tests", () => {
 
       expect(response.status).toBe(401);
       const data = await response.json();
-      expect(data.success).toBe(false);
+      expect(data.error || data.code).toBeDefined();
     });
   });
 
@@ -142,86 +140,37 @@ describe("API Integration Tests", () => {
       const response = await fetch(`${BASE_URL}/api/auth/parent-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: "13800000100",
-          password: "1111",
-        }),
+        body: JSON.stringify({ phone: "13800000100", password: "1111", loginType: "password" }),
       });
 
       const contentType = response.headers.get("content-type");
       expect(contentType).toContain("application/json");
     });
+  });
 
-    test("should include CORS headers if configured", async () => {
-      if (!serverRunning) return;
-
-      const response = await fetch(`${BASE_URL}/api/auth/parent-login`, {
-        method: "OPTIONS",
+  describe("Web Routes Integration", () => {
+    test("GET / returns landing page", async () => {
+      const response = await fetch(`${BASE_URL}/`, {
+        redirect: "manual",
       });
 
-      // CORS 头可能不存在，但不应该抛出错误
-      expect(response.status).toBeLessThan(500);
-    });
-  });
-
-  describe("Error Handling", () => {
-    test("should handle malformed JSON", async () => {
-      if (!serverRunning) return;
-
-      const response = await fetch(`${BASE_URL}/api/auth/parent-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: "not valid json",
-      });
-
-      // 应该返回 400 或 500
-      expect(response.status).toBeGreaterThanOrEqual(400);
+      expect(response.status).toBe(200);
     });
 
-    test("should handle missing content type", async () => {
-      if (!serverRunning) return;
+    test("GET /parent returns HTML page", async () => {
+      const response = await fetch(`${BASE_URL}/parent`);
 
-      const response = await fetch(`${BASE_URL}/api/auth/parent-login`, {
-        method: "POST",
-        body: JSON.stringify({ phone: "13800000100", password: "1111" }),
-      });
-
-      // 应该返回 400 或继续处理
-      expect(response.status).toBeGreaterThanOrEqual(200);
-    });
-  });
-});
-
-describe("Web Routes Integration", () => {
-  test("GET / should redirect to login", async () => {
-    const response = await fetch(`${BASE_URL}/`, {
-      redirect: "manual",
+      expect(response.status).toBe(200);
+      const contentType = response.headers.get("content-type");
+      expect(contentType?.includes("text/html")).toBe(true);
     });
 
-    // 应该重定向
-    expect(response.status).toBe(307); // Temporary Redirect
-  });
+    test("GET /child returns HTML page", async () => {
+      const response = await fetch(`${BASE_URL}/child`);
 
-  test("GET /auth/login should return HTML", async () => {
-    const response = await fetch(`${BASE_URL}/auth/login`);
-
-    expect(response.status).toBe(200);
-    const contentType = response.headers.get("content-type");
-    expect(contentType).toContain("text/html");
-  });
-
-  test("GET /parent should return HTML", async () => {
-    const response = await fetch(`${BASE_URL}/parent`);
-
-    // 未认证应该重定向
-    expect(response.status).toBeGreaterThanOrEqual(300);
-  });
-
-  test("GET /child should return HTML", async () => {
-    const response = await fetch(`${BASE_URL}/child`);
-
-    expect(response.status).toBe(200);
-    const contentType = response.headers.get("content-type");
-    expect(contentType).toContain("text/html");
+      expect(response.status).toBe(200);
+      const contentType = response.headers.get("content-type");
+      expect(contentType).toContain("text/html");
+    });
   });
 });

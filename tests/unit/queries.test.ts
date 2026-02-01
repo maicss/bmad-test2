@@ -1,15 +1,7 @@
-/**
- * Database Queries Unit Tests
- * 
- * 测试 lib/db/queries.ts 中的数据库查询函数
- * 覆盖率目标: >80%
- */
-
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { createTestDatabase, initTestSchema, seedTestData, cleanupTestDatabase } from "../setup";
 import { Database } from "bun:sqlite";
 
-// 使用原始 SQL 查询测试数据库操作
 describe("Database Queries", () => {
   let db: Database;
   let testIds: { parentId: string; childId: string; familyId: string };
@@ -123,10 +115,8 @@ describe("Database Queries", () => {
 
   describe("Referential Integrity", () => {
     test("should cascade delete family members when family is deleted", () => {
-      // 删除家庭
       db.run("DELETE FROM family WHERE id = ?", [testIds.familyId]);
       
-      // 成员应该也被删除
       const members = db.query("SELECT * FROM family_member WHERE family_id = ?").all(testIds.familyId);
       expect(members).toHaveLength(0);
     });
