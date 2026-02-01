@@ -395,3 +395,46 @@ export type NewWish = typeof wishes.$inferInsert;
 
 export type WishRedemption = typeof wishRedemptions.$inferSelect;
 export type NewWishRedemption = typeof wishRedemptions.$inferInsert;
+
+/**
+ * 图片表
+ * 存储用户上传的图片信息
+ */
+export const images = sqliteTable("image", {
+  id: text("id").primaryKey(),
+  filename: text("filename").notNull(),
+  originalName: text("original_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  size: integer("size").notNull(),
+  storagePath: text("storage_path").notNull(),
+  url: text("url").notNull(),
+  uploaderId: text("uploader_id"),
+  uploaderName: text("uploader_name"),
+  uploaderPhone: text("uploader_phone"),
+  uploaderFamilyId: text("uploader_family_id"),
+  ownerType: text("owner_type", { enum: ["admin", "family"] }).notNull(),
+  ownerId: text("owner_id").notNull(),
+  referenceCount: integer("reference_count").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export type Image = typeof images.$inferSelect;
+export type NewImage = typeof images.$inferInsert;
+
+export const dateStrategyTemplates = sqliteTable("date_strategy_template", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  region: text("region").notNull(),
+  year: integer("year").notNull(),
+  isPublic: integer("is_public", { mode: "boolean" }).notNull().default(true),
+  dates: text("dates").notNull(),
+  copyCount: integer("copy_count").notNull().default(0),
+  createdBy: text("created_by"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export type DateStrategyTemplate = typeof dateStrategyTemplates.$inferSelect;
+export type NewDateStrategyTemplate = typeof dateStrategyTemplates.$inferInsert;
