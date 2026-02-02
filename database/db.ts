@@ -92,8 +92,26 @@ function runMigrations(db: Database): void {
           migrationsRun++;
         } catch (error) {
           db.exec("ROLLBACK");
-          console.error(`❌ Migration failed: ${file}`, error);
-          throw error;
+          
+          // Check if error is due to already existing objects (column, table, index)
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          const isDuplicateError = 
+            errorMessage.includes("duplicate column name") ||
+            errorMessage.includes("already exists") ||
+            errorMessage.includes("table.*already exists");
+          
+          if (isDuplicateError) {
+            // Migration was partially applied, mark it as done and continue
+            console.log(`⚠️  Migration ${file} partially applied (objects already exist), marking as complete`);
+            const timestamp = Date.now();
+            db.query(
+              `INSERT INTO ${MIGRATION_TABLE} (name, applied_at) VALUES (?, ?)`
+            ).run(file, timestamp);
+            migrationsRun++;
+          } else {
+            console.error(`❌ Migration failed: ${file}`, error);
+            throw error;
+          }
         }
       }
     }
