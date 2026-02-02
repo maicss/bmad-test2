@@ -203,13 +203,35 @@ export default async function AdminDashboardPage() {
     )
     .get() as { count: number };
 
-  const wishTemplates = [
-    { id: "1", name: "去游乐园", type: "activity", points: 100 },
-    { id: "2", name: "买新玩具", type: "item", points: 50 },
-    { id: "3", name: "看电影", type: "activity", points: 80 },
-    { id: "4", name: "吃冰淇淋", type: "item", points: 30 },
-    { id: "5", name: "露营", type: "activity", points: 200 },
-  ];
+  const wishTemplates = rawDb
+    .query(
+      `
+    SELECT id, name, type, points_required, icon_type, icon_value, icon_color, border_style, is_active
+    FROM wish_template
+    WHERE status = 'active'
+    ORDER BY created_at DESC
+    LIMIT 6
+  `,
+    )
+    .all() as Array<{
+    id: string;
+    name: string;
+    type: string;
+    points_required: number;
+    icon_type: string | null;
+    icon_value: string | null;
+    icon_color: string | null;
+    border_style: string | null;
+    is_active: number;
+  }>;
+
+  const wishTemplateCount = rawDb
+    .query(
+      `
+    SELECT COUNT(*) as count FROM wish_template WHERE status = 'active'
+  `,
+    )
+    .get() as { count: number };
 
   const medalTemplates = rawDb
     .query(
@@ -549,12 +571,28 @@ export default async function AdminDashboardPage() {
                         </p>
                         <p className="text-xs text-slate-500">
                           {template.type === "activity" ? "活动" : "物品"} ·{" "}
-                          {template.points}积分
+                          {template.points_required}积分
                         </p>
                       </div>
                     </div>
+                    <Badge
+                      variant={template.is_active ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {template.is_active ? "启用" : "禁用"}
+                    </Badge>
                   </Link>
                 ))}
+                {wishTemplateCount.count > 6 && (
+                  <Link href="/admin/wish-templates">
+                    <Button
+                      variant="ghost"
+                      className="w-full text-muted-foreground"
+                    >
+                      查看更多 ({wishTemplateCount.count - 6})
+                    </Button>
+                  </Link>
+                )}
               </div>
             </CardContent>
           </Card>
