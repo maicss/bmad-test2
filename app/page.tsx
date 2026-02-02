@@ -26,7 +26,7 @@ export default function LandingPage() {
               <span className="font-bold text-xl text-slate-900">家庭积分奖励</span>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/login">
+              <Link href="/family/login">
                 <Button variant="ghost">登录</Button>
               </Link>
               <Link href="/register">
@@ -273,7 +273,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-6 text-sm text-slate-600">
               <Link href="/" className="hover:text-slate-900">首页</Link>
               <Link href="/register" className="hover:text-slate-900">注册</Link>
-              <Link href="/login" className="hover:text-slate-900">登录</Link>
+              <Link href="/family/login" className="hover:text-slate-900">登录</Link>
               <Link href="/admin" className="hover:text-slate-900">管理后台</Link>
             </div>
             <p className="text-sm text-slate-500">

@@ -25,6 +25,7 @@
   - **Data Fetching:** Force **Server Components** for data fetching; minimize `'use client'` usage.
 - **UI System:** **Shadcn UI**, **Tailwind CSS**, **Radix UI Primitives**, and **Lucide Icons**.
   - **Rule:** Priority goes to Shadcn UI components. Do not re-implement existing Shadcn components using raw Tailwind.
+  - **Error Display Rule:** Never use `alert()` to display error messages in the UI. Always use Shadcn UI Dialog, Toast, or inline error messages for better UX.
 
 ### 3. Build Target: PWA (Progressive Web App)
 
