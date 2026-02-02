@@ -1,0 +1,198 @@
+/**
+ * POST /api/admin/medal-templates
+ * 创建新的徽章模板
+ */
+
+import { NextRequest } from "next/server";
+import { getSession, isAdmin } from "@/lib/auth";
+import { getRawDb } from "@/database/db";
+import type { User } from "@/lib/db/schema";
+import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
+import { generateId } from "@/lib/id";
+import type { CreateMedalTemplateRequest } from "@/types/medal";
+import { MedalTierColorSchemes } from "@/types/medal";
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getSession(request.headers);
+
+    if (!session?.user) {
+      return Response.json(
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "未登录"),
+        { status: 401 }
+      );
+    }
+
+    if (!isAdmin(session.user as User)) {
+      return Response.json(
+        createErrorResponse(ErrorCodes.FORBIDDEN, "只有管理员可以创建徽章模板"),
+        { status: 403 }
+      );
+    }
+
+    const body: CreateMedalTemplateRequest = await request.json();
+
+    // 验证必填字段
+    if (!body.name || body.name.trim().length < 2 || body.name.trim().length > 10) {
+      return Response.json(
+        createErrorResponse(ErrorCodes.MEDAL_NAME_INVALID, "徽章名称需要2-10个字符"),
+        { status: 400 }
+      );
+    }
+
+    if (!body.icon || !body.icon.value) {
+      return Response.json(
+        createErrorResponse(ErrorCodes.MEDAL_ICON_REQUIRED, "请选择图标"),
+        { status: 400 }
+      );
+    }
+
+    // 验证阈值次数
+    const thresholdCounts = body.thresholdCounts || [10];
+    for (let i = 0; i < thresholdCounts.length; i++) {
+      if (thresholdCounts[i] < 1) {
+        return Response.json(
+          createErrorResponse(ErrorCodes.MEDAL_THRESHOLD_INVALID, `等级${i + 1}的次数至少需要1次`),
+          { status: 400 }
+        );
+      }
+      if (i > 0 && thresholdCounts[i] <= thresholdCounts[i - 1]) {
+        return Response.json(
+          createErrorResponse(ErrorCodes.MEDAL_THRESHOLD_NOT_ASCENDING, `等级${i + 1}的次数必须大于等级${i}的次数`),
+          { status: 400 }
+        );
+      }
+    }
+
+    const rawDb = getRawDb();
+    const now = new Date().toISOString();
+    const id = generateId();
+
+    // 处理色系数据
+    let tierColors: string | null = null;
+    if (body.levelMode === "multiple" && body.tierColorScheme) {
+      const scheme = MedalTierColorSchemes[body.tierColorScheme];
+      tierColors = JSON.stringify(scheme.slice(0, body.levelCount || 3));
+    }
+
+    // 插入数据库
+    rawDb.query(`
+      INSERT INTO medal_template (
+        id, family_id, name, icon_type, icon_value, icon_color, border_style,
+        level_mode, level_count, tier_colors, threshold_counts, is_continuous,
+        is_active, created_by, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id,
+      "admin", // 系统级模板，使用 admin 作为 family_id
+      body.name.trim(),
+      body.icon.type,
+      body.icon.value,
+      body.icon.color || null,
+      body.borderStyle || "circle",
+      body.levelMode || "single",
+      body.levelMode === "multiple" ? (body.levelCount || 3) : 1,
+      tierColors,
+      JSON.stringify(thresholdCounts),
+      body.isContinuous ? 1 : 0,
+      1, // is_active
+      session.user.id,
+      now,
+      now
+    );
+
+    return Response.json(
+      createSuccessResponse({
+        id,
+        name: body.name.trim(),
+        message: "徽章模板创建成功",
+      }),
+      { status: 201 }
+    );
+
+  } catch (error) {
+    console.error("POST /api/admin/medal-templates error:", error);
+    return Response.json(
+      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "创建徽章模板失败"),
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * GET /api/admin/medal-templates
+ * 获取所有徽章模板列表
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getSession(request.headers);
+
+    if (!session?.user) {
+      return Response.json(
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "未登录"),
+        { status: 401 }
+      );
+    }
+
+    if (!isAdmin(session.user as User)) {
+      return Response.json(
+        createErrorResponse(ErrorCodes.FORBIDDEN, "只有管理员可以查看徽章模板"),
+        { status: 403 }
+      );
+    }
+
+    const rawDb = getRawDb();
+    
+    const templates = rawDb.query(`
+      SELECT 
+        id,
+        name,
+        icon_type as iconType,
+        icon_value as iconValue,
+        icon_color as iconColor,
+        border_style as borderStyle,
+        level_mode as levelMode,
+        level_count as levelCount,
+        is_active as isActive
+      FROM medal_template
+      ORDER BY created_at DESC
+    `).all() as Array<{
+      id: string;
+      name: string;
+      iconType: "lucide" | "custom";
+      iconValue: string;
+      iconColor: string | null;
+      borderStyle: "circle" | "hexagon" | "square";
+      levelMode: "single" | "multiple";
+      levelCount: number;
+      isActive: number;
+    }>;
+
+    // 格式化响应数据
+    const formattedTemplates = templates.map(t => ({
+      id: t.id,
+      name: t.name,
+      icon: {
+        type: t.iconType,
+        value: t.iconValue,
+        color: t.iconColor,
+      },
+      borderStyle: t.borderStyle,
+      levelMode: t.levelMode,
+      levelCount: t.levelCount,
+      isActive: Boolean(t.isActive),
+    }));
+
+    return Response.json(
+      createSuccessResponse(formattedTemplates),
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("GET /api/admin/medal-templates error:", error);
+    return Response.json(
+      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "获取徽章模板列表失败"),
+      { status: 500 }
+    );
+  }
+}

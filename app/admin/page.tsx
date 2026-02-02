@@ -173,13 +173,26 @@ export default async function AdminDashboardPage() {
     { id: "5", name: "露营", type: "activity", points: 200 },
   ]
 
-  const badgeTemplates = [
-    { id: "1", name: "学习之星", description: "连续7天完成作业", level: "gold" },
-    { id: "2", name: "家务能手", description: "完成10次家务任务", level: "silver" },
-    { id: "3", name: "早起达人", description: "连续14天早起", level: "gold" },
-    { id: "4", name: "阅读爱好者", description: "阅读20本书", level: "bronze" },
-    { id: "5", name: "运动健将", description: "运动30天", level: "silver" },
-  ]
+  const medalTemplates = rawDb.query(`
+    SELECT id, name, icon_type, icon_value, icon_color, border_style, level_mode, level_count, is_active
+    FROM medal_template
+    ORDER BY created_at DESC
+    LIMIT 6
+  `).all() as Array<{
+    id: string;
+    name: string;
+    icon_type: "lucide" | "custom";
+    icon_value: string;
+    icon_color: string | null;
+    border_style: "circle" | "hexagon" | "square";
+    level_mode: "single" | "multiple";
+    level_count: number;
+    is_active: number;
+  }>
+
+  const medalTemplateCount = rawDb.query(`
+    SELECT COUNT(*) as count FROM medal_template
+  `).get() as { count: number }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -503,41 +516,57 @@ export default async function AdminDashboardPage() {
               </Link>
             </CardHeader>
             <CardContent className="pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {badgeTemplates.map((template) => (
-                  <Link
-                    key={template.id}
-                    href={`/admin/badge-templates/${template.id}`}
-                    className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer"
-                  >
-                    <div className={`p-2 rounded-full ${
-                      template.level === 'gold' ? 'bg-yellow-100' : 
-                      template.level === 'silver' ? 'bg-slate-200' : 
-                      'bg-orange-100'
-                    }`}>
-                      <Award className={`h-4 w-4 ${
-                        template.level === 'gold' ? 'text-yellow-600' : 
-                        template.level === 'silver' ? 'text-slate-600' : 
-                        'text-orange-600'
-                      }`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-900 truncate">{template.name}</p>
-                      <p className="text-xs text-slate-500 truncate">{template.description}</p>
-                    </div>
-                    <Badge 
-                      variant="outline"
-                      className={`text-xs shrink-0 ${
-                        template.level === 'gold' ? 'border-yellow-400 text-yellow-700' : 
-                        template.level === 'silver' ? 'border-slate-400 text-slate-700' : 
-                        'border-orange-400 text-orange-700'
-                      }`}
-                    >
-                      {template.level === 'gold' ? '金牌' : 
-                       template.level === 'silver' ? '银牌' : '铜牌'}
-                    </Badge>
-                  </Link>
-                ))}
+              <div className="space-y-3">
+                {medalTemplates.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-4">暂无徽章模板</p>
+                ) : (
+                  <>
+                    {medalTemplates.map((template) => (
+                      <Link
+                        key={template.id}
+                        href={`/admin/badge-templates/${template.id}`}
+                        className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="p-2 rounded-full"
+                            style={{ 
+                              backgroundColor: template.icon_type === "lucide" 
+                                ? (template.icon_color || "#64748B") + "20"
+                                : "#F1F5F9",
+                            }}
+                          >
+                            <Award 
+                              className="h-4 w-4"
+                              style={{ color: template.icon_color || "#64748B" }}
+                            />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900">{template.name}</p>
+                            <p className="text-xs text-slate-500">
+                              {template.level_mode === 'single' ? '单等级' : `${template.level_count} 等级`} · 
+                              {template.border_style === 'circle' ? '圆形' : 
+                               template.border_style === 'square' ? '正方形' : '六边形'}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge 
+                          variant={template.is_active ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {template.is_active ? "启用" : "禁用"}
+                        </Badge>
+                      </Link>
+                    ))}
+                    {medalTemplateCount.count > 6 && (
+                      <Link href="/admin/badge-templates">
+                        <Button variant="ghost" className="w-full text-muted-foreground">
+                          查看更多 ({medalTemplateCount.count - 6})
+                        </Button>
+                      </Link>
+                    )}
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

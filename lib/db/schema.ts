@@ -438,3 +438,51 @@ export const dateStrategyTemplates = sqliteTable("date_strategy_template", {
 
 export type DateStrategyTemplate = typeof dateStrategyTemplates.$inferSelect;
 export type NewDateStrategyTemplate = typeof dateStrategyTemplates.$inferInsert;
+
+/**
+ * 徽章模板表
+ * 定义可解锁的徽章类型和等级配置
+ */
+export const medalTemplates = sqliteTable("medal_template", {
+  id: text("id").primaryKey(),
+  familyId: text("family_id")
+    .notNull()
+    .references(() => families.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // 徽章名称，2-10个字符
+  iconType: text("icon_type", { enum: ["lucide", "custom"] }).notNull().default("lucide"),
+  iconValue: text("icon_value").notNull(), // Lucide图标名称或自定义图片URL
+  iconColor: text("icon_color"), // 图标颜色（当使用Lucide图标时）
+  borderStyle: text("border_style", { enum: ["circle", "hexagon", "square"] })
+    .notNull()
+    .default("circle"), // 边框风格：圆形、六边形、正方形
+  levelMode: text("level_mode", { enum: ["single", "multiple"] })
+    .notNull()
+    .default("single"), // 等级模式：单等级或多等级
+  levelCount: integer("level_count").notNull().default(1), // 等级数量（1-5）
+  tierColors: text("tier_colors"), // 多等级时的色系JSON数组
+  thresholdCounts: text("threshold_counts").notNull(), // 各等级所需次数JSON数组
+  isContinuous: integer("is_continuous", { mode: "boolean" }).notNull().default(false), // 是否要求连续
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export type MedalTemplate = typeof medalTemplates.$inferSelect;
+export type NewMedalTemplate = typeof medalTemplates.$inferInsert;
+
+/**
+ * 徽章模板关系
+ */
+export const medalTemplatesRelations = relations(medalTemplates, ({ one }) => ({
+  family: one(families, {
+    fields: [medalTemplates.familyId],
+    references: [families.id],
+  }),
+  createdBy: one(users, {
+    fields: [medalTemplates.createdBy],
+    references: [users.id],
+  }),
+}));
