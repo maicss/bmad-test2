@@ -44,6 +44,10 @@ tmp
 *.tsbuildinfo
 next-env.d.ts
 
-# SQLite temporary files
-database/*.sqlite-shm
-database/*.sqlite-wal
+# SQLite
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Image bed storage
+image-bed/
