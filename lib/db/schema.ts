@@ -486,3 +486,42 @@ export const medalTemplatesRelations = relations(medalTemplates, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+/**
+ * 愿望模板表
+ * 管理员创建的可供家庭使用的愿望模板
+ */
+export const wishTemplates = sqliteTable("wish_template", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(), // 愿望名称，2-50个字符
+  description: text("description"), // 愿望描述
+  type: text("type", { enum: ["item", "activity"] }).notNull().default("item"), // 类型：物品或活动
+  pointsRequired: real("points_required").notNull(), // 所需积分，必须大于0
+  iconType: text("icon_type", { enum: ["lucide", "custom"] }).notNull().default("lucide"), // 图标类型：Lucide图标或自定义图片
+  iconValue: text("icon_value"), // Lucide图标名称或图片URL
+  iconColor: text("icon_color"), // 图标颜色（当使用Lucide图标时）
+  borderStyle: text("border_style", { enum: ["circle", "hexagon", "square"] })
+    .notNull()
+    .default("circle"), // 边框风格
+  dueDate: text("due_date"), // 截止日期 (YYYY-MM-DD 格式，可选)
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true), // 是否启用
+  status: text("status", { enum: ["active", "deleted"] }).notNull().default("active"), // 状态（软删除）
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export type WishTemplate = typeof wishTemplates.$inferSelect;
+export type NewWishTemplate = typeof wishTemplates.$inferInsert;
+
+/**
+ * 愿望模板关系
+ */
+export const wishTemplatesRelations = relations(wishTemplates, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [wishTemplates.createdBy],
+    references: [users.id],
+  }),
+}));
