@@ -36,7 +36,8 @@ export async function GET(
     const contentType = contentTypeMap[ext || ''] || 'application/octet-stream';
 
     // Return image with appropriate headers
-    return new Response(buffer, {
+    // Buffer extends Uint8Array, use it directly for Response
+    return new Response(buffer as unknown as BodyInit, {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000, immutable',
