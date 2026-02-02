@@ -113,8 +113,9 @@ export default function MedalTemplatesListPage() {
             const BorderIcon = getIconComponent(borderStyle.icon);
 
             return (
-              <Card key={template.id} className="h-full hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
+              <Link key={template.id} href={`/admin/badge-templates/${template.id}`}>
+                <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
+                  <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       {/* 徽章预览 */}
@@ -175,9 +176,9 @@ export default function MedalTemplatesListPage() {
                       <span>{borderStyle.label}边框</span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
+                  </CardContent>
+                </Card>
+              </Link>
           })}
         </div>
       )}
