@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 插入数据库
+    // family_id 为 NULL 表示系统级模板（所有家庭可用）
     rawDb.query(`
       INSERT INTO medal_template (
         id, family_id, name, icon_type, icon_value, icon_color, border_style,
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
-      "admin", // 系统级模板，使用 admin 作为 family_id
+      null, // 系统级模板，family_id 为 NULL
       body.name.trim(),
       body.icon.type,
       body.icon.value,

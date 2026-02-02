@@ -446,8 +446,7 @@ export type NewDateStrategyTemplate = typeof dateStrategyTemplates.$inferInsert;
 export const medalTemplates = sqliteTable("medal_template", {
   id: text("id").primaryKey(),
   familyId: text("family_id")
-    .notNull()
-    .references(() => families.id, { onDelete: "cascade" }),
+    .references(() => families.id, { onDelete: "cascade" }), // NULL for system-level templates
   name: text("name").notNull(), // 徽章名称，2-10个字符
   iconType: text("icon_type", { enum: ["lucide", "custom"] }).notNull().default("lucide"),
   iconValue: text("icon_value").notNull(), // Lucide图标名称或自定义图片URL
