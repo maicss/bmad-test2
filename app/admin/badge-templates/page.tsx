@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Plus, Medal, Loader2, Circle, Square, Hexagon } from "lucide-react";
 import type { MedalTemplateListItem, MedalBorderStyle } from "@/types/medal";
-import { MedalTierColorSchemes } from "@/types/medal";
 import * as Icons from "lucide-react";
 
 const BORDER_STYLE_MAP: Record<MedalBorderStyle, { label: string; icon: string }> = {
@@ -116,69 +115,70 @@ export default function MedalTemplatesListPage() {
               <Link key={template.id} href={`/admin/badge-templates/${template.id}`}>
                 <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
                   <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      {/* 徽章预览 */}
-                      <div 
-                        className="h-12 w-12 rounded-full flex items-center justify-center"
-                        style={{ 
-                          backgroundColor: template.icon.type === "lucide" 
-                            ? (template.icon.color || "#64748B") + "20"
-                            : "#F1F5F9",
-                          border: `2px solid ${template.icon.type === "lucide" 
-                            ? (template.icon.color || "#64748B")
-                            : "#CBD5E1"}`,
-                          borderRadius: template.borderStyle === "square" ? "8px" 
-                            : template.borderStyle === "hexagon" ? "4px" 
-                            : "50%",
-                        }}
-                      >
-                        {template.icon.type === "custom" ? (
-                          <img 
-                            src={template.icon.value} 
-                            alt={template.name}
-                            className="h-6 w-6 object-contain"
-                          />
-                        ) : IconComponent ? (
-                          <IconComponent 
-                            className="h-6 w-6"
-                            style={{ color: template.icon.color || "#64748B" }}
-                          />
-                        ) : (
-                          <Medal className="h-6 w-6 text-slate-400" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg truncate">
-                          {template.name}
-                        </CardTitle>
-                        <CardDescription className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {LEVEL_MODE_MAP[template.levelMode]}
-                          </Badge>
-                          {template.levelMode === "multiple" && (
-                            <span className="text-xs text-muted-foreground">
-                              {template.levelCount} 级
-                            </span>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        {/* 徽章预览 */}
+                        <div 
+                          className="h-12 w-12 rounded-full flex items-center justify-center"
+                          style={{ 
+                            backgroundColor: template.icon.type === "lucide" 
+                              ? (template.icon.color || "#64748B") + "20"
+                              : "#F1F5F9",
+                            border: `2px solid ${template.icon.type === "lucide" 
+                              ? (template.icon.color || "#64748B")
+                              : "#CBD5E1"}`,
+                            borderRadius: template.borderStyle === "square" ? "8px" 
+                              : template.borderStyle === "hexagon" ? "4px" 
+                              : "50%",
+                          }}
+                        >
+                          {template.icon.type === "custom" ? (
+                            <img 
+                              src={template.icon.value} 
+                              alt={template.name}
+                              className="h-6 w-6 object-contain"
+                            />
+                          ) : IconComponent ? (
+                            <IconComponent 
+                              className="h-6 w-6"
+                              style={{ color: template.icon.color || "#64748B" }}
+                            />
+                          ) : (
+                            <Medal className="h-6 w-6 text-slate-400" />
                           )}
-                        </CardDescription>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg truncate">
+                            {template.name}
+                          </CardTitle>
+                          <CardDescription className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {LEVEL_MODE_MAP[template.levelMode]}
+                            </Badge>
+                            {template.levelMode === "multiple" && (
+                              <span className="text-xs text-muted-foreground">
+                                {template.levelCount} 级
+                              </span>
+                            )}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <Badge variant={template.isActive ? "default" : "secondary"}>
+                        {template.isActive ? "启用" : "禁用"}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        {BorderIcon && <BorderIcon className="h-4 w-4" />}
+                        <span>{borderStyle.label}边框</span>
                       </div>
                     </div>
-                    <Badge variant={template.isActive ? "default" : "secondary"}>
-                      {template.isActive ? "启用" : "禁用"}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      {BorderIcon && <BorderIcon className="h-4 w-4" />}
-                      <span>{borderStyle.label}边框</span>
-                    </div>
-                  </div>
                   </CardContent>
                 </Card>
               </Link>
+            );
           })}
         </div>
       )}
