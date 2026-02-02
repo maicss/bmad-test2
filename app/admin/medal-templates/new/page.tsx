@@ -3,16 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Medal } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { MedalTemplateForm } from "@/components/medal-template-form";
 import type { CreateMedalTemplateRequest } from "@/types/medal";
 
 export default function NewMedalTemplatePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (data: CreateMedalTemplateRequest) => {
@@ -31,10 +31,8 @@ export default function NewMedalTemplatePage() {
       const result = await response.json();
 
       if (result.success) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          router.push("/admin/medal-templates");
-        }, 1500);
+        toast.success("徽章模板创建成功！");
+        router.push("/admin/medal-templates");
       } else {
         setError(result.message || "创建失败");
       }
@@ -59,37 +57,23 @@ export default function NewMedalTemplatePage() {
         </div>
       </div>
 
-      {isSuccess ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                <Medal className="h-6 w-6 text-green-600" />
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>徽章模板信息</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              {error}
             </div>
-            <div className="text-green-600 font-medium text-lg">徽章模板创建成功！</div>
-            <p className="text-muted-foreground text-sm mt-2">正在返回管理页面...</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>徽章模板信息</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                {error}
-              </div>
-            )}
-            <MedalTemplateForm 
-              onSubmit={handleSubmit}
-              onCancel={() => router.push("/admin")}
-              isLoading={isSubmitting}
-            />
-          </CardContent>
-        </Card>
-      )}
+          )}
+          <MedalTemplateForm 
+            onSubmit={handleSubmit}
+            onCancel={() => router.push("/admin")}
+            isLoading={isSubmitting}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

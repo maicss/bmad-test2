@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Medal, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { MedalTemplateForm } from "@/components/medal-template-form";
 import type { CreateMedalTemplateRequest, MedalTemplateResponse } from "@/types/medal";
 
@@ -15,7 +16,6 @@ export default function EditMedalTemplatePage({ params }: { params: Promise<{ id
   const [template, setTemplate] = useState<MedalTemplateResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,10 +63,8 @@ export default function EditMedalTemplatePage({ params }: { params: Promise<{ id
       const result = await response.json();
 
       if (result.success) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          router.push(`/admin/medal-templates/${templateId}`);
-        }, 1500);
+        toast.success("徽章模板更新成功！");
+        router.push("/admin/medal-templates");
       } else {
         setError(result.message || "更新失败");
       }
@@ -139,40 +137,26 @@ export default function EditMedalTemplatePage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      {isSuccess ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                <Medal className="h-6 w-6 text-green-600" />
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>徽章模板信息</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              {error}
             </div>
-            <div className="text-green-600 font-medium text-lg">徽章模板更新成功！</div>
-            <p className="text-muted-foreground text-sm mt-2">正在返回详情页面...</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>徽章模板信息</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                {error}
-              </div>
-            )}
-            {template && (
-              <MedalTemplateForm 
-                initialData={initialData}
-                onSubmit={handleSubmit}
-                onCancel={() => router.push(`/admin/medal-templates/${templateId}`)}
-                isLoading={isSubmitting}
-              />
-            )}
-          </CardContent>
-        </Card>
-      )}
+          )}
+          {template && (
+            <MedalTemplateForm 
+              initialData={initialData}
+              onSubmit={handleSubmit}
+              onCancel={() => router.push(`/admin/medal-templates/${templateId}`)}
+              isLoading={isSubmitting}
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
