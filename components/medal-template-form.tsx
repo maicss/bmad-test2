@@ -28,6 +28,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip"
 import type {
   MedalIconValue,
   MedalBorderStyle,
@@ -38,7 +44,7 @@ import type {
 } from "@/types/medal"
 import { MedalTierColorSchemes } from "@/types/medal"
 import { ErrorCodes } from "@/lib/constant"
-import { AlertCircle, Check } from "lucide-react"
+import { AlertCircle, Check, HelpCircle } from "lucide-react"
 
 // ============================================================
 // 类型定义
@@ -254,6 +260,9 @@ export function MedalTemplateForm({
   const [thresholdCounts, setThresholdCounts] = React.useState<number[]>(
     initialData?.thresholdCounts || [10]
   )
+  const [rewardPoints, setRewardPoints] = React.useState<number>(
+    initialData?.rewardPoints || 0
+  )
   const [isContinuous, setIsContinuous] = React.useState(
     initialData?.isContinuous || false
   )
@@ -315,6 +324,7 @@ export function MedalTemplateForm({
       thresholdCounts: levelMode === "single" 
         ? [thresholdCounts[0] || 10]
         : thresholdCounts.slice(0, levelCount),
+      rewardPoints: rewardPoints || 0,
       isContinuous,
     }
 
@@ -554,6 +564,36 @@ export function MedalTemplateForm({
             </div>
           </div>
         )}
+      </div>
+
+      {/* 奖励积分 */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+          奖励积分
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>单等级奖励一次，多等级每得到一次奖励一次</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <span className="text-xs font-normal text-slate-400">(最小为0)</span>
+        </label>
+        <Input
+          type="number"
+          min={0}
+          value={rewardPoints || ""}
+          onChange={(e) => {
+            const val = parseInt(e.target.value, 10)
+            setRewardPoints(isNaN(val) ? 0 : Math.max(0, val))
+          }}
+          disabled={isLoading}
+          className="w-32"
+          placeholder="0"
+        />
       </div>
 
       {/* 是否连续 */}

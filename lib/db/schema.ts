@@ -460,6 +460,7 @@ export const medalTemplates = sqliteTable("medal_template", {
   levelCount: integer("level_count").notNull().default(1), // 等级数量（1-5）
   tierColors: text("tier_colors"), // 多等级时的色系JSON数组
   thresholdCounts: text("threshold_counts").notNull(), // 各等级所需次数JSON数组
+  rewardPoints: real("reward_points").notNull().default(0), // 获得徽章时奖励的积分
   isContinuous: integer("is_continuous", { mode: "boolean" }).notNull().default(false), // 是否要求连续
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   createdBy: text("created_by")

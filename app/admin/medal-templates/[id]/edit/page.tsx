@@ -120,6 +120,7 @@ export default function EditMedalTemplatePage({ params }: { params: Promise<{ id
     levelMode: template.levelMode,
     levelCount: template.levelCount,
     thresholdCounts: template.tiers?.map(t => t.threshold) || [10],
+    rewardPoints: template.rewardPoints,
     isContinuous: template.isContinuous,
   } : undefined;
 

@@ -212,6 +212,10 @@ export default function MedalTemplateDetailPage({ params }: { params: Promise<{ 
                 <label className="text-sm text-muted-foreground">是否连续</label>
                 <p className="font-medium">{template.isContinuous ? "是" : "否"}</p>
               </div>
+              <div>
+                <label className="text-sm text-muted-foreground">奖励积分</label>
+                <p className="font-medium">{template.rewardPoints || 0} 分</p>
+              </div>
             </div>
           </CardContent>
         </Card>

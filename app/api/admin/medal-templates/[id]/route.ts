@@ -113,6 +113,7 @@ export async function PUT(
         level_count = ?,
         tier_colors = ?,
         threshold_counts = ?,
+        reward_points = ?,
         is_continuous = ?,
         updated_at = ?
       WHERE id = ?
@@ -126,6 +127,7 @@ export async function PUT(
       body.levelMode === "multiple" ? (body.levelCount || 3) : 1,
       tierColors,
       JSON.stringify(thresholdCounts),
+      body.rewardPoints || 0,
       body.isContinuous ? 1 : 0,
       now,
       id

@@ -91,9 +91,9 @@ export async function POST(request: NextRequest) {
     rawDb.query(`
       INSERT INTO medal_template (
         id, family_id, name, icon_type, icon_value, icon_color, border_style,
-        level_mode, level_count, tier_colors, threshold_counts, is_continuous,
+        level_mode, level_count, tier_colors, threshold_counts, reward_points, is_continuous,
         is_active, created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       null, // 系统级模板，family_id 为 NULL
@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
       body.levelMode === "multiple" ? (body.levelCount || 3) : 1,
       tierColors,
       JSON.stringify(thresholdCounts),
+      body.rewardPoints || 0,
       body.isContinuous ? 1 : 0,
       1, // is_active
       session.user.id,
@@ -169,6 +170,7 @@ export async function GET(request: NextRequest) {
         border_style as borderStyle,
         level_mode as levelMode,
         level_count as levelCount,
+        reward_points as rewardPoints,
         is_active as isActive
       FROM medal_template
       ORDER BY created_at DESC
@@ -181,6 +183,7 @@ export async function GET(request: NextRequest) {
       borderStyle: "circle" | "hexagon" | "square";
       levelMode: "single" | "multiple";
       levelCount: number;
+      rewardPoints: number;
       isActive: number;
     }>;
 
@@ -196,6 +199,7 @@ export async function GET(request: NextRequest) {
       borderStyle: t.borderStyle,
       levelMode: t.levelMode,
       levelCount: t.levelCount,
+      rewardPoints: t.rewardPoints,
       isActive: Boolean(t.isActive),
     }));
 

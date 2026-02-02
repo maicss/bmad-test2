@@ -103,6 +103,7 @@ export interface MedalTemplateDB {
   levelCount: number;
   tierColors: string | null; // JSON字符串
   thresholdCounts: string; // JSON字符串
+  rewardPoints: number; // 奖励积分
   isContinuous: boolean;
   isActive: boolean;
   createdBy: string;
@@ -125,6 +126,7 @@ export interface NewMedalTemplateDB {
   levelCount: number;
   tierColors?: string;
   thresholdCounts: string;
+  rewardPoints?: number;
   isContinuous: boolean;
   isActive?: boolean;
   createdBy: string;
@@ -147,6 +149,7 @@ export interface CreateMedalTemplateRequest {
   levelCount?: number; // 多等级时有效，默认3
   tierColorScheme?: MedalTierColorScheme; // 多等级时有效
   thresholdCounts: number[]; // 各等级所需次数
+  rewardPoints: number; // 奖励积分
   isContinuous: boolean;
 }
 
@@ -161,6 +164,7 @@ export interface UpdateMedalTemplateRequest {
   levelCount?: number;
   tierColorScheme?: MedalTierColorScheme;
   thresholdCounts?: number[];
+  rewardPoints?: number;
   isContinuous?: boolean;
   isActive?: boolean;
 }
@@ -177,6 +181,7 @@ export interface MedalTemplateResponse {
   levelMode: MedalLevelMode;
   levelCount: number;
   tiers: MedalTierConfig[];
+  rewardPoints: number;
   isContinuous: boolean;
   isActive: boolean;
   createdBy: string;
