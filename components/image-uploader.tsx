@@ -215,34 +215,61 @@ export function ImageUploader({
       case "square":
         return "rounded-lg"
       case "hexagon":
-        return "rounded-md"
+        return ""
       default:
         return "rounded-full"
     }
   }
 
-  // 六边形裁剪样式
-  const hexagonStyle: React.CSSProperties = borderStyle === "hexagon" ? {
-    clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-  } : {}
+  // 六边形容器组件（SVG边框）
+  const HexagonContainer = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div className={cn("relative h-32 w-32", className)}>
+      {/* SVG边框层 */}
+      <svg 
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+      >
+        <polygon
+          points="50,2 96,25 96,75 50,98 4,75 4,25"
+          fill="#F1F5F9"
+          stroke="#CBD5E1"
+          strokeWidth="3"
+        />
+      </svg>
+      {/* 内容层 */}
+      <div className="absolute inset-[3px] overflow-hidden" style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}>
+        {children}
+      </div>
+    </div>
+  )
 
   // 显示已上传的图片预览
   if (previewUrl) {
+    const imageContent = (
+      <img
+        src={previewUrl}
+        alt="Uploaded preview"
+        className="h-full w-full object-cover"
+      />
+    )
+
     return (
       <div className="flex flex-col items-center gap-2">
-        <div 
-          className={cn(
-            "relative h-32 w-32 overflow-hidden border-2 border-slate-300 bg-slate-100",
-            getBorderStyleClass()
-          )}
-          style={hexagonStyle}
-        >
-          <img
-            src={previewUrl}
-            alt="Uploaded preview"
-            className="h-full w-full object-cover"
-          />
-        </div>
+        {borderStyle === "hexagon" ? (
+          <HexagonContainer>
+            {imageContent}
+          </HexagonContainer>
+        ) : (
+          <div 
+            className={cn(
+              "relative h-32 w-32 overflow-hidden border-2 border-slate-300 bg-slate-100",
+              getBorderStyleClass()
+            )}
+          >
+            {imageContent}
+          </div>
+        )}
         <button
           type="button"
           onClick={handleClear}

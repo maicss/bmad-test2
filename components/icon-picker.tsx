@@ -301,37 +301,72 @@ export function IconPicker({
     }
   }
 
-  // 六边形裁剪样式
-  const hexagonStyle: React.CSSProperties = borderStyle === "hexagon" ? {
-    clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-  } : {}
+  // 六边形SVG边框组件
+  const HexagonBorder = ({ children }: { children: React.ReactNode }) => (
+    <div className="relative h-32 w-32">
+      {/* SVG边框层 */}
+      <svg 
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+      >
+        <polygon
+          points="50,2 96,25 96,75 50,98 4,75 4,25"
+          fill={value ? "#EFF6FF" : "#F1F5F9"}
+          stroke={value ? "#3B82F6" : "#CBD5E1"}
+          strokeWidth="3"
+        />
+      </svg>
+      {/* 内容层 */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        {children}
+      </div>
+    </div>
+  )
+
+  // 非六边形时的按钮样式
+  const buttonClassName = cn(
+    "flex h-32 w-32 items-center justify-center border-2 border-slate-300 bg-slate-100 transition-all",
+    getBorderStyleClass(),
+    value && "border-blue-500 bg-blue-50",
+    disabled && "cursor-not-allowed opacity-50"
+  )
+
+  const buttonContent = SelectedIcon ? (
+    <SelectedIcon
+      className="h-16 w-16"
+      style={{ color: value?.color || "#3B82F6" }}
+    />
+  ) : (
+    <div className="flex flex-col items-center gap-1 text-slate-400">
+      <Search className="h-8 w-8" />
+      <span className="text-xs">选择图标</span>
+    </div>
+  )
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => !disabled && setOpen(true)}
-        disabled={disabled}
-        className={cn(
-          "flex h-32 w-32 items-center justify-center border-2 border-slate-300 bg-slate-100 transition-all",
-          getBorderStyleClass(),
-          value && "border-blue-500 bg-blue-50",
-          disabled && "cursor-not-allowed opacity-50"
-        )}
-        style={hexagonStyle}
-      >
-        {SelectedIcon ? (
-          <SelectedIcon
-            className="h-16 w-16"
-            style={{ color: value?.color || "#3B82F6" }}
-          />
-        ) : (
-          <div className="flex flex-col items-center gap-1 text-slate-400">
-            <Search className="h-8 w-8" />
-            <span className="text-xs">选择图标</span>
-          </div>
-        )}
-      </button>
+      {borderStyle === "hexagon" ? (
+        <button
+          type="button"
+          onClick={() => !disabled && setOpen(true)}
+          disabled={disabled}
+          className={cn("p-0 border-0 bg-transparent", disabled && "cursor-not-allowed opacity-50")}
+        >
+          <HexagonBorder>
+            {buttonContent}
+          </HexagonBorder>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => !disabled && setOpen(true)}
+          disabled={disabled}
+          className={buttonClassName}
+        >
+          {buttonContent}
+        </button>
+      )}
 
       <IconPickerDialog
         open={open}
