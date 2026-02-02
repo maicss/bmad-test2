@@ -91,6 +91,7 @@ interface IconPickerProps {
   value?: { name: IconName; color: string }
   onChange?: (value: { name: IconName; color: string }) => void
   disabled?: boolean
+  borderStyle?: "circle" | "square" | "hexagon"
 }
 
 interface IconPickerDialogProps {
@@ -275,14 +276,35 @@ export function IconPicker({
   value,
   onChange,
   disabled = false,
+  borderStyle = "circle",
 }: IconPickerProps) {
   const [open, setOpen] = React.useState(false)
 
   const handleSelect = (iconName: IconName, color: string) => {
     onChange?.({ name: iconName, color })
+    setOpen(false)
   }
 
   const SelectedIcon = value?.name ? getIconComponent(value.name) : null
+
+  // 根据边框风格获取样式
+  const getBorderStyleClass = () => {
+    switch (borderStyle) {
+      case "circle":
+        return "rounded-full"
+      case "square":
+        return "rounded-lg"
+      case "hexagon":
+        return "rounded-md"
+      default:
+        return "rounded-full"
+    }
+  }
+
+  // 六边形裁剪样式
+  const hexagonStyle: React.CSSProperties = borderStyle === "hexagon" ? {
+    clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
+  } : {}
 
   return (
     <>
@@ -291,21 +313,21 @@ export function IconPicker({
         onClick={() => !disabled && setOpen(true)}
         disabled={disabled}
         className={cn(
-          "flex h-20 w-20 items-center justify-center rounded-xl border-2 border-dashed transition-all",
-          value
-            ? "border-solid border-blue-500 bg-blue-50"
-            : "border-slate-300 hover:border-slate-400",
+          "flex h-32 w-32 items-center justify-center border-2 border-slate-300 bg-slate-100 transition-all",
+          getBorderStyleClass(),
+          value && "border-blue-500 bg-blue-50",
           disabled && "cursor-not-allowed opacity-50"
         )}
+        style={hexagonStyle}
       >
         {SelectedIcon ? (
           <SelectedIcon
-            className="h-10 w-10"
+            className="h-16 w-16"
             style={{ color: value?.color || "#3B82F6" }}
           />
         ) : (
           <div className="flex flex-col items-center gap-1 text-slate-400">
-            <Search className="h-6 w-6" />
+            <Search className="h-8 w-8" />
             <span className="text-xs">选择图标</span>
           </div>
         )}

@@ -4,9 +4,8 @@
  * 这是一个组合组件，整合以下功能：
  * - IconPicker: Lucide 图标选择（全量、过滤、颜色选择）
  * - ImageUploader: 图片上传到图床
- * - BorderPreview: 边框预览（圆形、六边形、正方形）
  * 
- * 最终预览效果统一使用 Avatar 的大小和外观
+ * 边框预览已集成到各选择组件中
  */
 
 "use client"
@@ -15,7 +14,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { IconPicker } from "./icon-picker"
 import { ImageUploader } from "./image-uploader"
-import { BorderPreview, BorderStyleSelector } from "./border-preview"
+import { BorderStyleSelector } from "./border-preview"
 import type { MedalIconValue, MedalBorderStyle } from "@/types/medal"
 import { ImageIcon, Type } from "lucide-react"
 
@@ -143,24 +142,17 @@ export function ImagePicker({
         </div>
       </div>
 
-      {/* 选择内容区域 - 带边框预览 */}
+      {/* 选择内容区域 */}
       <div className="pt-2">
         {activeTab === "icon" && (
           <div className="flex flex-col items-center gap-2">
-            <div className="rounded-xl border border-slate-200 p-4 bg-slate-50">
-              <BorderPreview
-                icon={value}
-                borderStyle={borderStyle}
-                size="md"
-                tierColor="#94A3B8"
-              />
-            </div>
             <IconPicker
               value={
                 value?.type === "lucide"
                   ? { name: value.value as any, color: value.color || "#3B82F6" }
                   : undefined
               }
+              borderStyle={borderStyle}
               onChange={handleIconSelect}
               disabled={disabled}
             />
@@ -170,18 +162,11 @@ export function ImagePicker({
 
         {activeTab === "upload" && (
           <div className="flex flex-col items-center gap-2">
-            <div className="rounded-xl border border-slate-200 p-4 bg-slate-50">
-              <BorderPreview
-                icon={value}
-                borderStyle={borderStyle}
-                size="md"
-                tierColor="#94A3B8"
-              />
-            </div>
             <ImageUploader
               value={value?.type === "custom" ? value.value : null}
               onChange={handleImageUpload}
               disabled={disabled}
+              borderStyle={borderStyle}
             />
             <span className="text-xs text-slate-500">支持 JPG、PNG、GIF、WebP、SVG</span>
           </div>
@@ -194,7 +179,7 @@ export function ImagePicker({
 // 导出子组件
 export { IconPicker } from "./icon-picker"
 export { ImageUploader } from "./image-uploader"
-export { BorderPreview, BorderStyleSelector } from "./border-preview"
+export { BorderStyleSelector } from "./border-preview"
 
 // 导出类型
 export type { ImagePickerProps }

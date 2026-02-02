@@ -24,6 +24,7 @@ interface ImageUploaderProps {
   disabled?: boolean
   maxSize?: number // 最大文件大小（MB），默认10MB
   acceptedTypes?: string[] // 接受的文件类型
+  borderStyle?: "circle" | "square" | "hexagon" // 边框风格
 }
 
 interface UploadState {
@@ -85,6 +86,7 @@ export function ImageUploader({
   disabled = false,
   maxSize = 10,
   acceptedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"],
+  borderStyle = "circle",
 }: ImageUploaderProps) {
   const [uploadState, setUploadState] = React.useState<UploadState>({
     status: "idle",
@@ -205,37 +207,51 @@ export function ImageUploader({
     }
   }
 
+  // 根据边框风格获取样式
+  const getBorderStyleClass = () => {
+    switch (borderStyle) {
+      case "circle":
+        return "rounded-full"
+      case "square":
+        return "rounded-lg"
+      case "hexagon":
+        return "rounded-md"
+      default:
+        return "rounded-full"
+    }
+  }
+
+  // 六边形裁剪样式
+  const hexagonStyle: React.CSSProperties = borderStyle === "hexagon" ? {
+    clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
+  } : {}
+
   // 显示已上传的图片预览
   if (previewUrl) {
     return (
-      <div className="relative h-32 w-32 overflow-hidden rounded-xl border border-slate-200">
-        <img
-          src={previewUrl}
-          alt="Uploaded preview"
-          className="h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors hover:bg-black/40">
-          <button
-            type="button"
-            onClick={handleClear}
-            disabled={disabled}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-red-500 opacity-0 shadow-sm transition-opacity hover:bg-white hover:text-red-600 disabled:cursor-not-allowed group-hover:opacity-100"
-            style={{ opacity: 1 }}
-          >
-            <X className="h-4 w-4" />
-          </button>
+      <div className="flex flex-col items-center gap-2">
+        <div 
+          className={cn(
+            "relative h-32 w-32 overflow-hidden border-2 border-slate-300 bg-slate-100",
+            getBorderStyleClass()
+          )}
+          style={hexagonStyle}
+        >
+          <img
+            src={previewUrl}
+            alt="Uploaded preview"
+            className="h-full w-full object-cover"
+          />
         </div>
-        {/* 悬停时显示删除按钮 */}
-        <div className="group absolute inset-0 flex items-center justify-center">
-          <button
-            type="button"
-            onClick={handleClear}
-            disabled={disabled}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-500 opacity-0 shadow-lg transition-all hover:scale-110 hover:bg-white group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleClear}
+          disabled={disabled}
+          className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 transition-colors"
+        >
+          <X className="h-3 w-3" />
+          删除图片
+        </button>
       </div>
     )
   }
