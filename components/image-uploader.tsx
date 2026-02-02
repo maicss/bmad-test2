@@ -1,6 +1,6 @@
 /**
  * ImageUploader - 图片上传组件
- * 
+ *
  * 功能：
  * - 上传图片到图床
  * - 上传成功后显示预览
@@ -8,29 +8,29 @@
  * - 参考: https://www.shadcnblocks.com/component/file-upload/file-upload-special-1
  */
 
-"use client"
+"use client";
 
-import * as React from "react"
-import { Upload, X, Loader2, ImageIcon, Check } from "lucide-react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { Upload, X, Loader2, ImageIcon, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // ============================================================
 // 类型定义
 // ============================================================
 
 interface ImageUploaderProps {
-  value?: string | null // 图片URL
-  onChange?: (url: string | null) => void
-  disabled?: boolean
-  maxSize?: number // 最大文件大小（MB），默认10MB
-  acceptedTypes?: string[] // 接受的文件类型
-  borderStyle?: "circle" | "square" | "hexagon" // 边框风格
+  value?: string | null; // 图片URL
+  onChange?: (url: string | null) => void;
+  disabled?: boolean;
+  maxSize?: number; // 最大文件大小（MB），默认10MB
+  acceptedTypes?: string[]; // 接受的文件类型
+  borderStyle?: "circle" | "square" | "hexagon"; // 边框风格
 }
 
 interface UploadState {
-  status: "idle" | "uploading" | "success" | "error"
-  progress: number
-  error?: string
+  status: "idle" | "uploading" | "success" | "error";
+  progress: number;
+  error?: string;
 }
 
 // ============================================================
@@ -41,11 +41,11 @@ interface UploadState {
  * 格式化文件大小
  */
 function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 Bytes"
-  const k = 1024
-  const sizes = ["Bytes", "KB", "MB", "GB"]
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 /**
@@ -54,26 +54,26 @@ function formatFileSize(bytes: number): string {
 function validateFile(
   file: File,
   maxSizeMB: number,
-  acceptedTypes: string[]
+  acceptedTypes: string[],
 ): { valid: boolean; error?: string } {
   // 检查文件大小
-  const maxSizeBytes = maxSizeMB * 1024 * 1024
+  const maxSizeBytes = maxSizeMB * 1024 * 1024;
   if (file.size > maxSizeBytes) {
     return {
       valid: false,
       error: `文件过大，最大支持 ${maxSizeMB}MB`,
-    }
+    };
   }
 
   // 检查文件类型
   if (acceptedTypes.length > 0 && !acceptedTypes.includes(file.type)) {
     return {
       valid: false,
-      error: `不支持的文件类型，请上传 ${acceptedTypes.map(t => t.replace("image/", "")).join("、")} 格式的图片`,
-    }
+      error: `不支持的文件类型，请上传 ${acceptedTypes.map((t) => t.replace("image/", "")).join("、")} 格式的图片`,
+    };
   }
 
-  return { valid: true }
+  return { valid: true };
 }
 
 // ============================================================
@@ -85,147 +85,161 @@ export function ImageUploader({
   onChange,
   disabled = false,
   maxSize = 10,
-  acceptedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"],
+  acceptedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/svg+xml",
+  ],
   borderStyle = "circle",
 }: ImageUploaderProps) {
   const [uploadState, setUploadState] = React.useState<UploadState>({
     status: "idle",
     progress: 0,
-  })
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(value || null)
-  const [dragActive, setDragActive] = React.useState(false)
-  const inputRef = React.useRef<HTMLInputElement>(null)
+  });
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(
+    value || null,
+  );
+  const [dragActive, setDragActive] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   // 同步外部value变化
   React.useEffect(() => {
-    setPreviewUrl(value || null)
-  }, [value])
+    setPreviewUrl(value || null);
+  }, [value]);
 
   /**
    * 执行上传
    */
   const performUpload = async (file: File) => {
     // 验证文件
-    const validation = validateFile(file, maxSize, acceptedTypes)
+    const validation = validateFile(file, maxSize, acceptedTypes);
     if (!validation.valid) {
-      setUploadState({ status: "error", progress: 0, error: validation.error })
-      return
+      setUploadState({ status: "error", progress: 0, error: validation.error });
+      return;
     }
 
-    setUploadState({ status: "uploading", progress: 0 })
+    setUploadState({ status: "uploading", progress: 0 });
 
     try {
-      const formData = new FormData()
-      formData.append("file", file)
+      const formData = new FormData();
+      formData.append("file", file);
 
       const response = await fetch("/api/image-bed/upload", {
         method: "POST",
         body: formData,
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
-        throw new Error(errorData?.message || "上传失败")
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "上传失败");
       }
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (result.success && result.data?.url) {
-        setUploadState({ status: "success", progress: 100 })
-        setPreviewUrl(result.data.url)
-        onChange?.(result.data.url)
+        setUploadState({ status: "success", progress: 100 });
+        setPreviewUrl(result.data.url);
+        onChange?.(result.data.url);
       } else {
-        throw new Error(result.message || "上传失败")
+        throw new Error(result.message || "上传失败");
       }
     } catch (error) {
       setUploadState({
         status: "error",
         progress: 0,
         error: error instanceof Error ? error.message : "上传失败，请重试",
-      })
+      });
     }
-  }
+  };
 
   /**
    * 处理文件选择
    */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      performUpload(file)
+      performUpload(file);
     }
     // 重置input以允许重复选择同一文件
     if (inputRef.current) {
-      inputRef.current.value = ""
+      inputRef.current.value = "";
     }
-  }
+  };
 
   /**
    * 处理拖拽事件
    */
   const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
+      setDragActive(true);
     } else if (e.type === "dragleave") {
-      setDragActive(false)
+      setDragActive(false);
     }
-  }
+  };
 
   /**
    * 处理文件拖放
    */
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
 
-    if (disabled) return
+    if (disabled) return;
 
-    const file = e.dataTransfer.files?.[0]
+    const file = e.dataTransfer.files?.[0];
     if (file) {
-      performUpload(file)
+      performUpload(file);
     }
-  }
+  };
 
   /**
    * 清除已上传的图片
    */
   const handleClear = () => {
-    setPreviewUrl(null)
-    setUploadState({ status: "idle", progress: 0 })
-    onChange?.(null)
-  }
+    setPreviewUrl(null);
+    setUploadState({ status: "idle", progress: 0 });
+    onChange?.(null);
+  };
 
   /**
    * 触发文件选择
    */
   const triggerFileInput = () => {
     if (!disabled && inputRef.current) {
-      inputRef.current.click()
+      inputRef.current.click();
     }
-  }
+  };
 
   // 根据边框风格获取样式
   const getBorderStyleClass = () => {
     switch (borderStyle) {
       case "circle":
-        return "rounded-full"
+        return "rounded-full";
       case "square":
-        return "rounded-lg"
+        return "rounded-lg";
       case "hexagon":
-        return ""
+        return "";
       default:
-        return "rounded-full"
+        return "rounded-full";
     }
-  }
+  };
 
   // 六边形容器组件（SVG边框）
-  const HexagonContainer = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  const HexagonContainer = ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => (
     <div className={cn("relative h-32 w-32", className)}>
       {/* SVG边框层 */}
-      <svg 
+      <svg
         className="absolute inset-0 h-full w-full"
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
@@ -234,15 +248,21 @@ export function ImageUploader({
           points="50,2 96,25 96,75 50,98 4,75 4,25"
           fill="#F1F5F9"
           stroke="#CBD5E1"
-          strokeWidth="3"
+          strokeWidth="2"
         />
       </svg>
       {/* 内容层 */}
-      <div className="absolute inset-[3px] overflow-hidden" style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}>
+      <div
+        className="absolute inset-0.75 overflow-hidden"
+        style={{
+          clipPath:
+            "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
+        }}
+      >
         {children}
       </div>
     </div>
-  )
+  );
 
   // 显示已上传的图片预览
   if (previewUrl) {
@@ -252,19 +272,17 @@ export function ImageUploader({
         alt="Uploaded preview"
         className="h-full w-full object-cover"
       />
-    )
+    );
 
     return (
       <div className="flex flex-col items-center gap-2">
         {borderStyle === "hexagon" ? (
-          <HexagonContainer>
-            {imageContent}
-          </HexagonContainer>
+          <HexagonContainer>{imageContent}</HexagonContainer>
         ) : (
-          <div 
+          <div
             className={cn(
               "relative h-32 w-32 overflow-hidden border-2 border-slate-300 bg-slate-100",
-              getBorderStyleClass()
+              getBorderStyleClass(),
             )}
           >
             {imageContent}
@@ -280,7 +298,7 @@ export function ImageUploader({
           删除图片
         </button>
       </div>
-    )
+    );
   }
 
   // 上传中状态
@@ -296,7 +314,7 @@ export function ImageUploader({
           />
         </div>
       </div>
-    )
+    );
   }
 
   // 错误状态
@@ -325,7 +343,7 @@ export function ImageUploader({
           className="hidden"
         />
       </div>
-    )
+    );
   }
 
   // 默认上传区域
@@ -340,7 +358,7 @@ export function ImageUploader({
         dragActive
           ? "border-blue-500 bg-blue-50"
           : "border-slate-300 hover:border-slate-400 hover:bg-slate-50",
-        disabled && "cursor-not-allowed opacity-50"
+        disabled && "cursor-not-allowed opacity-50",
       )}
       onClick={triggerFileInput}
     >
@@ -361,13 +379,11 @@ export function ImageUploader({
           )}
         </div>
         <span className="text-xs">上传图片</span>
-        <span className="text-[10px] text-slate-400">
-          最大 {maxSize}MB
-        </span>
+        <span className="text-[10px] text-slate-400">最大 {maxSize}MB</span>
       </div>
     </div>
-  )
+  );
 }
 
 // 导出类型
-export type { ImageUploaderProps, UploadState }
+export type { ImageUploaderProps, UploadState };

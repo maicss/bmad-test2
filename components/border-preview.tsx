@@ -1,31 +1,31 @@
 /**
  * BorderPreview - 边框预览组件
- * 
+ *
  * 功能：
  * - 支持圆形、正六边形、正方形三种边框风格
  * - 统一的 avatar 尺寸外观
  * - 支持图标或图片内容预览
- * 
+ *
  * 参考 Ingress 徽章风格设计
  */
 
-"use client"
+"use client";
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import type { MedalBorderStyle, MedalIconValue } from "@/types/medal"
-import * as Icons from "lucide-react"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import type { MedalBorderStyle, MedalIconValue } from "@/types/medal";
+import * as Icons from "lucide-react";
 
 // ============================================================
 // 类型定义
 // ============================================================
 
 interface BorderPreviewProps {
-  icon?: MedalIconValue
-  borderStyle: MedalBorderStyle
-  size?: "sm" | "md" | "lg"
-  className?: string
-  tierColor?: string // 等级颜色，用于边框着色
+  icon?: MedalIconValue;
+  borderStyle: MedalBorderStyle;
+  size?: "sm" | "md" | "lg";
+  className?: string;
+  tierColor?: string; // 等级颜色，用于边框着色
 }
 
 // ============================================================
@@ -35,10 +35,20 @@ interface BorderPreviewProps {
 /**
  * 获取图标组件
  */
-function getIconComponent(name: string): React.ComponentType<{ className?: string; style?: React.CSSProperties }> | null {
+function getIconComponent(
+  name: string,
+): React.ComponentType<{
+  className?: string;
+  style?: React.CSSProperties;
+}> | null {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Icon = (Icons as unknown as Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>>)[name]
-  return Icon || null
+  const Icon = (
+    Icons as unknown as Record<
+      string,
+      React.ComponentType<{ className?: string; style?: React.CSSProperties }>
+    >
+  )[name];
+  return Icon || null;
 }
 
 /**
@@ -61,8 +71,8 @@ function getSizeConfig(size: "sm" | "md" | "lg") {
       icon: "h-16 w-16",
       borderWidth: "border-4",
     },
-  }
-  return configs[size]
+  };
+  return configs[size];
 }
 
 // ============================================================
@@ -75,13 +85,13 @@ function HexagonSVG({
   borderWidth,
   children,
 }: {
-  className?: string
-  borderColor: string
-  borderWidth: string
-  children: React.ReactNode
+  className?: string;
+  borderColor: string;
+  borderWidth: string;
+  children: React.ReactNode;
 }) {
-  const bw = parseInt(borderWidth.replace(/[^0-9]/g, "")) || 3
-  
+  const bw = parseInt(borderWidth.replace(/[^0-9]/g, "")) || 3;
+
   return (
     <div className={cn("relative", className)}>
       {/* 六边形边框 SVG */}
@@ -103,7 +113,7 @@ function HexagonSVG({
         {children}
       </div>
     </div>
-  )
+  );
 }
 
 // ============================================================
@@ -115,12 +125,13 @@ function CirclePreview({
   size,
   borderColor,
 }: {
-  icon?: MedalIconValue
-  size: "sm" | "md" | "lg"
-  borderColor: string
+  icon?: MedalIconValue;
+  size: "sm" | "md" | "lg";
+  borderColor: string;
 }) {
-  const sizeConfig = getSizeConfig(size)
-  const IconComponent = icon?.type === "lucide" ? getIconComponent(icon.value) : null
+  const sizeConfig = getSizeConfig(size);
+  const IconComponent =
+    icon?.type === "lucide" ? getIconComponent(icon.value) : null;
 
   return (
     <div
@@ -128,7 +139,7 @@ function CirclePreview({
         "flex items-center justify-center overflow-hidden rounded-full bg-slate-50",
         sizeConfig.container,
         sizeConfig.borderWidth,
-        "border-solid"
+        "border-solid",
       )}
       style={{ borderColor }}
     >
@@ -147,7 +158,7 @@ function CirclePreview({
         <div className={cn("rounded-full bg-slate-200", sizeConfig.icon)} />
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================
@@ -159,12 +170,13 @@ function SquarePreview({
   size,
   borderColor,
 }: {
-  icon?: MedalIconValue
-  size: "sm" | "md" | "lg"
-  borderColor: string
+  icon?: MedalIconValue;
+  size: "sm" | "md" | "lg";
+  borderColor: string;
 }) {
-  const sizeConfig = getSizeConfig(size)
-  const IconComponent = icon?.type === "lucide" ? getIconComponent(icon.value) : null
+  const sizeConfig = getSizeConfig(size);
+  const IconComponent =
+    icon?.type === "lucide" ? getIconComponent(icon.value) : null;
 
   return (
     <div
@@ -172,7 +184,7 @@ function SquarePreview({
         "flex items-center justify-center overflow-hidden rounded-lg bg-slate-50",
         sizeConfig.container,
         sizeConfig.borderWidth,
-        "border-solid"
+        "border-solid",
       )}
       style={{ borderColor }}
     >
@@ -191,7 +203,7 @@ function SquarePreview({
         <div className={cn("rounded bg-slate-200", sizeConfig.icon)} />
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================
@@ -203,19 +215,20 @@ function HexagonPreview({
   size,
   borderColor,
 }: {
-  icon?: MedalIconValue
-  size: "sm" | "md" | "lg"
-  borderColor: string
+  icon?: MedalIconValue;
+  size: "sm" | "md" | "lg";
+  borderColor: string;
 }) {
-  const sizeConfig = getSizeConfig(size)
-  const IconComponent = icon?.type === "lucide" ? getIconComponent(icon.value) : null
+  const sizeConfig = getSizeConfig(size);
+  const IconComponent =
+    icon?.type === "lucide" ? getIconComponent(icon.value) : null;
 
   // 六边形尺寸需要稍微调整以匹配视觉大小
   const hexSizeClass = {
     sm: "h-14 w-14",
     md: "h-24 w-24",
     lg: "h-36 w-36",
-  }[size]
+  }[size];
 
   return (
     <HexagonSVG
@@ -238,7 +251,7 @@ function HexagonPreview({
         <div className={cn("rounded bg-slate-200", sizeConfig.icon)} />
       )}
     </HexagonSVG>
-  )
+  );
 }
 
 // ============================================================
@@ -253,7 +266,7 @@ export function BorderPreview({
   tierColor,
 }: BorderPreviewProps) {
   // 使用传入的颜色或默认使用 slate-400
-  const borderColor = tierColor || "#94A3B8"
+  const borderColor = tierColor || "#94A3B8";
 
   return (
     <div className={cn("flex items-center justify-center", className)}>
@@ -267,7 +280,7 @@ export function BorderPreview({
         <HexagonPreview icon={icon} size={size} borderColor={borderColor} />
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================
@@ -275,16 +288,20 @@ export function BorderPreview({
 // ============================================================
 
 interface BorderStyleSelectorProps {
-  value: MedalBorderStyle
-  onChange: (style: MedalBorderStyle) => void
-  disabled?: boolean
+  value: MedalBorderStyle;
+  onChange: (style: MedalBorderStyle) => void;
+  disabled?: boolean;
 }
 
-const BORDER_STYLE_OPTIONS: { value: MedalBorderStyle; label: string; icon: string }[] = [
+const BORDER_STYLE_OPTIONS: {
+  value: MedalBorderStyle;
+  label: string;
+  icon: string;
+}[] = [
   { value: "circle", label: "圆形", icon: "Circle" },
   { value: "hexagon", label: "六边形", icon: "Hexagon" },
   { value: "square", label: "正方形", icon: "Square" },
-]
+];
 
 export function BorderStyleSelector({
   value,
@@ -294,7 +311,7 @@ export function BorderStyleSelector({
   return (
     <div className="flex gap-2">
       {BORDER_STYLE_OPTIONS.map((option) => {
-        const Icon = getIconComponent(option.icon)
+        const Icon = getIconComponent(option.icon);
         return (
           <button
             key={option.value}
@@ -306,17 +323,17 @@ export function BorderStyleSelector({
               value === option.value
                 ? "border-blue-500 bg-blue-50 text-blue-600"
                 : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
-              disabled && "cursor-not-allowed opacity-50"
+              disabled && "cursor-not-allowed opacity-50",
             )}
           >
             {Icon && <Icon className="h-5 w-5" />}
             <span className="text-xs">{option.label}</span>
           </button>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 // 导出类型
-export type { BorderPreviewProps, BorderStyleSelectorProps }
+export type { BorderPreviewProps, BorderStyleSelectorProps };

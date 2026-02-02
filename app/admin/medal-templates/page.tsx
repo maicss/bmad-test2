@@ -69,7 +69,7 @@ export default function MedalTemplatesListPage() {
             <p className="text-muted-foreground">管理所有徽章模板</p>
           </div>
         </div>
-        <Link href="/admin/badge-templates/new">
+        <Link href="/admin/medal-templates/new">
           <Button className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             新建徽章模板
@@ -95,7 +95,7 @@ export default function MedalTemplatesListPage() {
         <div className="text-center py-12">
           <Medal className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">暂存徽章模板</p>
-          <Link href="/admin/badge-templates/new">
+          <Link href="/admin/medal-templates/new">
             <Button variant="outline" className="mt-4">
               <Plus className="h-4 w-4 mr-2" />
               创建第一个徽章模板
@@ -112,7 +112,7 @@ export default function MedalTemplatesListPage() {
             const BorderIcon = getIconComponent(borderStyle.icon);
 
             return (
-              <Link key={template.id} href={`/admin/badge-templates/${template.id}`}>
+              <Link key={template.id} href={`/admin/medal-templates/${template.id}`}>
                 <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">

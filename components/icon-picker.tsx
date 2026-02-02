@@ -1,6 +1,6 @@
 /**
  * IconPicker - 图标选择组件
- * 
+ *
  * 功能：
  * - 全量 Lucide 图标选择
  * - 支持搜索过滤
@@ -8,15 +8,15 @@
  * - 参考: https://www.shadcnblocks.com/component/emoji-picker/emoji-picker-basic
  */
 
-"use client"
+"use client";
 
-import * as React from "react"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { Search, X, Check } from "lucide-react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { Search, X, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // 导入所有 Lucide 图标
-import * as Icons from "lucide-react"
+import * as Icons from "lucide-react";
 
 // ============================================================
 // 图标列表配置
@@ -28,34 +28,151 @@ import * as Icons from "lucide-react"
  */
 const MEDAL_ICON_NAMES = [
   // 成就/奖励类
-  "Trophy", "Medal", "Award", "Star", "Crown", "Gem", "Diamond", "Target", "Flag",
-  "Bookmark", "Heart", "Sparkles", "Zap", "Flame", "Sun", "Moon", "Cloud", "Rainbow",
+  "Trophy",
+  "Medal",
+  "Award",
+  "Star",
+  "Crown",
+  "Gem",
+  "Diamond",
+  "Target",
+  "Flag",
+  "Bookmark",
+  "Heart",
+  "Sparkles",
+  "Zap",
+  "Flame",
+  "Sun",
+  "Moon",
+  "Cloud",
+  "Rainbow",
   // 学习/智慧类
-  "BookOpen", "Book", "GraduationCap", "Brain", "Lightbulb", "Telescope", "Microscope",
-  "Rocket", "Plane", "Globe", "Map", "Compass", "Navigation", "Anchor",
+  "BookOpen",
+  "Book",
+  "GraduationCap",
+  "Brain",
+  "Lightbulb",
+  "Telescope",
+  "Microscope",
+  "Rocket",
+  "Plane",
+  "Globe",
+  "Map",
+  "Compass",
+  "Navigation",
+  "Anchor",
   // 运动/活动类
-  "Bike", "Footprints", "Mountain", "Trees", "Flower", "Flower2", "Leaf", "Sprout",
+  "Bike",
+  "Footprints",
+  "Mountain",
+  "Trees",
+  "Flower",
+  "Flower2",
+  "Leaf",
+  "Sprout",
   // 艺术/创意类
-  "Palette", "Paintbrush", "Music", "Mic", "Camera", "Image", "Video", "Clapperboard",
+  "Palette",
+  "Paintbrush",
+  "Music",
+  "Mic",
+  "Camera",
+  "Image",
+  "Video",
+  "Clapperboard",
   // 科技/工具类
-  "Cpu", "Code", "Terminal", "Wifi", "Bluetooth", "Battery", "Plug", "Settings",
+  "Cpu",
+  "Code",
+  "Terminal",
+  "Wifi",
+  "Bluetooth",
+  "Battery",
+  "Plug",
+  "Settings",
   // 社交/情感类
-  "ThumbsUp", "Smile", "Laugh", "Clover", "Gift", "PartyPopper", "Balloon",
+  "ThumbsUp",
+  "Smile",
+  "Laugh",
+  "Clover",
+  "Gift",
+  "PartyPopper",
+  "Balloon",
   // 动物/自然类
-  "Cat", "Dog", "Bird", "Fish", "Bug", "Butterfly", "Apple", "Carrot", "Cherry",
+  "Cat",
+  "Dog",
+  "Bird",
+  "Fish",
+  "Bug",
+  "Butterfly",
+  "Apple",
+  "Carrot",
+  "Cherry",
   // 其他
-  "Shield", "Key", "Lock", "Unlock", "Eye", "EyeOff", "Bell", "Calendar", "Clock",
-  "Hourglass", "Timer", "Wallet", "CreditCard", "Banknote", "Coins", "Receipt",
-  "ShoppingCart", "Package", "Truck", "Home", "Building", "Castle", "Church",
-  "School", "Hospital", "Factory", "Warehouse", "Store", "Hotel", "Landmark",
-  "Monument", "Theater", "Stadium", "Dumbbell", "Tent", "TreePine", "TreeDeciduous",
-  "PalmTree", "Cactus", "Rose", "Grape", "Citrus", "Banana",
-  "Pizza", "Burger", "IceCream", "Cookie", "Candy", "Chocolate", "Coffee", "Tea",
-  "Beer", "Wine", "Cocktail", "CupSoda", "Milk", "Egg", "Beef", "Drumstick",
-  "Cupcake", "Donut", "Lollipop", "Popsicle",
-] as const
+  "Shield",
+  "Key",
+  "Lock",
+  "Unlock",
+  "Eye",
+  "EyeOff",
+  "Bell",
+  "Calendar",
+  "Clock",
+  "Hourglass",
+  "Timer",
+  "Wallet",
+  "CreditCard",
+  "Banknote",
+  "Coins",
+  "Receipt",
+  "ShoppingCart",
+  "Package",
+  "Truck",
+  "Home",
+  "Building",
+  "Castle",
+  "Church",
+  "School",
+  "Hospital",
+  "Factory",
+  "Warehouse",
+  "Store",
+  "Hotel",
+  "Landmark",
+  "Monument",
+  "Theater",
+  "Stadium",
+  "Dumbbell",
+  "Tent",
+  "TreePine",
+  "TreeDeciduous",
+  "PalmTree",
+  "Cactus",
+  "Rose",
+  "Grape",
+  "Citrus",
+  "Banana",
+  "Pizza",
+  "Burger",
+  "IceCream",
+  "Cookie",
+  "Candy",
+  "Chocolate",
+  "Coffee",
+  "Tea",
+  "Beer",
+  "Wine",
+  "Cocktail",
+  "CupSoda",
+  "Milk",
+  "Egg",
+  "Beef",
+  "Drumstick",
+  "Cupcake",
+  "Donut",
+  "Lollipop",
+  "Popsicle",
+] as const;
 
-type IconName = typeof MEDAL_ICON_NAMES[number]
+type IconName = (typeof MEDAL_ICON_NAMES)[number];
 
 // 预设颜色选项
 const PRESET_COLORS = [
@@ -81,25 +198,25 @@ const PRESET_COLORS = [
   { name: "中性色", value: "#737373", class: "bg-neutral-500" },
   { name: "石头色", value: "#78716C", class: "bg-stone-500" },
   { name: "黑色", value: "#000000", class: "bg-black" },
-] as const
+] as const;
 
 // ============================================================
 // 类型定义
 // ============================================================
 
 interface IconPickerProps {
-  value?: { name: IconName; color: string }
-  onChange?: (value: { name: IconName; color: string }) => void
-  disabled?: boolean
-  borderStyle?: "circle" | "square" | "hexagon"
+  value?: { name: IconName; color: string };
+  onChange?: (value: { name: IconName; color: string }) => void;
+  disabled?: boolean;
+  borderStyle?: "circle" | "square" | "hexagon";
 }
 
 interface IconPickerDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSelect: (icon: IconName, color: string) => void
-  selectedIcon?: IconName
-  selectedColor?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelect: (icon: IconName, color: string) => void;
+  selectedIcon?: IconName;
+  selectedColor?: string;
 }
 
 // ============================================================
@@ -109,19 +226,27 @@ interface IconPickerDialogProps {
 /**
  * 获取图标组件
  */
-function getIconComponent(name: IconName): React.ComponentType<{ className?: string; style?: React.CSSProperties }> | null {
+function getIconComponent(name: IconName): React.ComponentType<{
+  className?: string;
+  style?: React.CSSProperties;
+}> | null {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Icon = (Icons as unknown as Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>>)[name]
-  return Icon || null
+  const Icon = (
+    Icons as unknown as Record<
+      string,
+      React.ComponentType<{ className?: string; style?: React.CSSProperties }>
+    >
+  )[name];
+  return Icon || null;
 }
 
 /**
  * 根据搜索词过滤图标
  */
 function filterIcons(searchTerm: string): IconName[] {
-  if (!searchTerm.trim()) return [...MEDAL_ICON_NAMES]
-  const term = searchTerm.toLowerCase()
-  return MEDAL_ICON_NAMES.filter(name => name.toLowerCase().includes(term))
+  if (!searchTerm.trim()) return [...MEDAL_ICON_NAMES];
+  const term = searchTerm.toLowerCase();
+  return MEDAL_ICON_NAMES.filter((name) => name.toLowerCase().includes(term));
 }
 
 // ============================================================
@@ -135,27 +260,32 @@ function IconPickerDialog({
   selectedIcon,
   selectedColor = "#3B82F6",
 }: IconPickerDialogProps) {
-  const [searchTerm, setSearchTerm] = React.useState("")
-  const [currentColor, setCurrentColor] = React.useState(selectedColor)
-  const [tempSelectedIcon, setTempSelectedIcon] = React.useState<IconName | undefined>(selectedIcon)
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [currentColor, setCurrentColor] = React.useState(selectedColor);
+  const [tempSelectedIcon, setTempSelectedIcon] = React.useState<
+    IconName | undefined
+  >(selectedIcon);
 
   // 重置状态当对话框打开时
   React.useEffect(() => {
     if (open) {
-      setSearchTerm("")
-      setCurrentColor(selectedColor || "#3B82F6")
-      setTempSelectedIcon(selectedIcon)
+      setSearchTerm("");
+      setCurrentColor(selectedColor || "#3B82F6");
+      setTempSelectedIcon(selectedIcon);
     }
-  }, [open, selectedIcon, selectedColor])
+  }, [open, selectedIcon, selectedColor]);
 
-  const filteredIcons = React.useMemo(() => filterIcons(searchTerm), [searchTerm])
+  const filteredIcons = React.useMemo(
+    () => filterIcons(searchTerm),
+    [searchTerm],
+  );
 
   const handleConfirm = () => {
     if (tempSelectedIcon) {
-      onSelect(tempSelectedIcon, currentColor)
+      onSelect(tempSelectedIcon, currentColor);
     }
-    onOpenChange(false)
-  }
+    onOpenChange(false);
+  };
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -201,7 +331,7 @@ function IconPickerDialog({
                     color.class,
                     currentColor === color.value
                       ? "ring-2 ring-offset-2 ring-blue-500 scale-110"
-                      : "hover:scale-105"
+                      : "hover:scale-105",
                   )}
                   title={color.name}
                 >
@@ -217,8 +347,8 @@ function IconPickerDialog({
           <div className="max-h-[320px] overflow-y-auto p-4">
             <div className="grid grid-cols-6 gap-2">
               {filteredIcons.map((iconName) => {
-                const Icon = getIconComponent(iconName)
-                if (!Icon) return null
+                const Icon = getIconComponent(iconName);
+                if (!Icon) return null;
                 return (
                   <button
                     key={iconName}
@@ -227,16 +357,13 @@ function IconPickerDialog({
                       "flex aspect-square items-center justify-center rounded-lg border transition-all",
                       tempSelectedIcon === iconName
                         ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20"
-                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50",
                     )}
                     title={iconName}
                   >
-                    <Icon
-                      className="h-6 w-6"
-                      style={{ color: currentColor }}
-                    />
+                    <Icon className="h-6 w-6" style={{ color: currentColor }} />
                   </button>
-                )
+                );
               })}
             </div>
             {filteredIcons.length === 0 && (
@@ -265,7 +392,7 @@ function IconPickerDialog({
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
-  )
+  );
 }
 
 // ============================================================
@@ -278,34 +405,34 @@ export function IconPicker({
   disabled = false,
   borderStyle = "circle",
 }: IconPickerProps) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
 
   const handleSelect = (iconName: IconName, color: string) => {
-    onChange?.({ name: iconName, color })
-    setOpen(false)
-  }
+    onChange?.({ name: iconName, color });
+    setOpen(false);
+  };
 
-  const SelectedIcon = value?.name ? getIconComponent(value.name) : null
+  const SelectedIcon = value?.name ? getIconComponent(value.name) : null;
 
   // 根据边框风格获取样式
   const getBorderStyleClass = () => {
     switch (borderStyle) {
       case "circle":
-        return "rounded-full"
+        return "rounded-full";
       case "square":
-        return "rounded-lg"
+        return "rounded-lg";
       case "hexagon":
-        return "rounded-md"
+        return "rounded-md";
       default:
-        return "rounded-full"
+        return "rounded-full";
     }
-  }
+  };
 
   // 六边形SVG边框组件
   const HexagonBorder = ({ children }: { children: React.ReactNode }) => (
     <div className="relative h-32 w-32">
       {/* SVG边框层 */}
-      <svg 
+      <svg
         className="absolute inset-0 h-full w-full"
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
@@ -314,7 +441,7 @@ export function IconPicker({
           points="50,2 96,25 96,75 50,98 4,75 4,25"
           fill={value ? "#EFF6FF" : "#F1F5F9"}
           stroke={value ? "#3B82F6" : "#CBD5E1"}
-          strokeWidth="3"
+          strokeWidth="1"
         />
       </svg>
       {/* 内容层 */}
@@ -322,15 +449,15 @@ export function IconPicker({
         {children}
       </div>
     </div>
-  )
+  );
 
   // 非六边形时的按钮样式
   const buttonClassName = cn(
     "flex h-32 w-32 items-center justify-center border-2 border-slate-300 bg-slate-100 transition-all",
     getBorderStyleClass(),
     value && "border-blue-500 bg-blue-50",
-    disabled && "cursor-not-allowed opacity-50"
-  )
+    disabled && "cursor-not-allowed opacity-50",
+  );
 
   const buttonContent = SelectedIcon ? (
     <SelectedIcon
@@ -342,7 +469,7 @@ export function IconPicker({
       <Search className="h-8 w-8" />
       <span className="text-xs">选择图标</span>
     </div>
-  )
+  );
 
   return (
     <>
@@ -351,11 +478,12 @@ export function IconPicker({
           type="button"
           onClick={() => !disabled && setOpen(true)}
           disabled={disabled}
-          className={cn("p-0 border-0 bg-transparent", disabled && "cursor-not-allowed opacity-50")}
+          className={cn(
+            "p-0 border-0 bg-transparent",
+            disabled && "cursor-not-allowed opacity-50",
+          )}
         >
-          <HexagonBorder>
-            {buttonContent}
-          </HexagonBorder>
+          <HexagonBorder>{buttonContent}</HexagonBorder>
         </button>
       ) : (
         <button
@@ -376,9 +504,9 @@ export function IconPicker({
         selectedColor={value?.color}
       />
     </>
-  )
+  );
 }
 
 // 导出类型和常量
-export { MEDAL_ICON_NAMES, PRESET_COLORS }
-export type { IconName }
+export { MEDAL_ICON_NAMES, PRESET_COLORS };
+export type { IconName };

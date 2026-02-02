@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2, Pencil, Trash2, Award, Target, CheckCircle } from "lucide-react";
 import type { MedalTemplateResponse, MedalBorderStyle } from "@/types/medal";
-import { MedalTierColorSchemes } from "@/types/medal";
 import * as Icons from "lucide-react";
 
 const BORDER_STYLE_MAP: Record<MedalBorderStyle, { label: string; icon: string }> = {
@@ -73,7 +72,7 @@ export default function MedalTemplateDetailPage({ params }: { params: Promise<{ 
       });
 
       if (response.ok) {
-        router.push("/admin/badge-templates");
+        router.push("/admin/medal-templates");
       } else {
         const data = await response.json();
         alert(data.message || "删除失败");
@@ -99,7 +98,7 @@ export default function MedalTemplateDetailPage({ params }: { params: Promise<{ 
       <div className="container mx-auto py-6">
         <div className="text-center py-12">
           <p className="text-muted-foreground">徽章模板不存在</p>
-          <Link href="/admin/badge-templates">
+          <Link href="/admin/medal-templates">
             <Button variant="outline" className="mt-4">
               返回列表
             </Button>
@@ -118,7 +117,7 @@ export default function MedalTemplateDetailPage({ params }: { params: Promise<{ 
     <div className="container mx-auto py-6 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Link href="/admin/badge-templates">
+          <Link href="/admin/medal-templates">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -129,7 +128,7 @@ export default function MedalTemplateDetailPage({ params }: { params: Promise<{ 
           </div>
         </div>
         <div className="flex gap-2">
-          <Link href={`/admin/badge-templates/${templateId}/edit`}>
+          <Link href={`/admin/medal-templates/${templateId}/edit`}>
             <Button variant="outline" className="flex items-center gap-2">
               <Pencil className="h-4 w-4" />
               编辑

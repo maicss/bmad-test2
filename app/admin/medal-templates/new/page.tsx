@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Medal } from "lucide-react";
 import { MedalTemplateForm } from "@/components/medal-template-form";
 import type { CreateMedalTemplateRequest } from "@/types/medal";
-import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
 
 export default function NewMedalTemplatePage() {
   const router = useRouter();
@@ -34,7 +33,7 @@ export default function NewMedalTemplatePage() {
       if (result.success) {
         setIsSuccess(true);
         setTimeout(() => {
-          router.push("/admin/badge-templates");
+          router.push("/admin/medal-templates");
         }, 1500);
       } else {
         setError(result.message || "创建失败");
