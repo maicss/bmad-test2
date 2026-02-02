@@ -96,17 +96,6 @@ export function ImagePicker({
 
   return (
     <div className={cn("space-y-4", disabled && "opacity-50")}>
-      {/* 预览区域 */}
-      <div className="flex flex-col items-center gap-3">
-        <label className="text-sm font-medium text-slate-700">预览效果</label>
-        <BorderPreview
-          icon={value}
-          borderStyle={borderStyle}
-          size="md"
-          tierColor="#94A3B8"
-        />
-      </div>
-
       {/* 边框风格选择 */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-slate-700">边框风格</label>
@@ -154,10 +143,18 @@ export function ImagePicker({
         </div>
       </div>
 
-      {/* 选择内容区域 */}
+      {/* 选择内容区域 - 带边框预览 */}
       <div className="pt-2">
         {activeTab === "icon" && (
           <div className="flex flex-col items-center gap-2">
+            <div className="rounded-xl border border-slate-200 p-4 bg-slate-50">
+              <BorderPreview
+                icon={value}
+                borderStyle={borderStyle}
+                size="md"
+                tierColor="#94A3B8"
+              />
+            </div>
             <IconPicker
               value={
                 value?.type === "lucide"
@@ -173,6 +170,14 @@ export function ImagePicker({
 
         {activeTab === "upload" && (
           <div className="flex flex-col items-center gap-2">
+            <div className="rounded-xl border border-slate-200 p-4 bg-slate-50">
+              <BorderPreview
+                icon={value}
+                borderStyle={borderStyle}
+                size="md"
+                tierColor="#94A3B8"
+              />
+            </div>
             <ImageUploader
               value={value?.type === "custom" ? value.value : null}
               onChange={handleImageUpload}

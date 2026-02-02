@@ -45,9 +45,6 @@ tmp
 next-env.d.ts
 
 # SQLite
-*.sqlite
-*.sqlite-shm
-*.sqlite-wal
 
 # Image bed storage
 image-bed/

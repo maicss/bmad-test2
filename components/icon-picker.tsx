@@ -49,10 +49,10 @@ const MEDAL_ICON_NAMES = [
   "ShoppingCart", "Package", "Truck", "Home", "Building", "Castle", "Church",
   "School", "Hospital", "Factory", "Warehouse", "Store", "Hotel", "Landmark",
   "Monument", "Theater", "Stadium", "Dumbbell", "Tent", "TreePine", "TreeDeciduous",
-  "PalmTree", "Cactus", "Flower", "Rose", "Cherry", "Grape", "Citrus", "Banana",
+  "PalmTree", "Cactus", "Rose", "Grape", "Citrus", "Banana",
   "Pizza", "Burger", "IceCream", "Cookie", "Candy", "Chocolate", "Coffee", "Tea",
   "Beer", "Wine", "Cocktail", "CupSoda", "Milk", "Egg", "Beef", "Drumstick",
-  "Cookie", "Cupcake", "Donut", "Lollipop", "Cookie", "Popsicle",
+  "Cupcake", "Donut", "Lollipop", "Popsicle",
 ] as const
 
 type IconName = typeof MEDAL_ICON_NAMES[number]

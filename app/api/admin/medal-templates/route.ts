@@ -112,8 +112,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("POST /api/admin/medal-templates error:", error);
+    // 详细记录错误信息以便调试
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("Error details:", { message: errorMessage, stack: errorStack, body });
     return Response.json(
-      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "创建徽章模板失败"),
+      createErrorResponse(ErrorCodes.INTERNAL_ERROR, `创建徽章模板失败: ${errorMessage}`),
       { status: 500 }
     );
   }
