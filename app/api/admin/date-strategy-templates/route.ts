@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     const rawDb = getRawDb();
 
-    let query = `SELECT * FROM date_strategy_template WHERE 1=1`;
+    let query = `SELECT * FROM date_strategy WHERE 1=1`;
     const params: (string | number)[] = [];
 
     if (region) {
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
 
     rawDb.query(`
-      INSERT INTO date_strategy_template (id, name, description, region, year, is_public, dates, created_by, created_at, updated_at)
+      INSERT INTO date_strategy (id, name, description, region, year, is_public, dates, created_by, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,

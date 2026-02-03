@@ -29,7 +29,7 @@ export async function GET(
     const rawDb = getRawDb();
 
     const template = rawDb.query(`
-      SELECT * FROM date_strategy_template WHERE id = ?
+      SELECT * FROM date_strategy WHERE id = ?
     `).get(id);
 
     if (!template) {
@@ -77,7 +77,7 @@ export async function PUT(
     const rawDb = getRawDb();
 
     const existing = rawDb.query(`
-      SELECT copy_count FROM date_strategy_template WHERE id = ?
+      SELECT copy_count FROM date_strategy WHERE id = ?
     `).get(id) as { copy_count: number } | null;
 
     if (!existing) {
@@ -90,7 +90,7 @@ export async function PUT(
     const now = new Date().toISOString();
 
     rawDb.query(`
-      UPDATE date_strategy_template 
+      UPDATE date_strategy 
       SET name = ?, description = ?, region = ?, year = ?, is_public = ?, dates = ?, updated_at = ?
       WHERE id = ?
     `).run(
@@ -148,7 +148,7 @@ export async function DELETE(
     const rawDb = getRawDb();
 
     const existing = rawDb.query(`
-      SELECT copy_count FROM date_strategy_template WHERE id = ?
+      SELECT copy_count FROM date_strategy WHERE id = ?
     `).get(id) as { copy_count: number } | null;
 
     if (!existing) {
@@ -165,7 +165,7 @@ export async function DELETE(
       );
     }
 
-    rawDb.query(`DELETE FROM date_strategy_template WHERE id = ?`).run(id);
+    rawDb.query(`DELETE FROM date_strategy WHERE id = ?`).run(id);
 
     return Response.json(createSuccessResponse({ deleted: true }));
   } catch (error) {

@@ -9,9 +9,28 @@ interface MultiSelectCalendarProps {
   selectedDates: string[];
   onChange: (dates: string[]) => void;
   year?: number;
+  readOnly?: boolean;
 }
 
-export function MultiSelectCalendar({ selectedDates, onChange, year = new Date().getFullYear() }: MultiSelectCalendarProps) {
+// Normalize date string to YYYY-MM-DD format for comparison
+export function normalizeDateForComparison(dateStr: string): string | null {
+  const match = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!match) return null;
+  
+  const [, year, month, day] = match;
+  const monthInt = parseInt(month, 10);
+  const dayInt = parseInt(day, 10);
+  
+  // Validate ranges
+  if (monthInt < 1 || monthInt > 12 || dayInt < 1 || dayInt > 31) {
+    return null;
+  }
+  
+  // Return normalized format
+  return `${year}-${monthInt.toString().padStart(2, '0')}-${dayInt.toString().padStart(2, '0')}`;
+}
+
+export function MultiSelectCalendar({ selectedDates, onChange, year = new Date().getFullYear(), readOnly = false }: MultiSelectCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(year);
 
@@ -32,14 +51,29 @@ export function MultiSelectCalendar({ selectedDates, onChange, year = new Date()
     return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   };
 
+  // Normalize all selected dates for comparison
+  const normalizedSelectedDates = selectedDates
+    .map(d => normalizeDateForComparison(d))
+    .filter((d): d is string => d !== null);
+
   const isSelected = (year: number, month: number, day: number) => {
-    return selectedDates.includes(formatDate(year, month, day));
+    const formattedDate = formatDate(year, month, day);
+    return normalizedSelectedDates.includes(formattedDate);
   };
 
   const toggleDate = (year: number, month: number, day: number) => {
+    if (readOnly) return;
     const dateStr = formatDate(year, month, day);
-    if (selectedDates.includes(dateStr)) {
-      onChange(selectedDates.filter((d) => d !== dateStr));
+    // Check against normalized dates
+    const normalizedDateStr = normalizeDateForComparison(dateStr);
+    const isCurrentlySelected = normalizedDateStr && normalizedSelectedDates.includes(normalizedDateStr);
+    
+    if (isCurrentlySelected) {
+      // Remove the original format that matched
+      const indexToRemove = selectedDates.findIndex(d => normalizeDateForComparison(d) === normalizedDateStr);
+      if (indexToRemove >= 0) {
+        onChange(selectedDates.filter((_, i) => i !== indexToRemove));
+      }
     } else {
       onChange([...selectedDates, dateStr]);
     }
@@ -101,11 +135,14 @@ export function MultiSelectCalendar({ selectedDates, onChange, year = new Date()
               key={day}
               type="button"
               onClick={() => toggleDate(currentYear, currentMonth, day)}
+              disabled={readOnly}
               className={cn(
                 "h-8 w-8 rounded-md text-sm flex items-center justify-center transition-colors",
                 selected
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "hover:bg-accent"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground",
+                !readOnly && selected && "hover:bg-primary/90",
+                !readOnly && !selected && "hover:bg-accent"
               )}
             >
               {day}
@@ -118,35 +155,39 @@ export function MultiSelectCalendar({ selectedDates, onChange, year = new Date()
         <div className="mt-4 pt-4 border-t">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">
-              已选择 {selectedDates.length} 个日期
+              共 {selectedDates.length} 个日期
             </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onChange([])}
-              className="text-muted-foreground"
-            >
-              清空
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
-            {selectedDates.map((date) => (
-              <div
-                key={date}
-                className="flex items-center gap-1 px-2 py-1 bg-secondary rounded text-xs"
+            {!readOnly && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onChange([])}
+                className="text-muted-foreground"
               >
-                {date}
-                <button
-                  type="button"
-                  onClick={() => onChange(selectedDates.filter((d) => d !== date))}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
+                清空
+              </Button>
+            )}
           </div>
+          {!readOnly && (
+            <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+              {selectedDates.map((date) => (
+                <div
+                  key={date}
+                  className="flex items-center gap-1 px-2 py-1 bg-secondary rounded text-xs"
+                >
+                  {date}
+                  <button
+                    type="button"
+                    onClick={() => onChange(selectedDates.filter((d) => d !== date))}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

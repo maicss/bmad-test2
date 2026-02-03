@@ -55,7 +55,7 @@ class ConsoleMockProvider implements OTPServiceProvider {
   async sendSMS(phone: string, code: string): Promise<SendOTPResult> {
     // 模拟网络延迟
     await new Promise((resolve) => setTimeout(resolve, 500));
-    
+
     // 输出到控制台
     console.log("\n========================================");
     console.log("📱 OTP短信发送 (开发模式)");
@@ -68,6 +68,7 @@ class ConsoleMockProvider implements OTPServiceProvider {
       success: true,
       message: "验证码已发送（开发模式：查看控制台输出）",
       debugCode: code,
+      providerResponse: code,
     };
   }
 }

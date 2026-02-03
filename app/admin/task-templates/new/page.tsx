@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { TaskTemplateForm } from "@/components/task-template-form";
 
@@ -41,17 +41,13 @@ export default function NewTaskTemplatePage() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>模板信息</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TaskTemplateForm 
-              onSuccess={handleSuccess}
-              onCancel={() => router.push("/admin")}
-            />
-          </CardContent>
-        </Card>
+        <div>
+          <h2 className="text-lg font-semibold mb-4">模板信息</h2>
+          <TaskTemplateForm
+            onSuccess={handleSuccess}
+            onCancel={() => router.push("/admin")}
+          />
+        </div>
       )}
     </div>
   );

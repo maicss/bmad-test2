@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/searchable-select";
 import { MultiSelectCalendar } from "@/components/multi-select-calendar";
+import { redirectToLogin } from "@/lib/api-client";
 
 const PROVINCES = [
   { id: "national", label: "全国" },
@@ -46,24 +48,63 @@ const PROVINCES = [
 interface DateStrategyFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
+  initialData?: {
+    name?: string;
+    description?: string | null;
+    region?: string;
+    year?: number;
+    isPublic?: boolean;
+    dates?: string;
+  };
 }
 
-export function DateStrategyForm({ onSuccess, onCancel }: DateStrategyFormProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [region, setRegion] = useState("national");
-  const [year, setYear] = useState(new Date().getFullYear().toString());
-  const [isPublic, setIsPublic] = useState(true);
+export function DateStrategyForm({ onSuccess, onCancel, initialData }: DateStrategyFormProps) {
+  const router = useRouter();
+  const [name, setName] = useState(initialData?.name ? `${initialData.name} (复制)` : "");
+  const [description, setDescription] = useState(initialData?.description || "");
+  const [region, setRegion] = useState(initialData?.region || "national");
+  const [year, setYear] = useState(
+    initialData?.year?.toString() || new Date().getFullYear().toString()
+  );
+  const [isPublic, setIsPublic] = useState(initialData?.isPublic ?? true);
   const [dateMode, setDateMode] = useState<"picker" | "input">("picker");
-  const [selectedDates, setSelectedDates] = useState<string[]>([]);
-  const [dateInput, setDateInput] = useState("");
+  const [selectedDates, setSelectedDates] = useState<string[]>(
+    initialData?.dates ? initialData.dates.split(",").filter(d => d.trim()) : []
+  );
+  const [dateInput, setDateInput] = useState(initialData?.dates || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [error, setError] = useState<string>("");
 
+  // Normalize date format from 2026-2-9 to 2026-02-09
+  const normalizeDate = (dateStr: string): string | null => {
+    // Match date patterns: YYYY-M-D, YYYY-MM-D, YYYY-M-DD, YYYY-MM-DD
+    const match = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (!match) return null;
+    
+    const [, year, month, day] = match;
+    const monthInt = parseInt(month, 10);
+    const dayInt = parseInt(day, 10);
+    
+    // Validate ranges
+    if (monthInt < 1 || monthInt > 12 || dayInt < 1 || dayInt > 31) {
+      return null;
+    }
+    
+    // Pad with leading zeros
+    const paddedMonth = monthInt.toString().padStart(2, '0');
+    const paddedDay = dayInt.toString().padStart(2, '0');
+    
+    return `${year}-${paddedMonth}-${paddedDay}`;
+  };
+
   const deduplicateDates = (datesStr: string): string => {
     const dates = datesStr.split(",").map(d => d.trim()).filter(d => d);
-    const uniqueDates = [...new Set(dates)];
+    // Normalize each date and filter out invalid ones
+    const normalizedDates = dates
+      .map(d => normalizeDate(d))
+      .filter((d): d is string => d !== null);
+    const uniqueDates = [...new Set(normalizedDates)];
     return uniqueDates.join(",");
   };
 
@@ -97,6 +138,18 @@ export function DateStrategyForm({ onSuccess, onCancel }: DateStrategyFormProps)
           dates,
         }),
       });
+      
+      // Handle 401 Unauthorized
+      if (response.status === 401) {
+        redirectToLogin("/admin/date-strategy-templates/new");
+        return;
+      }
+      
+      // Handle 403 Forbidden - redirect to parent home
+      if (response.status === 403) {
+        router.push("/parent");
+        return;
+      }
 
       const data = await response.json();
 
@@ -223,7 +276,7 @@ export function DateStrategyForm({ onSuccess, onCancel }: DateStrategyFormProps)
           <Textarea
             value={dateInput}
             onChange={(e) => setDateInput(e.target.value)}
-            placeholder="请输入日期，多个日期用逗号分隔，格式：2024-01-01,2024-02-15"
+            placeholder="请输入日期，多个日期用逗号分隔，格式：2024-01-01,2024-2-9,2026-12-25"
             rows={3}
             className="max-h-40 overflow-y-auto"
           />

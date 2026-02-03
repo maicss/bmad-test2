@@ -422,7 +422,7 @@ export const images = sqliteTable("image", {
 export type Image = typeof images.$inferSelect;
 export type NewImage = typeof images.$inferInsert;
 
-export const dateStrategyTemplates = sqliteTable("date_strategy_template", {
+export const dateStrategies = sqliteTable("date_strategy", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
@@ -436,8 +436,8 @@ export const dateStrategyTemplates = sqliteTable("date_strategy_template", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
-export type DateStrategyTemplate = typeof dateStrategyTemplates.$inferSelect;
-export type NewDateStrategyTemplate = typeof dateStrategyTemplates.$inferInsert;
+export type DateStrategy = typeof dateStrategies.$inferSelect;
+export type NewDateStrategy = typeof dateStrategies.$inferInsert;
 
 /**
  * 徽章模板表

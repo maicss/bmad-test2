@@ -344,18 +344,15 @@ export default function AdminLoginPage() {
           </Tabs>
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
-          <Link 
-            href="/family/login" 
+          <Link
+            href="/family/login"
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             返回普通用户登录
           </Link>
-          <p className="text-xs text-muted-foreground text-center">
-            测试账号：13800000001 / 1111
-          </p>
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

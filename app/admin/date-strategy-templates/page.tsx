@@ -1,5 +1,7 @@
 "use client";
 
+"use client";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,18 +10,27 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { SearchableSelect } from "@/components/searchable-select";
-import { DateStrategyDetailModal } from "@/components/date-strategy-detail-modal";
-import { 
-  Calendar, 
-  MapPin, 
-  Globe, 
-  Plus, 
-  Search, 
+import { redirectToLogin } from "@/lib/api-client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Calendar,
+  MapPin,
+  Globe,
+  Plus,
+  Search,
   Loader2,
   ArrowLeft,
-  Pencil,
   Trash2,
-  Eye
+  Pencil,
+  Copy,
+  AlertTriangle
 } from "lucide-react";
 
 interface DateStrategyTemplate {
@@ -113,8 +124,8 @@ export default function DateStrategyTemplatesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("");
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTemplates();
@@ -124,6 +135,19 @@ export default function DateStrategyTemplatesPage() {
     setIsLoading(true);
     try {
       const response = await fetch("/api/admin/date-strategy-templates");
+
+      // Handle 401 Unauthorized
+      if (response.status === 401) {
+        redirectToLogin("/admin/date-strategy-templates");
+        return;
+      }
+
+      // Handle 403 Forbidden - redirect to parent home
+      if (response.status === 403) {
+        router.push("/parent");
+        return;
+      }
+
       const data = await response.json();
       if (data.success) {
         setTemplates(data.data.templates || []);
@@ -135,18 +159,34 @@ export default function DateStrategyTemplatesPage() {
     }
   };
 
-  const handleDelete = async (id: string, copyCount: number) => {
+  const openDeleteDialog = (id: string, copyCount: number) => {
     if (copyCount > 0) {
       alert("无法删除已被复制的模板");
       return;
     }
+    setDeleteTemplateId(id);
+    setDeleteDialogOpen(true);
+  };
 
-    if (!confirm("确定要删除此模板吗？")) return;
+  const handleDeleteConfirm = async () => {
+    if (!deleteTemplateId) return;
 
     try {
-      const response = await fetch(`/api/admin/date-strategy-templates/${id}`, {
+      const response = await fetch(`/api/admin/date-strategy-templates/${deleteTemplateId}`, {
         method: "DELETE",
       });
+
+      // Handle 401 Unauthorized
+      if (response.status === 401) {
+        redirectToLogin("/admin/date-strategy-templates");
+        return;
+      }
+
+      // Handle 403 Forbidden - redirect to parent home
+      if (response.status === 403) {
+        router.push("/parent");
+        return;
+      }
 
       const data = await response.json();
 
@@ -157,6 +197,9 @@ export default function DateStrategyTemplatesPage() {
       }
     } catch (error) {
       alert("删除失败，请重试");
+    } finally {
+      setDeleteDialogOpen(false);
+      setDeleteTemplateId(null);
     }
   };
 
@@ -197,16 +240,12 @@ export default function DateStrategyTemplatesPage() {
             <p className="text-muted-foreground">管理所有日期策略模板</p>
           </div>
         </div>
-        <Button 
-          onClick={() => {
-            setSelectedTemplateId(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          新建模板
-        </Button>
+        <Link href="/admin/date-strategy-templates/new">
+          <Button className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            新建模板
+          </Button>
+        </Link>
       </div>
 
       <div className="flex flex-wrap gap-4">
@@ -243,17 +282,12 @@ export default function DateStrategyTemplatesPage() {
         <div className="text-center py-12">
           <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">暂无日期策略模板</p>
-          <Button 
-            variant="outline" 
-            className="mt-4"
-            onClick={() => {
-              setSelectedTemplateId(null);
-              setIsModalOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            创建第一个模板
-          </Button>
+          <Link href="/admin/date-strategy-templates/new">
+            <Button variant="outline" className="mt-4">
+              <Plus className="h-4 w-4 mr-2" />
+              创建第一个模板
+            </Button>
+          </Link>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -263,100 +297,104 @@ export default function DateStrategyTemplatesPage() {
 
             return (
               <Card key={template.id} className="flex flex-col">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg truncate">
-                        {template.name}
-                      </CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-1">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {PROVINCE_MAP[template.region] || template.region}
-                        </span>
-                        <span>·</span>
-                        <span>{template.year}年</span>
-                      </CardDescription>
+                <Link href={`/admin/date-strategy-templates/${template.id}`} className="flex-1">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg truncate">
+                          {template.name}
+                        </CardTitle>
+                        <CardDescription className="flex items-center gap-2 mt-1">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {PROVINCE_MAP[template.region] || template.region}
+                          </span>
+                          <span>·</span>
+                          <span>{template.year}年</span>
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {template.is_public ? (
+                          <Badge variant="secondary" className="text-xs">
+                            <Globe className="h-3 w-3 mr-1" />
+                            公开
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs">
+                            私有
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {template.is_public ? (
-                        <Badge variant="secondary" className="text-xs">
-                          <Globe className="h-3 w-3 mr-1" />
-                          公开
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-xs">
-                          私有
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
+                  </CardHeader>
 
-                <CardContent className="flex-1">
-                  {template.description && (
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                      {template.description}
-                    </p>
-                  )}
+                  <CardContent className="flex-1">
+                    {template.description && (
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                        {template.description}
+                      </p>
+                    )}
 
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{dateCount} 个日期</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span>{dateCount} 个日期</span>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-1">
+                        {dateList.map((date) => (
+                          <Badge key={date} variant="secondary" className="text-xs">
+                            {date}
+                          </Badge>
+                        ))}
+                        {dateCount > 5 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{dateCount - 5}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                    
-                    <div className="flex flex-wrap gap-1">
-                      {dateList.map((date) => (
-                        <Badge key={date} variant="secondary" className="text-xs">
-                          {date}
-                        </Badge>
-                      ))}
-                      {dateCount > 5 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{dateCount - 5}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
 
-                  <div className="mt-3 pt-3 border-t">
-                    <Badge variant={template.copy_count > 0 ? "default" : "outline"} className="text-xs">
-                      复制次数: {template.copy_count || 0}
-                    </Badge>
-                  </div>
-                </CardContent>
+                    <div className="mt-3 pt-3 border-t">
+                      <Badge variant={template.copy_count > 0 ? "default" : "outline"} className="text-xs">
+                        复制次数: {template.copy_count || 0}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Link>
 
                 <CardFooter className="pt-3 border-t flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <Link
+                    href={`/admin/date-strategy-templates/${template.id}`}
                     className="flex-1"
-                    onClick={() => {
-                      setSelectedTemplateId(template.id);
-                      setIsModalOpen(true);
-                    }}
                   >
-                    <Eye className="h-4 w-4 mr-1" />
-                    查看
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      编辑
+                    </Button>
+                  </Link>
+                  <Link
+                    href={`/admin/date-strategy-templates/new?copy=${template.id}`}
                     className="flex-1"
-                    onClick={() => {
-                      setSelectedTemplateId(template.id);
-                      setIsModalOpen(true);
-                    }}
                   >
-                    <Pencil className="h-4 w-4 mr-1" />
-                    编辑
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      复制
+                    </Button>
+                  </Link>
                   <Button
                     variant="outline"
                     size="sm"
                     className="px-2"
-                    onClick={() => handleDelete(template.id, template.copy_count)}
+                    onClick={() => openDeleteDialog(template.id, template.copy_count)}
                     disabled={template.copy_count > 0}
                     title={template.copy_count > 0 ? "已被复制，无法删除" : "删除"}
                   >
@@ -369,13 +407,28 @@ export default function DateStrategyTemplatesPage() {
         </div>
       )}
 
-      <DateStrategyDetailModal
-        templateId={selectedTemplateId}
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        onUpdate={fetchTemplates}
-        onDelete={fetchTemplates}
-      />
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              确认删除
+            </DialogTitle>
+            <DialogDescription>
+              确定要删除此日期策略模板吗？此操作无法撤销。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              确认删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

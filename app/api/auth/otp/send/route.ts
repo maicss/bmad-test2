@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       return Response.json({
         success: true,
         message: "验证码已发送",
-        debugCode: process.env.NODE_ENV === "development" ? "111111" : undefined,
+        debugCode: process.env.OTP_DEBUG_CODE || undefined,
       });
     }
 
@@ -77,12 +77,13 @@ export async function POST(request: NextRequest) {
     // 6. 存储验证码到 verification 表（使用 better-auth 的验证机制）
     const now = new Date();
     const expiresAt = new Date(now.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
-    const code = result.debugCode || "111111"; // 开发模式使用debugCode
+    // 使用 OTP 服务返回的实际验证码，或开发模式的调试码
+    const code = result.debugCode || result.providerResponse;
 
     // 先删除该手机号的旧验证码
     rawDb.run(
       `
-      DELETE FROM verification 
+      DELETE FROM verification
       WHERE identifier = ?
     `,
       [`otp:${phone}`]
@@ -97,10 +98,10 @@ export async function POST(request: NextRequest) {
       [
         crypto.randomUUID(),
         `otp:${phone}`,
-        code,
-        expiresAt.toISOString(),
-        now.toISOString(),
-        now.toISOString(),
+        String(code),
+        expiresAt.getTime(), // 使用毫秒时间戳
+        now.getTime(),
+        now.getTime(),
       ]
     );
 
@@ -116,8 +117,8 @@ export async function POST(request: NextRequest) {
       expiresIn: OTP_EXPIRY_MINUTES * 60, // 秒
     };
 
-    // 开发/测试模式下返回验证码
-    if (result.debugCode && process.env.NODE_ENV !== "production") {
+    // 开发/测试模式下返回验证码（由环境变量控制）
+    if (result.debugCode && process.env.OTP_DEBUG_CODE) {
       response.debugCode = result.debugCode;
     }
 

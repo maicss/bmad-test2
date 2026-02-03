@@ -18,7 +18,7 @@ const db = new Database("database/db.sqlite");
  *
  * 支持的认证方式：
  * 1. 家长: 手机号 + 密码
- * 2. 家长: 手机号 + OTP 验证码 (TODO)
+ * 2. 家长: 手机号 + OTP 验证码
  * 3. 儿童: PIN 码 (在 lib/pin-auth.ts 中实现)
  */
 export const auth = betterAuth({
@@ -116,6 +116,31 @@ export const auth = betterAuth({
     max: 100,
   },
 });
+
+/**
+ * Get user by phone number
+ */
+export async function getUserByPhone(phone: string) {
+  const rawDb = getRawDb();
+  const user = rawDb
+    .query(`
+      SELECT id, name, email, role, phone, image, createdAt, updatedAt
+      FROM user
+      WHERE phone = ?
+    `)
+    .get(phone) as {
+      id: string;
+      name: string;
+      email: string | null;
+      role: string;
+      phone: string;
+      image: string | null;
+      createdAt: string;
+      updatedAt: string;
+    } | null;
+
+  return user;
+}
 
 /**
  * 获取当前会话

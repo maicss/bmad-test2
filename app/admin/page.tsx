@@ -29,7 +29,7 @@ import {
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { PendingFamiliesList } from "./components/pending-families-list";
-import { DateStrategySection } from "@/components/date-strategy-section";
+import { DateStrategySection } from "./components/date-strategy-section";
 
 function AdminIcon({ className }: { className?: string }) {
   return (

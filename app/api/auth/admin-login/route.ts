@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
 import { getRawDb } from "@/database/db";
 import { z } from "zod";
+import { getOTPService, SendOTPResult } from "@/lib/otp-service";
 
 import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
+
 // 密码登录验证 Schema
 const passwordLoginSchema = z.object({
   phone: z.string().trim().regex(/^1[3-9]\d{9}$/, "请输入有效的手机号"),
@@ -82,17 +84,23 @@ export async function POST(request: NextRequest) {
           `
         SELECT password
         FROM account
-        WHERE user_id = ? AND provider_id = 'credential'
+        WHERE user_id = ? AND provider_id = 'phone'
       `
         )
         .get(user.id) as { password: string } | null;
 
-      // 测试密码 "1111" 或数据库中的密码
-      const isValidPassword =
-        password === "1111" || // 测试密码
-        (account &&
-          account.password &&
-          (await verifyPassword(password, account.password)));
+      if (!account) {
+        return Response.json(
+          {
+            success: false,
+            error: "账号未设置密码，请使用验证码登录",
+          },
+          { status: 401 }
+        );
+      }
+
+      // 验证密码（使用 Bun.password.verify）
+      const isValidPassword = await Bun.password.verify(password, account.password);
 
       if (!isValidPassword) {
         return Response.json(
@@ -142,8 +150,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // 测试验证码 "111111" 或数据库中的验证码
-      if (otp !== "111111" && otp !== verification.value) {
+      // 验证 OTP（使用环境变量控制的验证码）
+      const expectedOtp = process.env.OTP_DEBUG_CODE || verification.value;
+      if (otp !== expectedOtp) {
         return Response.json(
           {
             success: false,
@@ -168,7 +177,7 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24小时
 
-    // 创建 session 记录
+    // 创建 session 记录 - 使用毫秒时间戳与 Better-Auth 兼容
     rawDb.run(
       `
       INSERT INTO session (id, token, user_id, expires_at, created_at, updated_at)
@@ -178,9 +187,9 @@ export async function POST(request: NextRequest) {
         crypto.randomUUID(),
         sessionToken,
         user.id,
-        expiresAt.toISOString(),
-        now.toISOString(),
-        now.toISOString(),
+        expiresAt.getTime(),
+        now.getTime(),
+        now.getTime(),
       ]
     );
 
@@ -213,19 +222,5 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
-  }
-}
-
-/**
- * 验证密码
- */
-async function verifyPassword(
-  plainPassword: string,
-  hashedPassword: string
-): Promise<boolean> {
-  try {
-    return await Bun.password.verify(plainPassword, hashedPassword);
-  } catch {
-    return false;
   }
 }

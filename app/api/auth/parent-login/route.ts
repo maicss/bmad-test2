@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
 import { getRawDb } from "@/database/db";
-import { auth } from "@/lib/auth";
 import { z } from "zod";
 
 import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
+
 // 密码登录验证 Schema
 const passwordLoginSchema = z.object({
   phone: z.string().trim().regex(/^1[3-9]\d{9}$/, "请输入有效的手机号"),
@@ -77,17 +77,20 @@ export async function POST(request: NextRequest) {
           `
         SELECT password
         FROM account
-        WHERE user_id = ? AND provider_id = 'credential'
+        WHERE user_id = ? AND provider_id = 'phone'
       `
         )
         .get(user.id) as { password: string } | null;
 
-      // 测试密码 "1111" 或数据库中的密码
-      const isValidPassword =
-        password === "1111" || // 测试密码
-        (account &&
-          account.password &&
-          (await verifyPassword(password, account.password)));
+      if (!account) {
+        return Response.json(
+          createErrorResponse(ErrorCodes.UNAUTHORIZED, "账号未设置密码，请使用验证码登录"),
+          { status: 401 }
+        );
+      }
+
+      // 验证密码（使用 Bun.password.verify）
+      const isValidPassword = await Bun.password.verify(password, account.password);
 
       if (!isValidPassword) {
         return Response.json(
@@ -128,8 +131,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // 测试验证码 "111111" 或数据库中的验证码
-      if (otp !== "111111" && otp !== verification.value) {
+      // 验证 OTP（使用环境变量控制的验证码）
+      const expectedOtp = process.env.OTP_DEBUG_CODE || verification.value;
+      if (otp !== expectedOtp) {
         return Response.json(
           createErrorResponse(ErrorCodes.UNAUTHORIZED, "验证码错误"),
           { status: 401 }
@@ -146,8 +150,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. 使用 Better-Auth 创建 session
-    // 由于 Better-Auth 默认使用 email，我们需要手动创建 session
+    // 5. 创建 session - 使用毫秒时间戳与 Better-Auth 兼容
     const sessionToken = crypto.randomUUID();
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24小时
@@ -162,17 +165,15 @@ export async function POST(request: NextRequest) {
         crypto.randomUUID(),
         sessionToken,
         user.id,
-        expiresAt.getTime(), // 使用毫秒时间戳
+        expiresAt.getTime(),
         now.getTime(),
         now.getTime(),
       ]
     );
 
-    // 6. 返回用户信息，浏览器端需要手动设置 cookie
-    // 或者使用 Set-Cookie header
+    // 6. 返回用户信息，设置 cookie
     return Response.json(
-      {
-        success: true,
+      createSuccessResponse({
         user: {
           id: user.id,
           name: user.name,
@@ -180,9 +181,8 @@ export async function POST(request: NextRequest) {
           phone: user.phone,
           image: user.image,
         },
-        sessionToken, // 前端需要存储这个 token
         message: "登录成功",
-      },
+      }),
       {
         headers: {
           "Set-Cookie": `better-auth.session_token=${sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${24 * 60 * 60}`,
@@ -198,16 +198,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * 验证密码
- */
-async function verifyPassword(
-  plainPassword: string,
-  hashedPassword: string
-): Promise<boolean> {
-  try {
-    return await Bun.password.verify(plainPassword, hashedPassword);
-  } catch {
-    return false;
-  }
-}

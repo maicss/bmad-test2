@@ -40,11 +40,14 @@ tmp
 # vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+ # typescript
+ *.tsbuildinfo
+ next-env.d.ts
 
-# SQLite
+ # SQLite
+ *.sqlite
+ *.sqlite-shm
+ *.sqlite-wal
 
-# Image bed storage
-image-bed/
+ # Image bed storage
+ image-bed/

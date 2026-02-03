@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import { getCurrentRole } from "@/lib/api-client";
 
 interface TaskTemplateFormProps {
   onSuccess?: () => void;
@@ -56,17 +56,25 @@ export function TaskTemplateForm({ onSuccess, onCancel }: TaskTemplateFormProps)
   const [ageMin, setAgeMin] = useState("");
   const [ageMax, setAgeMax] = useState("");
   const [taskType, setTaskType] = useState<"daily" | "random">("daily");
+  const [isTemplate, setIsTemplate] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     fetchDateStrategies();
     fetchBadges();
+    fetchUserRole();
   }, []);
+
+  const fetchUserRole = async () => {
+    const role = await getCurrentRole();
+    setUserRole(role);
+  };
 
   const fetchDateStrategies = async () => {
     try {
-      const response = await fetch("/api/date-strategy-templates?is_public=true");
+      const response = await fetch("/api/admin/date-strategy-templates");
       const data = await response.json();
       if (data.success) {
         const strategies = data.data.templates.map((t: any) => ({
@@ -182,7 +190,7 @@ export function TaskTemplateForm({ onSuccess, onCancel }: TaskTemplateFormProps)
       ageRangeMin: ageMin ? Number(ageMin) : null,
       ageRangeMax: ageMax ? Number(ageMax) : null,
       taskType,
-      isTemplate: 1,
+      isTemplate: isTemplate ? 1 : 0,
       category: "custom",
       points: Number(basePoints),
       name: taskName,
@@ -214,8 +222,25 @@ export function TaskTemplateForm({ onSuccess, onCancel }: TaskTemplateFormProps)
   const publicBadges = badges.filter((b) => b.group === "public");
   const familyBadges = badges.filter((b) => b.group === "family");
 
+  const isAdmin = userRole === "admin";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {isAdmin && (
+        <div className="flex items-center space-x-2 pb-2 border-b">
+          <input
+            type="checkbox"
+            id="isTemplate"
+            checked={isTemplate}
+            onChange={(e) => setIsTemplate(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300"
+          />
+          <Label htmlFor="isTemplate" className="font-medium">
+            设为模板（公开给所有家庭使用）
+          </Label>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="templateName">模板名称 * (2-20字符)</Label>
