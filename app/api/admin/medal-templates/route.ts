@@ -86,6 +86,9 @@ export async function POST(request: NextRequest) {
       tierColors = JSON.stringify(scheme.slice(0, body.levelCount || 3));
     }
 
+    // 转换 icon_type: "icon" -> "lucide", "upload" -> "custom" (用于存储到数据库)
+    const dbIconType = body.icon.type === "icon" ? "lucide" : "custom";
+
     // 插入数据库
     // family_id 为 NULL 表示系统级模板（所有家庭可用）
     rawDb.query(`
@@ -93,12 +96,12 @@ export async function POST(request: NextRequest) {
         id, family_id, name, icon_type, icon_value, icon_color, border_style,
         level_mode, level_count, tier_colors, threshold_counts, reward_points, is_continuous,
         is_active, created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       null, // 系统级模板，family_id 为 NULL
       body.name.trim(),
-      body.icon.type,
+      dbIconType,
       body.icon.value,
       body.icon.color || null,
       body.borderStyle || "circle",
@@ -161,7 +164,7 @@ export async function GET(request: NextRequest) {
     const rawDb = getRawDb();
     
     const templates = rawDb.query(`
-      SELECT 
+      SELECT
         id,
         name,
         icon_type as iconType,
@@ -171,7 +174,7 @@ export async function GET(request: NextRequest) {
         level_mode as levelMode,
         level_count as levelCount,
         reward_points as rewardPoints,
-        is_active as isActive
+        is_public as isPublic
       FROM medal_template
       ORDER BY created_at DESC
     `).all() as Array<{
@@ -184,7 +187,7 @@ export async function GET(request: NextRequest) {
       levelMode: "single" | "multiple";
       levelCount: number;
       rewardPoints: number;
-      isActive: number;
+      isPublic: number;
     }>;
 
     // 格式化响应数据
@@ -192,7 +195,7 @@ export async function GET(request: NextRequest) {
       id: t.id,
       name: t.name,
       icon: {
-        type: t.iconType,
+        type: t.iconType === "lucide" ? "icon" : "upload",
         value: t.iconValue,
         color: t.iconColor,
       },
@@ -200,7 +203,7 @@ export async function GET(request: NextRequest) {
       levelMode: t.levelMode,
       levelCount: t.levelCount,
       rewardPoints: t.rewardPoints,
-      isActive: Boolean(t.isActive),
+      isActive: Boolean(t.isPublic),
     }));
 
     return Response.json(

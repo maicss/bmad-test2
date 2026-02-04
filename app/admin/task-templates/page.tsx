@@ -85,7 +85,7 @@ export default function TaskTemplatesListPage() {
             <p className="text-muted-foreground">管理所有计划任务模板</p>
           </div>
         </div>
-        <Link href="/admin/task-templates/new">
+        <Link href="/task-plans/new">
           <Button className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             新建模板
@@ -118,7 +118,7 @@ export default function TaskTemplatesListPage() {
         <div className="text-center py-12">
           <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">暂无任务模板</p>
-          <Link href="/admin/task-templates/new">
+          <Link href="/task-plans/new">
             <Button variant="outline" className="mt-4">
               <Plus className="h-4 w-4 mr-2" />
               创建第一个模板

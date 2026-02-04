@@ -462,7 +462,7 @@ export const medalTemplates = sqliteTable("medal_template", {
   thresholdCounts: text("threshold_counts").notNull(), // 各等级所需次数JSON数组
   rewardPoints: real("reward_points").notNull().default(0), // 获得徽章时奖励的积分
   isContinuous: integer("is_continuous", { mode: "boolean" }).notNull().default(false), // 是否要求连续
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  isPublic: integer("is_public", { mode: "boolean" }).notNull().default(true), // 是否公开
   createdBy: text("created_by")
     .notNull()
     .references(() => users.id),
@@ -523,5 +523,110 @@ export const wishTemplatesRelations = relations(wishTemplates, ({ one }) => ({
   createdBy: one(users, {
     fields: [wishTemplates.createdBy],
     references: [users.id],
+  }),
+}));
+
+// ============================================================
+// 任务计划表 (Task Plans)
+// ============================================================
+
+/**
+ * 任务计划表
+ * 替代 task_definition，支持完整的计划任务功能
+ */
+export const taskPlans = sqliteTable("task_plan", {
+  // Core identification
+  id: text("id").primaryKey(),
+
+  // Template vs Instance
+  isTemplate: integer("is_template", { mode: "boolean" }).notNull().default(false),
+
+  // Family association (nullable for public templates)
+  familyId: text("family_id").references(() => families.id, { onDelete: "cascade" }),
+
+  // Plan details (from form fields)
+  name: text("name").notNull(), // 计划名称 (2-20字符)
+  description: text("description"), // 描述 (2-200字符)
+  taskName: text("task_name").notNull(), // 任务名称 (2-20字符)
+  category: text("category", { enum: ["study", "housework", "behavior"] }),
+
+  // Points and rewards
+  points: real("points").notNull(), // 基础奖励
+
+  // Target members (for non-templates)
+  targetMemberIds: text("target_member_ids"), // JSON array of family member IDs
+
+  // Icon/image picker fields
+  imageType: text("image_type", { enum: ["icon", "upload"] }).notNull().default("icon"),
+  color: text("color"),
+  image: text("image"), // Icon name or uploaded image URL
+  borderStyle: text("border_style", { enum: ["circle", "hexagon", "square"] }).notNull().default("circle"),
+
+  // Date range
+  startDate: text("start_date"), // YYYY-MM-DD format
+  endDate: text("end_date"), // YYYY-MM-DD format
+
+  // Date strategy
+  dateStrategyId: text("date_strategy_id").references(() => dateStrategies.id),
+
+  // Combo/Streak strategy
+  enableCombo: integer("enable_combo", { mode: "boolean" }).notNull().default(false),
+  comboStrategyType: text("combo_strategy_type", { enum: ["linear", "stair"] }),
+  comboStrategyConfig: text("combo_strategy_config"), // JSON string
+
+  // Medal/badge
+  medalTemplateId: text("medal_template_id").references(() => medalTemplates.id),
+
+  // Task type
+  taskType: text("task_type", { enum: ["daily", "hidden"] }).notNull().default("daily"),
+
+  // Age suggestion (for templates)
+  ageRangeMin: integer("age_range_min"),
+  ageRangeMax: integer("age_range_max"),
+
+  // Template visibility (for templates)
+  isPublic: integer("is_public", { mode: "boolean" }).notNull().default(false),
+
+  // Status
+  status: text("status", {
+    enum: ["active", "suspended", "noTask", "deleted", "noExecutor", "published", "unpublished"]
+  }).notNull().default("active"),
+
+  // Template lineage
+  templateId: text("template_id"), // When copying from a public template
+
+  // Audit fields
+  createdBy: text("created_by").notNull().references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// Type exports
+export type TaskPlan = typeof taskPlans.$inferSelect;
+export type NewTaskPlan = typeof taskPlans.$inferInsert;
+
+/**
+ * 任务计划关系
+ */
+export const taskPlansRelations = relations(taskPlans, ({ one }) => ({
+  family: one(families, {
+    fields: [taskPlans.familyId],
+    references: [families.id],
+  }),
+  dateStrategy: one(dateStrategies, {
+    fields: [taskPlans.dateStrategyId],
+    references: [dateStrategies.id],
+  }),
+  medalTemplate: one(medalTemplates, {
+    fields: [taskPlans.medalTemplateId],
+    references: [medalTemplates.id],
+  }),
+  createdBy: one(users, {
+    fields: [taskPlans.createdBy],
+    references: [users.id],
+  }),
+  parentTemplate: one(taskPlans, {
+    fields: [taskPlans.templateId],
+    references: [taskPlans.id],
   }),
 }));

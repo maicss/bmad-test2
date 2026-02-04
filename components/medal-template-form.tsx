@@ -244,8 +244,20 @@ export function MedalTemplateForm({
 }: MedalTemplateFormProps) {
   // 表单状态
   const [name, setName] = React.useState(initialData?.name || "")
-  const [icon, setIcon] = React.useState<MedalIconValue>(
-    initialData?.icon || { type: "lucide", value: "Medal", color: "#FFD700" }
+  const [icon, setIcon] = React.useState<{
+    type: "icon" | "upload"
+    color?: string
+    value: string
+    borderStyle: MedalBorderStyle
+  }>(
+    initialData?.icon
+      ? {
+          type: initialData.icon.type === "icon" ? "icon" : "upload",
+          value: initialData.icon.value,
+          color: initialData.icon.color || "#FFD700",
+          borderStyle: initialData?.borderStyle || "circle",
+        }
+      : { type: "icon", value: "Medal", color: "#FFD700", borderStyle: "circle" }
   )
   const [borderStyle, setBorderStyle] = React.useState<MedalBorderStyle>(
     initialData?.borderStyle || "circle"
@@ -316,12 +328,16 @@ export function MedalTemplateForm({
 
     const submitData: CreateMedalTemplateRequest = {
       name: name.trim(),
-      icon,
+      icon: {
+        type: icon.type,
+        value: icon.value,
+        color: icon.color,
+      },
       borderStyle,
       levelMode,
       levelCount: levelMode === "multiple" ? levelCount : 1,
       tierColorScheme: levelMode === "multiple" ? tierColorScheme : undefined,
-      thresholdCounts: levelMode === "single" 
+      thresholdCounts: levelMode === "single"
         ? [thresholdCounts[0] || 10]
         : thresholdCounts.slice(0, levelCount),
       rewardPoints: rewardPoints || 0,
@@ -412,8 +428,10 @@ export function MedalTemplateForm({
           <ImagePicker
             value={icon}
             borderStyle={borderStyle}
-            onChange={setIcon}
-            onBorderStyleChange={setBorderStyle}
+            onChange={(newValue) => {
+              setIcon(newValue)
+              setBorderStyle(newValue.borderStyle)
+            }}
             disabled={isLoading}
           />
         </div>

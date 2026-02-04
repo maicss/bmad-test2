@@ -131,7 +131,7 @@ function CirclePreview({
 }) {
   const sizeConfig = getSizeConfig(size);
   const IconComponent =
-    icon?.type === "lucide" ? getIconComponent(icon.value) : null;
+    icon?.type === "icon" ? getIconComponent(icon.value) : null;
 
   return (
     <div
@@ -143,7 +143,7 @@ function CirclePreview({
       )}
       style={{ borderColor }}
     >
-      {icon?.type === "custom" ? (
+      {icon?.type === "upload" ? (
         <img
           src={icon.value}
           alt="Medal icon"
@@ -176,7 +176,7 @@ function SquarePreview({
 }) {
   const sizeConfig = getSizeConfig(size);
   const IconComponent =
-    icon?.type === "lucide" ? getIconComponent(icon.value) : null;
+    icon?.type === "icon" ? getIconComponent(icon.value) : null;
 
   return (
     <div
@@ -188,7 +188,7 @@ function SquarePreview({
       )}
       style={{ borderColor }}
     >
-      {icon?.type === "custom" ? (
+      {icon?.type === "upload" ? (
         <img
           src={icon.value}
           alt="Medal icon"
@@ -221,7 +221,7 @@ function HexagonPreview({
 }) {
   const sizeConfig = getSizeConfig(size);
   const IconComponent =
-    icon?.type === "lucide" ? getIconComponent(icon.value) : null;
+    icon?.type === "icon" ? getIconComponent(icon.value) : null;
 
   // 六边形尺寸需要稍微调整以匹配视觉大小
   const hexSizeClass = {
@@ -236,7 +236,7 @@ function HexagonPreview({
       borderColor={borderColor}
       borderWidth={sizeConfig.borderWidth}
     >
-      {icon?.type === "custom" ? (
+      {icon?.type === "upload" ? (
         <img
           src={icon.value}
           alt="Medal icon"

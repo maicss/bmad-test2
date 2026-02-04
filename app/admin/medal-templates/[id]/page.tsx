@@ -108,7 +108,7 @@ export default function MedalTemplateDetailPage({ params }: { params: Promise<{ 
     );
   }
 
-  const IconComponent = template.icon.type === "lucide" 
+  const IconComponent = template.icon.type === "icon"
     ? getIconComponent(template.icon.value)
     : null;
   const borderStyle = BORDER_STYLE_MAP[template.borderStyle];
@@ -147,28 +147,28 @@ export default function MedalTemplateDetailPage({ params }: { params: Promise<{ 
           <CardHeader>
             <div className="flex items-start gap-4">
               {/* 徽章预览 */}
-              <div 
+              <div
                 className="h-20 w-20 flex items-center justify-center"
-                style={{ 
-                  backgroundColor: template.icon.type === "lucide" 
+                style={{
+                  backgroundColor: template.icon.type === "icon"
                     ? (template.icon.color || "#64748B") + "20"
                     : "#F1F5F9",
-                  border: `3px solid ${template.icon.type === "lucide" 
+                  border: `3px solid ${template.icon.type === "icon"
                     ? (template.icon.color || "#64748B")
                     : "#CBD5E1"}`,
-                  borderRadius: template.borderStyle === "square" ? "12px" 
-                    : template.borderStyle === "hexagon" ? "8px" 
+                  borderRadius: template.borderStyle === "square" ? "12px"
+                    : template.borderStyle === "hexagon" ? "8px"
                     : "50%",
                 }}
               >
-                {template.icon.type === "custom" ? (
-                  <img 
-                    src={template.icon.value} 
+                {template.icon.type === "upload" ? (
+                  <img
+                    src={template.icon.value}
                     alt={template.name}
                     className="h-10 w-10 object-contain"
                   />
                 ) : IconComponent ? (
-                  <IconComponent 
+                  <IconComponent
                     className="h-10 w-10"
                     style={{ color: template.icon.color || "#64748B" }}
                   />
@@ -198,7 +198,7 @@ export default function MedalTemplateDetailPage({ params }: { params: Promise<{ 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-muted-foreground">图标类型</label>
-                <p className="font-medium">{template.icon.type === "lucide" ? "Lucide 图标" : "自定义图片"}</p>
+                <p className="font-medium">{template.icon.type === "icon" ? "Lucide 图标" : "自定义图片"}</p>
               </div>
               <div>
                 <label className="text-sm text-muted-foreground">边框风格</label>

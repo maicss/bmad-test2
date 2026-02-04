@@ -1,6 +1,6 @@
 /**
  * Medal (徽章) 类型定义
- * 
+ *
  * 命名规范：所有徽章相关英文使用 "medal"，不使用 "badge"
  */
 
@@ -11,7 +11,7 @@
 /**
  * 图标类型
  */
-export type MedalIconType = "lucide" | "custom";
+export type MedalIconType = "icon" | "upload";
 
 /**
  * 边框风格
@@ -210,10 +210,19 @@ export interface MedalTemplateListItem {
  * 图片选择组件 Props
  */
 export interface ImagePickerProps {
-  value?: MedalIconValue;
+  value?: {
+    type: "icon" | "upload";
+    color?: string;
+    value: string; // iconName or image url
+    borderStyle: MedalBorderStyle;
+  };
   borderStyle?: MedalBorderStyle;
-  onChange?: (value: MedalIconValue) => void;
-  onBorderStyleChange?: (style: MedalBorderStyle) => void;
+  onChange?: (value: {
+    type: "icon" | "upload";
+    color?: string;
+    value: string;
+    borderStyle: MedalBorderStyle;
+  }) => void;
   disabled?: boolean;
 }
 

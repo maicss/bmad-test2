@@ -1,19 +1,33 @@
 /**
  * Database Queries Layer
- * 
+ *
  * 所有复杂的 SQL 查询抽象在此文件中
  * 使用 Drizzle ORM 的类型安全 API
- * 
+ *
  * 安全提示：所有查询都使用参数化查询防止 SQL 注入
  */
 
-import { eq, and, desc, asc, sql, like, or, gt, lt, gte, lte, inArray } from "drizzle-orm";
+import {
+  eq,
+  and,
+  desc,
+  asc,
+  sql,
+  like,
+  or,
+  gt,
+  lt,
+  gte,
+  lte,
+  inArray,
+} from "drizzle-orm";
 import { getDb, schema } from "@/database/db";
 import type {
   User,
   Family,
   FamilyMember,
   TaskDefinition,
+  TaskPlan,
   BehaviorLog,
   PointTransaction,
   Wish,
@@ -22,6 +36,7 @@ import type {
   NewFamily,
   NewFamilyMember,
   NewTaskDefinition,
+  NewTaskPlan,
   NewBehaviorLog,
   NewPointTransaction,
   NewWish,
@@ -73,7 +88,10 @@ export async function createUser(data: NewUser): Promise<User> {
 /**
  * 更新用户信息
  */
-export async function updateUser(id: string, data: Partial<NewUser>): Promise<User | undefined> {
+export async function updateUser(
+  id: string,
+  data: Partial<NewUser>,
+): Promise<User | undefined> {
   const db = getDb();
   const [user] = await db
     .update(schema.users)
@@ -117,37 +135,34 @@ export async function getFamilyById(id: string): Promise<Family | undefined> {
 /**
  * 根据邀请码获取家庭
  */
-export async function getFamilyByInviteCode(inviteCode: string): Promise<Family | undefined> {
+export async function getFamilyByInviteCode(
+  inviteCode: string,
+): Promise<Family | undefined> {
   const db = getDb();
   const result = await db.query.families.findFirst({
     where: and(
       eq(schema.families.inviteCode, inviteCode),
       or(
         sql`${schema.families.inviteCodeExpiresAt} IS NULL`,
-        gt(schema.families.inviteCodeExpiresAt, new Date())
-      )
+        gt(schema.families.inviteCodeExpiresAt, new Date()),
+      ),
     ),
   });
   return result;
 }
 
 /**
- * 更新家庭邀请码
+ * 更新家庭信息
  */
-export async function updateFamilyInviteCode(
-  familyId: string,
-  inviteCode: string,
-  expiresAt?: Date
+export async function updateFamily(
+  id: string,
+  data: Partial<NewFamily>,
 ): Promise<Family | undefined> {
   const db = getDb();
   const [family] = await db
     .update(schema.families)
-    .set({
-      inviteCode,
-      inviteCodeExpiresAt: expiresAt,
-      updatedAt: new Date(),
-    })
-    .where(eq(schema.families.id, familyId))
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(schema.families.id, id))
     .returning();
   return family;
 }
@@ -159,37 +174,23 @@ export async function updateFamilyInviteCode(
 /**
  * 添加家庭成员
  */
-export async function addFamilyMember(data: NewFamilyMember): Promise<FamilyMember> {
+export async function addFamilyMember(
+  data: NewFamilyMember,
+): Promise<FamilyMember> {
   const db = getDb();
-  const [member] = await db.insert(schema.familyMembers).values(data).returning();
+  const [member] = await db
+    .insert(schema.familyMembers)
+    .values(data)
+    .returning();
   return member;
 }
 
 /**
- * 获取用户在家庭中的成员记录
+ * 根据家庭ID获取成员
  */
-export async function getFamilyMember(
+export async function getMembersByFamilyId(
   familyId: string,
-  userId: string
-): Promise<FamilyMember | undefined> {
-  const db = getDb();
-  const result = await db.query.familyMembers.findFirst({
-    where: and(
-      eq(schema.familyMembers.familyId, familyId),
-      eq(schema.familyMembers.userId, userId)
-    ),
-    with: {
-      user: true,
-      family: true,
-    },
-  });
-  return result;
-}
-
-/**
- * 获取家庭的所有成员
- */
-export async function getFamilyMembers(familyId: string): Promise<FamilyMember[]> {
+): Promise<FamilyMember[]> {
   const db = getDb();
   const results = await db.query.familyMembers.findMany({
     where: eq(schema.familyMembers.familyId, familyId),
@@ -202,33 +203,34 @@ export async function getFamilyMembers(familyId: string): Promise<FamilyMember[]
 }
 
 /**
- * 更新成员积分余额
+ * 根据成员ID获取成员
  */
-export async function updateMemberPoints(
+export async function getMemberById(
   memberId: string,
-  newPoints: number
 ): Promise<FamilyMember | undefined> {
   const db = getDb();
-  const [member] = await db
-    .update(schema.familyMembers)
-    .set({
-      currentPoints: newPoints,
-      updatedAt: new Date(),
-    })
-    .where(eq(schema.familyMembers.id, memberId))
-    .returning();
-  return member;
+  const result = await db.query.familyMembers.findFirst({
+    where: eq(schema.familyMembers.id, memberId),
+    with: {
+      user: true,
+      family: true,
+    },
+  });
+  return result;
 }
 
 /**
- * 调整成员积分（原子操作）
+ * 更新成员积分
  */
-export async function adjustMemberPoints(
+export async function updateMemberPoints(
   memberId: string,
-  delta: number
+  delta: number,
 ): Promise<FamilyMember | undefined> {
   const db = getDb();
-  const [member] = await db
+  const member = await getMemberById(memberId);
+  if (!member) return undefined;
+
+  const [updated] = await db
     .update(schema.familyMembers)
     .set({
       currentPoints: sql`${schema.familyMembers.currentPoints} + ${delta}`,
@@ -236,7 +238,7 @@ export async function adjustMemberPoints(
     })
     .where(eq(schema.familyMembers.id, memberId))
     .returning();
-  return member;
+  return updated;
 }
 
 // ============================================================
@@ -246,75 +248,46 @@ export async function adjustMemberPoints(
 /**
  * 创建任务定义
  */
-export async function createTaskDefinition(data: NewTaskDefinition): Promise<TaskDefinition> {
+export async function createTaskDefinition(
+  data: NewTaskDefinition,
+): Promise<TaskDefinition> {
   const db = getDb();
-  const [task] = await db.insert(schema.taskDefinitions).values(data).returning();
+  const [task] = await db
+    .insert(schema.taskDefinitions)
+    .values(data)
+    .returning();
   return task;
 }
 
 /**
- * 获取家庭的任务定义列表
+ * 根据家庭ID获取任务定义
  */
-export async function getTaskDefinitions(
+export async function getTaskDefinitionsByFamilyId(
   familyId: string,
-  options?: { activeOnly?: boolean; category?: "study" | "housework" | "behavior" | "health" | "custom" }
 ): Promise<TaskDefinition[]> {
   const db = getDb();
-  const conditions = [eq(schema.taskDefinitions.familyId, familyId)];
-
-  if (options?.activeOnly) {
-    conditions.push(eq(schema.taskDefinitions.isActive, true));
-  }
-
-  if (options?.category) {
-    conditions.push(eq(schema.taskDefinitions.category, options.category));
-  }
-
   const results = await db.query.taskDefinitions.findMany({
-    where: and(...conditions),
-    orderBy: [desc(schema.taskDefinitions.isActive), asc(schema.taskDefinitions.name)],
+    where: eq(schema.taskDefinitions.familyId, familyId),
+    orderBy: [desc(schema.taskDefinitions.createdAt)],
   });
   return results;
 }
 
 /**
- * 根据 ID 获取任务定义
+ * 根据ID获取任务定义
  */
-export async function getTaskDefinitionById(id: string): Promise<TaskDefinition | undefined> {
+export async function getTaskDefinitionById(
+  id: string,
+): Promise<TaskDefinition | undefined> {
   const db = getDb();
   const result = await db.query.taskDefinitions.findFirst({
     where: eq(schema.taskDefinitions.id, id),
+    with: {
+      family: true,
+      createdBy: true,
+    },
   });
   return result;
-}
-
-/**
- * 更新任务定义
- */
-export async function updateTaskDefinition(
-  id: string,
-  data: Partial<NewTaskDefinition>
-): Promise<TaskDefinition | undefined> {
-  const db = getDb();
-  const [task] = await db
-    .update(schema.taskDefinitions)
-    .set({ ...data, updatedAt: new Date() })
-    .where(eq(schema.taskDefinitions.id, id))
-    .returning();
-  return task;
-}
-
-/**
- * 软删除任务定义（标记为不活跃）
- */
-export async function deactivateTaskDefinition(id: string): Promise<TaskDefinition | undefined> {
-  const db = getDb();
-  const [task] = await db
-    .update(schema.taskDefinitions)
-    .set({ isActive: false, updatedAt: new Date() })
-    .where(eq(schema.taskDefinitions.id, id))
-    .returning();
-  return task;
 }
 
 // ============================================================
@@ -322,75 +295,28 @@ export async function deactivateTaskDefinition(id: string): Promise<TaskDefiniti
 // ============================================================
 
 /**
- * 记录行为
+ * 创建行为记录
  */
-export async function recordBehavior(data: NewBehaviorLog): Promise<BehaviorLog> {
+export async function createBehaviorLog(
+  data: NewBehaviorLog,
+): Promise<BehaviorLog> {
   const db = getDb();
   const [log] = await db.insert(schema.behaviorLogs).values(data).returning();
   return log;
 }
 
 /**
- * 获取成员的行为记录
- */
-export async function getBehaviorLogs(
-  memberId: string,
-  options?: {
-    limit?: number;
-    offset?: number;
-    startDate?: Date;
-    endDate?: Date;
-  }
-): Promise<BehaviorLog[]> {
-  const db = getDb();
-  const conditions = [eq(schema.behaviorLogs.memberId, memberId)];
-
-  if (options?.startDate) {
-    conditions.push(gte(schema.behaviorLogs.recordedAt, options.startDate));
-  }
-
-  if (options?.endDate) {
-    conditions.push(lte(schema.behaviorLogs.recordedAt, options.endDate));
-  }
-
-  const results = await db.query.behaviorLogs.findMany({
-    where: and(...conditions),
-    with: {
-      taskDefinition: true,
-      recordedBy: true,
-    },
-    orderBy: [desc(schema.behaviorLogs.recordedAt)],
-    limit: options?.limit,
-    offset: options?.offset,
-  });
-  return results;
-}
-
-/**
- * 获取家庭的所有行为记录
+ * 获取家庭行为记录
  */
 export async function getFamilyBehaviorLogs(
   familyId: string,
-  options?: {
-    limit?: number;
-    offset?: number;
-    startDate?: Date;
-    endDate?: Date;
-  }
+  options: { limit?: number; offset?: number } = {},
 ): Promise<BehaviorLog[]> {
   const db = getDb();
-  const conditions = [eq(schema.behaviorLogs.familyId, familyId)];
-
-  if (options?.startDate) {
-    conditions.push(gte(schema.behaviorLogs.recordedAt, options.startDate));
-  }
-
-  if (options?.endDate) {
-    conditions.push(lte(schema.behaviorLogs.recordedAt, options.endDate));
-  }
+  const { limit = 50, offset = 0 } = options;
 
   const results = await db.query.behaviorLogs.findMany({
-    where: and(...conditions),
+    where: eq(schema.behaviorLogs.familyId, familyId),
     with: {
       member: {
         with: {
@@ -401,42 +327,10 @@ export async function getFamilyBehaviorLogs(
       recordedBy: true,
     },
     orderBy: [desc(schema.behaviorLogs.recordedAt)],
-    limit: options?.limit,
-    offset: options?.offset,
+    limit,
+    offset,
   });
   return results;
-}
-
-/**
- * 计算成员在日期范围内的行为统计
- */
-export async function getBehaviorStats(
-  memberId: string,
-  startDate: Date,
-  endDate: Date
-): Promise<{ totalPoints: number; positiveCount: number; negativeCount: number }> {
-  const db = getDb();
-  const logs = await db
-    .select({
-      points: schema.behaviorLogs.points,
-    })
-    .from(schema.behaviorLogs)
-    .where(
-      and(
-        eq(schema.behaviorLogs.memberId, memberId),
-        gte(schema.behaviorLogs.recordedAt, startDate),
-        lte(schema.behaviorLogs.recordedAt, endDate)
-      )
-    );
-
-  return logs.reduce(
-    (acc, log) => ({
-      totalPoints: acc.totalPoints + log.points,
-      positiveCount: acc.positiveCount + (log.points > 0 ? 1 : 0),
-      negativeCount: acc.negativeCount + (log.points < 0 ? 1 : 0),
-    }),
-    { totalPoints: 0, positiveCount: 0, negativeCount: 0 }
-  );
 }
 
 // ============================================================
@@ -444,59 +338,38 @@ export async function getBehaviorStats(
 // ============================================================
 
 /**
- * 创建积分交易记录
+ * 创建积分交易
  */
-export async function createPointTransaction(data: NewPointTransaction): Promise<PointTransaction> {
+export async function createPointTransaction(
+  data: NewPointTransaction,
+): Promise<PointTransaction> {
   const db = getDb();
-  const [transaction] = await db.insert(schema.pointTransactions).values(data).returning();
+  const [transaction] = await db
+    .insert(schema.pointTransactions)
+    .values(data)
+    .returning();
   return transaction;
 }
 
 /**
- * 获取成员的积分交易历史
+ * 获取成员积分交易记录
  */
-export async function getPointTransactions(
+export async function getMemberPointTransactions(
   memberId: string,
-  options?: {
-    limit?: number;
-    offset?: number;
-    type?: "earn" | "spend" | "adjust" | "expire";
-  }
 ): Promise<PointTransaction[]> {
   const db = getDb();
-  const conditions = [eq(schema.pointTransactions.memberId, memberId)];
-
-  if (options?.type) {
-    conditions.push(eq(schema.pointTransactions.type, options.type));
-  }
-
   const results = await db.query.pointTransactions.findMany({
-    where: and(...conditions),
+    where: eq(schema.pointTransactions.memberId, memberId),
+    with: {
+      family: true,
+      member: {
+        with: {
+          user: true,
+        },
+      },
+    },
     orderBy: [desc(schema.pointTransactions.createdAt)],
-    limit: options?.limit,
-    offset: options?.offset,
   });
-  return results;
-}
-
-/**
- * 获取家庭积分交易汇总
- */
-export async function getFamilyPointSummary(familyId: string): Promise<
-  { memberId: string; totalEarned: number; totalSpent: number; balance: number }[]
-> {
-  const db = getDb();
-  const results = await db
-    .select({
-      memberId: schema.pointTransactions.memberId,
-      totalEarned: sql<number>`SUM(CASE WHEN ${schema.pointTransactions.type} = 'earn' THEN ${schema.pointTransactions.amount} ELSE 0 END)`,
-      totalSpent: sql<number>`SUM(CASE WHEN ${schema.pointTransactions.type} = 'spend' THEN ABS(${schema.pointTransactions.amount}) ELSE 0 END)`,
-      balance: sql<number>`SUM(${schema.pointTransactions.amount})`,
-    })
-    .from(schema.pointTransactions)
-    .where(eq(schema.pointTransactions.familyId, familyId))
-    .groupBy(schema.pointTransactions.memberId);
-
   return results;
 }
 
@@ -514,117 +387,53 @@ export async function createWish(data: NewWish): Promise<Wish> {
 }
 
 /**
- * 获取家庭的愿望列表
+ * 获取家庭愿望列表
  */
 export async function getWishes(
   familyId: string,
-  options?: {
-    memberId?: string;
-    status?: "pending" | "approved" | "rejected" | "completed" | "cancelled";
-  }
+  options: { status?: string; limit?: number } = {},
 ): Promise<Wish[]> {
   const db = getDb();
-  const conditions = [eq(schema.wishes.familyId, familyId)];
+  const { status, limit = 50 } = options;
 
-  if (options?.memberId) {
-    conditions.push(eq(schema.wishes.memberId, options.memberId));
-  }
-
-  if (options?.status) {
-    conditions.push(eq(schema.wishes.status, options.status));
+  let whereClause = eq(schema.wishes.familyId, familyId);
+  if (status) {
+    whereClause = and(whereClause, eq(schema.wishes.status, status)) as any;
   }
 
   const results = await db.query.wishes.findMany({
-    where: and(...conditions),
+    where: whereClause,
     with: {
       member: {
         with: {
           user: true,
         },
       },
-      approvedBy: true,
     },
     orderBy: [desc(schema.wishes.createdAt)],
+    limit,
   });
   return results;
 }
 
 /**
- * 根据 ID 获取愿望
+ * 根据ID获取愿望
  */
 export async function getWishById(id: string): Promise<Wish | undefined> {
   const db = getDb();
   const result = await db.query.wishes.findFirst({
     where: eq(schema.wishes.id, id),
     with: {
+      family: true,
       member: {
         with: {
           user: true,
         },
       },
       approvedBy: true,
-      redemptions: true,
     },
   });
   return result;
-}
-
-/**
- * 批准愿望
- */
-export async function approveWish(
-  wishId: string,
-  approvedBy: string
-): Promise<Wish | undefined> {
-  const db = getDb();
-  const [wish] = await db
-    .update(schema.wishes)
-    .set({
-      status: "approved",
-      approvedBy,
-      approvedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(schema.wishes.id, wishId))
-    .returning();
-  return wish;
-}
-
-/**
- * 拒绝愿望
- */
-export async function rejectWish(
-  wishId: string,
-  note?: string
-): Promise<Wish | undefined> {
-  const db = getDb();
-  const [wish] = await db
-    .update(schema.wishes)
-    .set({
-      status: "rejected",
-      note,
-      updatedAt: new Date(),
-    })
-    .where(eq(schema.wishes.id, wishId))
-    .returning();
-  return wish;
-}
-
-/**
- * 完成愿望
- */
-export async function completeWish(wishId: string): Promise<Wish | undefined> {
-  const db = getDb();
-  const [wish] = await db
-    .update(schema.wishes)
-    .set({
-      status: "completed",
-      completedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(schema.wishes.id, wishId))
-    .returning();
-  return wish;
 }
 
 // ============================================================
@@ -634,83 +443,49 @@ export async function completeWish(wishId: string): Promise<Wish | undefined> {
 /**
  * 创建愿望兑换记录
  */
-export async function createWishRedemption(data: NewWishRedemption): Promise<WishRedemption> {
+export async function createWishRedemption(
+  data: NewWishRedemption,
+): Promise<WishRedemption> {
   const db = getDb();
-  const [redemption] = await db.insert(schema.wishRedemptions).values(data).returning();
+  const [redemption] = await db
+    .insert(schema.wishRedemptions)
+    .values(data)
+    .returning();
   return redemption;
 }
 
 /**
- * 获取兑换记录
+ * 获取愿望兑换记录
  */
-export async function getWishRedemptions(
-  options?: {
-    memberId?: string;
-    familyId?: string;
-    status?: "pending" | "fulfilled" | "cancelled";
-  }
+export async function getWishRedemptionsByWishId(
+  wishId: string,
 ): Promise<WishRedemption[]> {
   const db = getDb();
-  const conditions = [];
-
-  if (options?.memberId) {
-    conditions.push(eq(schema.wishRedemptions.memberId, options.memberId));
-  }
-
-  if (options?.familyId) {
-    conditions.push(eq(schema.wishRedemptions.familyId, options.familyId));
-  }
-
-  if (options?.status) {
-    conditions.push(eq(schema.wishRedemptions.status, options.status));
-  }
-
   const results = await db.query.wishRedemptions.findMany({
-    where: conditions.length > 0 ? and(...conditions) : undefined,
+    where: eq(schema.wishRedemptions.wishId, wishId),
     with: {
-      wish: true,
       member: {
         with: {
           user: true,
         },
       },
-      fulfilledBy: true,
+      wish: true,
     },
     orderBy: [desc(schema.wishRedemptions.createdAt)],
   });
   return results;
 }
 
-/**
- * 履行兑换
- */
-export async function fulfillRedemption(
-  redemptionId: string,
-  fulfilledBy: string
-): Promise<WishRedemption | undefined> {
-  const db = getDb();
-  const [redemption] = await db
-    .update(schema.wishRedemptions)
-    .set({
-      status: "fulfilled",
-      fulfilledBy,
-      fulfilledAt: new Date(),
-    })
-    .where(eq(schema.wishRedemptions.id, redemptionId))
-    .returning();
-  return redemption;
-}
-
 // ============================================================
-// 复杂业务查询
+// 家庭仪表板相关查询
 // ============================================================
 
 /**
  * 获取家庭仪表板数据
  */
-export async function getFamilyDashboard(familyId: string): Promise<{
+export async function getFamilyDashboardData(familyId: string): Promise<{
   family: Family;
-  members: (FamilyMember & { user: User })[];
+  members: FamilyMember[];
   recentLogs: BehaviorLog[];
   pendingWishes: Wish[];
   topTasks: TaskDefinition[];
@@ -733,7 +508,10 @@ export async function getFamilyDashboard(familyId: string): Promise<{
   const pendingWishes = await getWishes(familyId, { status: "pending" });
 
   const topTasks = await db.query.taskDefinitions.findMany({
-    where: and(eq(schema.taskDefinitions.familyId, familyId), eq(schema.taskDefinitions.isActive, true)),
+    where: and(
+      eq(schema.taskDefinitions.familyId, familyId),
+      eq(schema.taskDefinitions.isActive, true),
+    ),
     orderBy: [desc(schema.taskDefinitions.createdAt)],
     limit: 5,
   });
@@ -755,9 +533,142 @@ export async function searchUsers(query: string): Promise<User[]> {
   const results = await db.query.users.findMany({
     where: or(
       like(schema.users.name, `%${query}%`),
-      like(schema.users.phone, `%${query}%`)
+      like(schema.users.phone, `%${query}%`),
     ),
     limit: 10,
   });
   return results;
+}
+
+// ============================================================
+// 计划任务相关查询
+// ============================================================
+
+/**
+ * 获取家庭成员（带用户信息，按角色排序）
+ * role 排序: child -> primary -> secondary
+ */
+export async function getFamilyMembersByFamilyId(familyId: string) {
+  const db = getDb();
+  const members = await db.query.familyMembers.findMany({
+    where: eq(schema.familyMembers.familyId, familyId),
+    with: {
+      user: true,
+    },
+    orderBy: [asc(schema.familyMembers.role)],
+  });
+  return members;
+}
+
+/**
+ * 获取家庭成员的用户ID列表
+ */
+export async function getFamilyUserIds(familyId: string): Promise<string[]> {
+  const db = getDb();
+  const members = await db.query.familyMembers.findMany({
+    where: eq(schema.familyMembers.familyId, familyId),
+    columns: {
+      userId: true,
+    },
+  });
+  return members.map((m) => m.userId);
+}
+
+/**
+ * 获取家庭创建的日期策略（非公开）
+ */
+export async function getFamilyDateStrategies(userIds: string[]) {
+  const db = getDb();
+  const strategies = await db.query.dateStrategies.findMany({
+    where: and(
+      inArray(schema.dateStrategies.createdBy, userIds),
+      eq(schema.dateStrategies.isPublic, false),
+    ),
+    orderBy: [desc(schema.dateStrategies.createdAt)],
+  });
+  return strategies;
+}
+
+// ============================================================
+// 任务计划相关查询 (Task Plan Queries)
+// ============================================================
+
+/**
+ * 创建任务计划
+ */
+export async function createTaskPlan(data: NewTaskPlan): Promise<TaskPlan> {
+  const db = getDb();
+  const [plan] = await db.insert(schema.taskPlans).values(data).returning();
+  return plan;
+}
+
+/**
+ * 根据家庭ID获取任务计划
+ */
+export async function getTaskPlansByFamilyId(familyId: string): Promise<TaskPlan[]> {
+  const db = getDb();
+  return db.query.taskPlans.findMany({
+    where: eq(schema.taskPlans.familyId, familyId),
+    orderBy: [desc(schema.taskPlans.createdAt)],
+  });
+}
+
+/**
+ * 获取公开任务计划模板
+ */
+export async function getPublicTaskPlanTemplates(): Promise<TaskPlan[]> {
+  const db = getDb();
+  return db.query.taskPlans.findMany({
+    where: and(
+      eq(schema.taskPlans.isTemplate, true),
+      eq(schema.taskPlans.isPublic, true),
+      eq(schema.taskPlans.status, "published"),
+    ),
+    with: {
+      createdBy: true,
+      medalTemplate: true,
+      dateStrategy: true,
+    },
+  });
+}
+
+/**
+ * 根据ID获取任务计划
+ */
+export async function getTaskPlanById(id: string): Promise<TaskPlan | undefined> {
+  const db = getDb();
+  return db.query.taskPlans.findFirst({
+    where: eq(schema.taskPlans.id, id),
+    with: {
+      family: true,
+      createdBy: true,
+      dateStrategy: true,
+      medalTemplate: true,
+    },
+  });
+}
+
+/**
+ * 验证日期范围与日期策略的重叠
+ */
+export async function validateDateRangeOverlap(
+  startDate: string,
+  endDate: string,
+  dateStrategyId: string
+): Promise<boolean> {
+  const db = getDb();
+  const strategy = await db.query.dateStrategies.findFirst({
+    where: eq(schema.dateStrategies.id, dateStrategyId),
+  });
+
+  if (!strategy || !strategy.dates) return false;
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const strategyDates = strategy.dates.split(",");
+
+  return strategyDates.some(dateStr => {
+    const date = new Date(dateStr.trim());
+    return date >= start && date <= end;
+  });
 }

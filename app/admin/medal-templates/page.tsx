@@ -105,7 +105,7 @@ export default function MedalTemplatesListPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredTemplates.map((template) => {
-            const IconComponent = template.icon.type === "lucide" 
+            const IconComponent = template.icon.type === "icon"
               ? getIconComponent(template.icon.value)
               : null;
             const borderStyle = BORDER_STYLE_MAP[template.borderStyle];
@@ -118,28 +118,28 @@ export default function MedalTemplatesListPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         {/* 徽章预览 */}
-                        <div 
+                        <div
                           className="h-12 w-12 rounded-full flex items-center justify-center"
-                          style={{ 
-                            backgroundColor: template.icon.type === "lucide" 
+                          style={{
+                            backgroundColor: template.icon.type === "icon"
                               ? (template.icon.color || "#64748B") + "20"
                               : "#F1F5F9",
-                            border: `2px solid ${template.icon.type === "lucide" 
+                            border: `2px solid ${template.icon.type === "icon"
                               ? (template.icon.color || "#64748B")
                               : "#CBD5E1"}`,
-                            borderRadius: template.borderStyle === "square" ? "8px" 
-                              : template.borderStyle === "hexagon" ? "4px" 
+                            borderRadius: template.borderStyle === "square" ? "8px"
+                              : template.borderStyle === "hexagon" ? "4px"
                               : "50%",
                           }}
                         >
-                          {template.icon.type === "custom" ? (
-                            <img 
-                              src={template.icon.value} 
+                          {template.icon.type === "upload" ? (
+                            <img
+                              src={template.icon.value}
                               alt={template.name}
                               className="h-6 w-6 object-contain"
                             />
                           ) : IconComponent ? (
-                            <IconComponent 
+                            <IconComponent
                               className="h-6 w-6"
                               style={{ color: template.icon.color || "#64748B" }}
                             />

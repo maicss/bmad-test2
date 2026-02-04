@@ -39,7 +39,13 @@ export async function GET(
       );
     }
 
-    return Response.json(createSuccessResponse({ template }));
+    // 转换 icon_type: "lucide" -> "icon", "custom" -> "upload"
+    const formattedTemplate = {
+      ...template,
+      icon_type: template.icon_type === "lucide" ? "icon" : "upload",
+    };
+
+    return Response.json(createSuccessResponse({ template: formattedTemplate }));
   } catch (error) {
     console.error(`GET /api/admin/wish-templates/${id} error:`, error);
     return Response.json(

@@ -110,7 +110,7 @@ export default function WishTemplateDetailPage() {
           <CardContent className="p-6">
             <div className="space-y-6">
               <div className="flex items-start gap-6">
-                {template.icon_type === "custom" && template.icon_value && (
+                {template.icon_type === "upload" && template.icon_value && (
                   <div className="flex-shrink-0">
                     <img
                       src={template.icon_value}

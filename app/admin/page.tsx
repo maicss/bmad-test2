@@ -236,23 +236,23 @@ export default async function AdminDashboardPage() {
   const medalTemplates = rawDb
     .query(
       `
-    SELECT id, name, icon_type, icon_value, icon_color, border_style, level_mode, level_count, is_active
-    FROM medal_template
-    ORDER BY created_at DESC
-    LIMIT 6
-  `,
+      SELECT id, name, icon_type, icon_value, icon_color, border_style, level_mode, level_count, is_public
+      FROM medal_template
+      ORDER BY created_at DESC
+      LIMIT 6
+    `,
     )
     .all() as Array<{
-    id: string;
-    name: string;
-    icon_type: "lucide" | "custom";
-    icon_value: string;
-    icon_color: string | null;
-    border_style: "circle" | "hexagon" | "square";
-    level_mode: "single" | "multiple";
-    level_count: number;
-    is_active: number;
-  }>;
+      id: string;
+      name: string;
+      icon_type: "lucide" | "custom";
+      icon_value: string;
+      icon_color: string | null;
+      border_style: "circle" | "hexagon" | "square";
+      level_mode: "single" | "multiple";
+      level_count: number;
+      is_public: number;
+    }>;
 
   const medalTemplateCount = rawDb
     .query(
@@ -470,7 +470,7 @@ export default async function AdminDashboardPage() {
                 </CardTitle>
                 <CardDescription className="mt-1">管理任务模板</CardDescription>
               </div>
-              <Link href="/admin/task-templates/new">
+              <Link href="/task-plans/new">
                 <Button size="sm" className="flex items-center gap-1">
                   <Plus className="h-4 w-4" />
                   创建
@@ -573,14 +573,14 @@ export default async function AdminDashboardPage() {
                           {template.type === "activity" ? "活动" : "物品"} ·{" "}
                           {template.points_required}积分
                         </p>
-                      </div>
-                    </div>
-                    <Badge
-                      variant={template.is_active ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {template.is_active ? "启用" : "禁用"}
-                    </Badge>
+                          </div>
+                        </div>
+                        <Badge
+                          variant={template.is_active ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {template.is_active ? "启用" : "禁用"}
+                        </Badge>
                   </Link>
                 ))}
                 {wishTemplateCount.count > 6 && (
@@ -664,10 +664,10 @@ export default async function AdminDashboardPage() {
                           </div>
                         </div>
                         <Badge
-                          variant={template.is_active ? "default" : "secondary"}
+                          variant={template.is_public ? "default" : "secondary"}
                           className="text-xs"
                         >
-                          {template.is_active ? "启用" : "禁用"}
+                          {template.is_public ? "启用" : "禁用"}
                         </Badge>
                       </Link>
                     ))}
