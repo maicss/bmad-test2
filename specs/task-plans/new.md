@@ -29,20 +29,20 @@
 表字段：
 
 - id
-- isTemplate
+- is_template
 - familyId 可以为 null，因为是管理员创建的。如果 family 的状态设置为 suspended或则deleted，则任务也要设置为suspended或则deleted
 - name
 - description
-- taskName
+- task_name
 - category
 - points
   // 下面四个字段都是 components/image-picker 的返回值
-- imageType icon|upload
+- image_type icon|upload
 - color string
 - image string
-- borderStyle string
+- border_style string
 - status 计划任务状态，active，suspend，noTask，deleted, noExecutor，published（模板设为公开），unpublished（模板非公开）
-- createdBy
-- createdAt
-- updatedAt
-- templateId: 家长复制一个公开模板的时候，所复制的模板id
+- created_by
+- created_at
+- updated_at
+- template_id: 家长复制一个公开模板的时候，所复制的模板id
