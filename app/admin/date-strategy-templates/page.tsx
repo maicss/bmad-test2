@@ -6,7 +6,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { SearchableSelect } from "@/components/searchable-select";
@@ -30,7 +37,7 @@ import {
   Trash2,
   Pencil,
   Copy,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
 
 interface DateStrategyTemplate {
@@ -48,7 +55,7 @@ interface DateStrategyTemplate {
 }
 
 const PROVINCES = [
-  { id: "national", label: "全国" },
+  { id: "000000", label: "全国" },
   { id: "110000", label: "北京市" },
   { id: "120000", label: "天津市" },
   { id: "130000", label: "河北省" },
@@ -83,7 +90,7 @@ const PROVINCES = [
 ];
 
 const PROVINCE_MAP: Record<string, string> = {
-  national: "全国",
+  "000000": "全国",
   "110000": "北京市",
   "120000": "天津市",
   "130000": "河北省",
@@ -172,9 +179,12 @@ export default function DateStrategyTemplatesPage() {
     if (!deleteTemplateId) return;
 
     try {
-      const response = await fetch(`/api/admin/date-strategy-templates/${deleteTemplateId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/admin/date-strategy-templates/${deleteTemplateId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       // Handle 401 Unauthorized
       if (response.status === 401) {
@@ -204,23 +214,25 @@ export default function DateStrategyTemplatesPage() {
   };
 
   const filteredTemplates = templates.filter((template) => {
-    const matchesSearch = 
+    const matchesSearch =
       template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (template.description?.toLowerCase() || "").includes(searchQuery.toLowerCase());
-    
-    const matchesRegion = regionFilter === "all" || template.region === regionFilter;
-    
+      (template.description?.toLowerCase() || "").includes(
+        searchQuery.toLowerCase(),
+      );
+
+    const matchesRegion =
+      regionFilter === "all" || template.region === regionFilter;
+
     const matchesYear = !yearFilter || template.year.toString() === yearFilter;
 
     return matchesSearch && matchesRegion && matchesYear;
   });
 
-  const regionOptions = [
-    { id: "all", label: "全部区域" },
-    ...PROVINCES,
-  ];
+  const regionOptions = [{ id: "all", label: "全部区域" }, ...PROVINCES];
 
-  const uniqueYears = [...new Set(templates.map((t) => t.year))].sort((a, b) => b - a);
+  const uniqueYears = [...new Set(templates.map((t) => t.year))].sort(
+    (a, b) => b - a,
+  );
   const yearOptions = [
     { id: "", label: "全部年份" },
     ...uniqueYears.map((y) => ({ id: y.toString(), label: `${y}年` })),
@@ -293,11 +305,17 @@ export default function DateStrategyTemplatesPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredTemplates.map((template) => {
             const dateCount = template.dates.split(",").filter((d) => d).length;
-            const dateList = template.dates.split(",").filter((d) => d).slice(0, 5);
+            const dateList = template.dates
+              .split(",")
+              .filter((d) => d)
+              .slice(0, 5);
 
             return (
               <Card key={template.id} className="flex flex-col">
-                <Link href={`/admin/date-strategy-templates/${template.id}`} className="flex-1">
+                <Link
+                  href={`/admin/date-strategy-templates/${template.id}`}
+                  className="flex-1"
+                >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -340,10 +358,14 @@ export default function DateStrategyTemplatesPage() {
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>{dateCount} 个日期</span>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-1">
                         {dateList.map((date) => (
-                          <Badge key={date} variant="secondary" className="text-xs">
+                          <Badge
+                            key={date}
+                            variant="secondary"
+                            className="text-xs"
+                          >
                             {date}
                           </Badge>
                         ))}
@@ -356,7 +378,12 @@ export default function DateStrategyTemplatesPage() {
                     </div>
 
                     <div className="mt-3 pt-3 border-t">
-                      <Badge variant={template.copy_count > 0 ? "default" : "outline"} className="text-xs">
+                      <Badge
+                        variant={
+                          template.copy_count > 0 ? "default" : "outline"
+                        }
+                        className="text-xs"
+                      >
                         复制次数: {template.copy_count || 0}
                       </Badge>
                     </div>
@@ -368,11 +395,7 @@ export default function DateStrategyTemplatesPage() {
                     href={`/admin/date-strategy-templates/${template.id}`}
                     className="flex-1"
                   >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                    >
+                    <Button variant="outline" size="sm" className="w-full">
                       <Pencil className="h-4 w-4 mr-1" />
                       编辑
                     </Button>
@@ -381,11 +404,7 @@ export default function DateStrategyTemplatesPage() {
                     href={`/admin/date-strategy-templates/new?copy=${template.id}`}
                     className="flex-1"
                   >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                    >
+                    <Button variant="outline" size="sm" className="w-full">
                       <Copy className="h-4 w-4 mr-1" />
                       复制
                     </Button>
@@ -394,11 +413,17 @@ export default function DateStrategyTemplatesPage() {
                     variant="outline"
                     size="sm"
                     className="px-2"
-                    onClick={() => openDeleteDialog(template.id, template.copy_count)}
+                    onClick={() =>
+                      openDeleteDialog(template.id, template.copy_count)
+                    }
                     disabled={template.copy_count > 0}
-                    title={template.copy_count > 0 ? "已被复制，无法删除" : "删除"}
+                    title={
+                      template.copy_count > 0 ? "已被复制，无法删除" : "删除"
+                    }
                   >
-                    <Trash2 className={`h-4 w-4 ${template.copy_count > 0 ? "text-muted-foreground" : "text-red-500"}`} />
+                    <Trash2
+                      className={`h-4 w-4 ${template.copy_count > 0 ? "text-muted-foreground" : "text-red-500"}`}
+                    />
                   </Button>
                 </CardFooter>
               </Card>
@@ -420,7 +445,10 @@ export default function DateStrategyTemplatesPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               取消
             </Button>
             <Button variant="destructive" onClick={handleDeleteConfirm}>

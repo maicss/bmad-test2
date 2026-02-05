@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +18,7 @@ import { SearchableSelect } from "@/components/searchable-select";
 import { MultiSelectCalendar } from "@/components/multi-select-calendar";
 
 const PROVINCES = [
-  { id: "national", label: "全国" },
+  { id: "000000", label: "全国" },
   { id: "110000", label: "北京市" },
   { id: "120000", label: "天津市" },
   { id: "130000", label: "河北省" },
@@ -85,7 +91,7 @@ export function DateStrategyDetailModal({
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [region, setRegion] = useState("national");
+  const [region, setRegion] = useState("000000");
   const [year, setYear] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [dateMode, setDateMode] = useState<"picker" | "input">("picker");
@@ -105,8 +111,8 @@ export function DateStrategyDetailModal({
       setRegion(template.region);
       setYear(template.year.toString());
       setIsPublic(template.is_public === 1);
-      
-      const dates = template.dates.split(",").filter(d => d.trim());
+
+      const dates = template.dates.split(",").filter((d) => d.trim());
       setSelectedDates(dates);
       setDateInput(template.dates);
     }
@@ -116,7 +122,9 @@ export function DateStrategyDetailModal({
     if (!templateId) return;
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/admin/date-strategy-templates/${templateId}`);
+      const response = await fetch(
+        `/api/admin/date-strategy-templates/${templateId}`,
+      );
       const data = await response.json();
       if (data.success) {
         setTemplate(data.data.template);
@@ -130,7 +138,7 @@ export function DateStrategyDetailModal({
 
   const handleSave = async () => {
     if (!template) return;
-    
+
     // Check if referenced
     if (template.copy_count > 0 && !showConfirm) {
       setShowConfirm(true);
@@ -142,25 +150,35 @@ export function DateStrategyDetailModal({
 
     try {
       let dates = dateMode === "picker" ? selectedDates.join(",") : dateInput;
-      
+
       // Deduplicate
       if (dateMode === "input") {
-        const uniqueDates = [...new Set(dates.split(",").map(d => d.trim()).filter(d => d))];
+        const uniqueDates = [
+          ...new Set(
+            dates
+              .split(",")
+              .map((d) => d.trim())
+              .filter((d) => d),
+          ),
+        ];
         dates = uniqueDates.join(",");
       }
 
-      const response = await fetch(`/api/admin/date-strategy-templates/${templateId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          description,
-          region,
-          year: parseInt(year),
-          isPublic,
-          dates,
-        }),
-      });
+      const response = await fetch(
+        `/api/admin/date-strategy-templates/${templateId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            description,
+            region,
+            year: parseInt(year),
+            isPublic,
+            dates,
+          }),
+        },
+      );
 
       const data = await response.json();
 
@@ -181,7 +199,7 @@ export function DateStrategyDetailModal({
 
   const handleDelete = async () => {
     if (!template) return;
-    
+
     if (template.copy_count > 0) {
       setError("无法删除已被复制的模板");
       return;
@@ -190,9 +208,12 @@ export function DateStrategyDetailModal({
     if (!confirm("确定要删除此模板吗？")) return;
 
     try {
-      const response = await fetch(`/api/admin/date-strategy-templates/${templateId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/admin/date-strategy-templates/${templateId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       const data = await response.json();
 
@@ -231,15 +252,26 @@ export function DateStrategyDetailModal({
           <DialogTitle className="flex items-center justify-between">
             <span>日期策略模板详情</span>
             <div className="flex items-center gap-2">
-              <Badge variant={template.copy_count > 0 ? "secondary" : "outline"}>
+              <Badge
+                variant={template.copy_count > 0 ? "secondary" : "outline"}
+              >
                 复制次数: {template.copy_count || 0}
               </Badge>
               {!isEditing && (
                 <>
-                  <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsEditing(true)}
+                  >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={handleDelete} disabled={template.copy_count > 0}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleDelete}
+                    disabled={template.copy_count > 0}
+                  >
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 </>
@@ -258,7 +290,11 @@ export function DateStrategyDetailModal({
                   此规则已被复制 {template.copy_count} 次，确认更新吗？
                 </p>
                 <div className="flex gap-2 mt-3">
-                  <Button size="sm" variant="outline" onClick={() => setShowConfirm(false)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowConfirm(false)}
+                  >
                     取消
                   </Button>
                   <Button size="sm" onClick={handleSave} disabled={isSaving}>
@@ -302,7 +338,12 @@ export function DateStrategyDetailModal({
                   width="100%"
                 />
               ) : (
-                <Input value={PROVINCES.find(p => p.id === region)?.label || region} disabled />
+                <Input
+                  value={
+                    PROVINCES.find((p) => p.id === region)?.label || region
+                  }
+                  disabled
+                />
               )}
             </div>
 
@@ -341,7 +382,10 @@ export function DateStrategyDetailModal({
                         if (e.target.checked) {
                           setDateMode("picker");
                           if (dateInput) {
-                            const dates = dateInput.split(",").map(d => d.trim()).filter(d => d);
+                            const dates = dateInput
+                              .split(",")
+                              .map((d) => d.trim())
+                              .filter((d) => d);
                             setSelectedDates([...new Set(dates)]);
                           }
                         }
@@ -368,7 +412,7 @@ export function DateStrategyDetailModal({
                   </label>
                 </div>
               </div>
-              
+
               {dateMode === "picker" ? (
                 <MultiSelectCalendar
                   selectedDates={selectedDates}
@@ -389,11 +433,14 @@ export function DateStrategyDetailModal({
             <div className="space-y-2">
               <Label>日期</Label>
               <div className="flex flex-wrap gap-2">
-                {template.dates.split(",").filter(d => d).map((date) => (
-                  <Badge key={date} variant="secondary">
-                    {date}
-                  </Badge>
-                ))}
+                {template.dates
+                  .split(",")
+                  .filter((d) => d)
+                  .map((date) => (
+                    <Badge key={date} variant="secondary">
+                      {date}
+                    </Badge>
+                  ))}
               </div>
             </div>
           )}

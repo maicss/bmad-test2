@@ -16,20 +16,23 @@ describe("Task Template API", () => {
   beforeAll(async () => {
     db = new Database(SERVER_DB_PATH);
     db.exec("PRAGMA foreign_keys = ON");
-    
+
     const session = await createTestAdminSession();
     if (!session) {
       throw new Error("Failed to create test admin session");
     }
-    
+
     adminUserId = session.userId;
     adminSession = session.cookie;
 
     dateStrategyId = `dst_${Date.now()}`;
-    db.run(`
+    db.run(
+      `
       INSERT INTO date_strategy_template (id, name, region, year, dates, created_by)
-      VALUES (?, 'Test Strategy', 'national', 2026, '2026-01-01,2026-01-02', ?)
-    `, [dateStrategyId, adminUserId]);
+      VALUES (?, 'Test Strategy', '"000000"', 2026, '2026-01-01,2026-01-02', ?)
+    `,
+      [dateStrategyId, adminUserId],
+    );
   });
 
   afterAll(async () => {
@@ -168,7 +171,7 @@ describe("Task Template API", () => {
 
       const response = await fetch(
         `${API_BASE}/api/admin/task-templates/${createdTemplateId}`,
-        { headers: { Cookie: adminSession } }
+        { headers: { Cookie: adminSession } },
       );
 
       const data = await response.json();
@@ -180,7 +183,7 @@ describe("Task Template API", () => {
     test("should return 404 for non-existent template", async () => {
       const response = await fetch(
         `${API_BASE}/api/admin/task-templates/non_existent_id`,
-        { headers: { Cookie: adminSession } }
+        { headers: { Cookie: adminSession } },
       );
 
       expect(response.status).toBe(404);
@@ -194,7 +197,7 @@ describe("Task Template API", () => {
       }
 
       const response = await fetch(
-        `${API_BASE}/api/admin/task-templates/${createdTemplateId}`
+        `${API_BASE}/api/admin/task-templates/${createdTemplateId}`,
       );
 
       expect(response.status).toBe(401);

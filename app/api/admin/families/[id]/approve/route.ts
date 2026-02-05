@@ -3,7 +3,11 @@ import { z } from "zod";
 import { getSession, isAdmin } from "@/lib/auth";
 import { getRawDb } from "@/database/db";
 import type { User } from "@/lib/db/schema";
-import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
+import {
+  ErrorCodes,
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/lib/constant";
 
 const approveSchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -24,12 +28,15 @@ function generateStrongPassword(): string {
   for (let i = 0; i < 8; i++) {
     password += allChars[Math.floor(Math.random() * allChars.length)];
   }
-  return password.split("").sort(() => Math.random() - 0.5).join("");
+  return password
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
 }
 
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await getSession(request.headers);
@@ -37,14 +44,17 @@ export async function POST(
     if (!session?.user) {
       return Response.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     if (!isAdmin(session.user as User)) {
       return Response.json(
-        createErrorResponse(ErrorCodes.FORBIDDEN, "Only admins can approve families"),
-        { status: 403 }
+        createErrorResponse(
+          ErrorCodes.FORBIDDEN,
+          "Only admins can approve families",
+        ),
+        { status: 403 },
       );
     }
 
@@ -55,35 +65,39 @@ export async function POST(
     if (!validation.success) {
       const firstError = validation.error.issues[0];
       return Response.json(
-        createErrorResponse(ErrorCodes.VALIDATION_ERROR, firstError?.message || "Validation failed"),
-        { status: 400 }
+        createErrorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          firstError?.message || "Validation failed",
+        ),
+        { status: 400 },
       );
     }
 
     const { action, rejectionReason } = validation.data;
     const rawDb = getRawDb();
 
-    const family = rawDb
-      .query("SELECT * FROM family WHERE id = ?")
-      .get(id) as {
-        id: string;
-        name: string;
-        status: string;
-        max_parents: number;
-        max_children: number;
-      } | null;
+    const family = rawDb.query("SELECT * FROM family WHERE id = ?").get(id) as {
+      id: string;
+      name: string;
+      status: string;
+      max_parents: number;
+      max_children: number;
+    } | null;
 
     if (!family) {
       return Response.json(
         createErrorResponse(ErrorCodes.NOT_FOUND, "Family not found"),
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     if (family.status !== "pending") {
       return Response.json(
-        createErrorResponse(ErrorCodes.BAD_REQUEST, "Family is not in pending status"),
-        { status: 400 }
+        createErrorResponse(
+          ErrorCodes.BAD_REQUEST,
+          "Family is not in pending status",
+        ),
+        { status: 400 },
       );
     }
 
@@ -96,12 +110,19 @@ export async function POST(
         SET status = ?, rejection_reason = ?, reviewed_at = ?, reviewed_by = ?, updated_at = ?
         WHERE id = ?
       `,
-        ["rejected", rejectionReason || null, now.toISOString(), session.user.id, now.toISOString(), id]
+        [
+          "rejected",
+          rejectionReason || null,
+          now.toISOString(),
+          session.user.id,
+          now.toISOString(),
+          id,
+        ],
       );
 
       return Response.json(
         createSuccessResponse({ message: "Family registration rejected" }),
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -121,7 +142,7 @@ export async function POST(
         SET status = ?, reviewed_at = ?, reviewed_by = ?, updated_at = ?
         WHERE id = ?
       `,
-        ["approved", now.toISOString(), session.user.id, now.toISOString(), id]
+        ["approved", now.toISOString(), session.user.id, now.toISOString(), id],
       );
 
       rawDb.run(
@@ -141,7 +162,7 @@ export async function POST(
           null,
           "male",
           null,
-        ]
+        ],
       );
 
       rawDb.run(
@@ -164,7 +185,7 @@ export async function POST(
           passwordHash,
           now.toISOString(),
           now.toISOString(),
-        ]
+        ],
       );
 
       rawDb.run(
@@ -181,12 +202,12 @@ export async function POST(
           0,
           now.toISOString(),
           now.toISOString(),
-        ]
+        ],
       );
 
       rawDb.exec("COMMIT");
 
-      const host = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const host = process.env.NEXT_PUBLIC_APP_URL;
       const familyLink = `${host}/parent?familyId=${id}`;
 
       return Response.json(
@@ -196,7 +217,7 @@ export async function POST(
           password,
           link: familyLink,
         }),
-        { status: 200 }
+        { status: 200 },
       );
     } catch (error) {
       rawDb.exec("ROLLBACK");
@@ -206,7 +227,7 @@ export async function POST(
     console.error("Approve family error:", error);
     return Response.json(
       createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

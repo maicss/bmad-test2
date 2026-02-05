@@ -1,18 +1,18 @@
 /**
  * Database Connection
- * 
+ *
  * 使用 Bun 内置的 SQLite 驱动
  * 与 Drizzle ORM 集成
- * 
+ *
  * 注意：直接使用 bun:sqlite，不在构建时执行
  */
 
-// @ts-ignore - bun:sqlite is Bun native module
 import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import * as schema from "@/lib/db/schema";
 import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
+import { seedDefaultDateStrategies } from "./seed-date-strategies";
 
 // 确保数据库目录存在
 const dbPath = "database/db.sqlite";
@@ -38,13 +38,13 @@ function runMigrations(db: Database): void {
     `);
 
     const migrationFiles = readdirSync(MIGRATIONS_DIR)
-      .filter(f => f.endsWith('.sql'))
+      .filter((f) => f.endsWith(".sql"))
       .sort();
 
     const appliedMigrations = db
       .query(`SELECT name FROM ${MIGRATION_TABLE}`)
       .all() as { name: string }[];
-    const appliedNames = new Set(appliedMigrations.map(m => m.name));
+    const appliedNames = new Set(appliedMigrations.map((m) => m.name));
 
     const isFirstMigration = appliedMigrations.length === 0;
     const firstMigrationFile = migrationFiles[0];
@@ -52,10 +52,12 @@ function runMigrations(db: Database): void {
     if (isFirstMigration && firstMigrationFile) {
       try {
         db.query(`SELECT 1 FROM account LIMIT 1`).get();
-        console.log("⚠️  Database already has schema, marking initial migration as applied");
+        console.log(
+          "⚠️  Database already has schema, marking initial migration as applied",
+        );
         const timestamp = Date.now();
         db.query(
-          `INSERT INTO ${MIGRATION_TABLE} (name, applied_at) VALUES (?, ?)`
+          `INSERT INTO ${MIGRATION_TABLE} (name, applied_at) VALUES (?, ?)`,
         ).run(firstMigrationFile, timestamp);
         appliedNames.add(firstMigrationFile);
       } catch {
@@ -68,44 +70,47 @@ function runMigrations(db: Database): void {
     for (const file of migrationFiles) {
       if (!appliedNames.has(file)) {
         console.log(`🔄 Applying migration: ${file}`);
-        
+
         // Read migration SQL
         const migrationPath = join(process.cwd(), MIGRATIONS_DIR, file);
-        const sql = readFileSync(migrationPath, 'utf-8');
+        const sql = readFileSync(migrationPath, "utf-8");
 
         // Remove Drizzle comment markers
-        const cleanedSql = sql.replace(/--> statement-breakpoint/g, '');
+        const cleanedSql = sql.replace(/--> statement-breakpoint/g, "");
 
         // Execute migration
         db.exec("BEGIN TRANSACTION");
         try {
           db.exec(cleanedSql);
-          
+
           // Record migration as applied
           const timestamp = Date.now();
           db.query(
-            `INSERT INTO ${MIGRATION_TABLE} (name, applied_at) VALUES (?, ?)`
+            `INSERT INTO ${MIGRATION_TABLE} (name, applied_at) VALUES (?, ?)`,
           ).run(file, timestamp);
-          
+
           db.exec("COMMIT");
           console.log(`✅ Migration applied: ${file}`);
           migrationsRun++;
         } catch (error) {
           db.exec("ROLLBACK");
-          
+
           // Check if error is due to already existing objects (column, table, index)
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          const isDuplicateError = 
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          const isDuplicateError =
             errorMessage.includes("duplicate column name") ||
             errorMessage.includes("already exists") ||
             errorMessage.includes("table.*already exists");
-          
+
           if (isDuplicateError) {
             // Migration was partially applied, mark it as done and continue
-            console.log(`⚠️  Migration ${file} partially applied (objects already exist), marking as complete`);
+            console.log(
+              `⚠️  Migration ${file} partially applied (objects already exist), marking as complete`,
+            );
             const timestamp = Date.now();
             db.query(
-              `INSERT INTO ${MIGRATION_TABLE} (name, applied_at) VALUES (?, ?)`
+              `INSERT INTO ${MIGRATION_TABLE} (name, applied_at) VALUES (?, ?)`,
             ).run(file, timestamp);
             migrationsRun++;
           } else {
@@ -138,12 +143,15 @@ try {
   rawDbInstance = new Database(dbPath);
   rawDbInstance.exec("PRAGMA journal_mode = WAL");
   rawDbInstance.exec("PRAGMA foreign_keys = ON");
-  
+
   // Run pending migrations
   runMigrations(rawDbInstance);
-  
+
+  // Seed default date strategies
+  seedDefaultDateStrategies(rawDbInstance);
+
   dbInstance = drizzle(rawDbInstance, { schema });
-  
+
   console.log("✅ Database initialized on module load");
 } catch (error) {
   console.error("❌ Failed to initialize database:", error);
@@ -187,7 +195,7 @@ export function checkDbConnection(): boolean {
  * 关闭数据库连接
  */
 export function closeDb(): void {
-  if (rawDbInstance && typeof rawDbInstance.close === 'function') {
+  if (rawDbInstance && typeof rawDbInstance.close === "function") {
     rawDbInstance.close();
   }
 }

@@ -24,19 +24,19 @@
 - 年龄建议 勾选设为模板后显示，两个数字输入框，后者要比前者大。
 - 设为公开 勾选设为模板后显示，checkbox
 
-表单保存的时候，校验逻辑：如果没有勾选设为模板，校验日期范围和日期策略有没有重合，没有重合的话提示用户：所选日期范围和日期策略没有重合，不会产生任务，确定保存吗。用户点击确定，则继续保存，点击取消，则停留在当前页面。
+- 表单保存的时候，校验逻辑：如果没有勾选设为模板，校验日期范围和日期策略有没有重合，没有重合的话提示用户：所选日期范围和日期策略没有重合，不会产生任务，确定保存吗。用户点击确定，则继续保存，点击取消，则停留在当前页面。
 
 表字段：
 
 - id
 - isTemplate
-- familyId 可以为 null，如果 family 的状态设置为 suspended或则deleted，则任务也要设置为suspended或则deleted
+- familyId 可以为 null，因为是管理员创建的。如果 family 的状态设置为 suspended或则deleted，则任务也要设置为suspended或则deleted
 - name
 - description
 - taskName
 - category
 - points
-  // 下面四个字段都是 componens/image-picker 的返回值
+  // 下面四个字段都是 components/image-picker 的返回值
 - imageType icon|upload
 - color string
 - image string

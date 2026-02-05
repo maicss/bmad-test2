@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 const PROVINCES = [
-  { id: "national", label: "全国" },
+  { id: "000000", label: "全国" },
   { id: "110000", label: "北京市" },
   { id: "120000", label: "天津市" },
   { id: "130000", label: "河北省" },
@@ -91,7 +91,7 @@ export default function DateStrategyTemplateDetailPage({
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [region, setRegion] = useState("national");
+  const [region, setRegion] = useState("000000");
   const [year, setYear] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [dateMode, setDateMode] = useState<"picker" | "input">("picker");
@@ -129,20 +129,22 @@ export default function DateStrategyTemplateDetailPage({
   const fetchTemplate = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/admin/date-strategy-templates/${templateId}`);
-      
+      const response = await fetch(
+        `/api/admin/date-strategy-templates/${templateId}`,
+      );
+
       // Handle 401 Unauthorized
       if (response.status === 401) {
         redirectToLogin(`/admin/date-strategy-templates/${templateId}`);
         return;
       }
-      
+
       // Handle 403 Forbidden - redirect to parent home
       if (response.status === 403) {
         router.push("/parent");
         return;
       }
-      
+
       const data = await response.json();
       if (data.success) {
         setTemplate(data.data.template);
@@ -185,32 +187,36 @@ export default function DateStrategyTemplateDetailPage({
             const [, y, m, day] = match;
             const monthInt = parseInt(m, 10);
             const dayInt = parseInt(day, 10);
-            if (monthInt < 1 || monthInt > 12 || dayInt < 1 || dayInt > 31) return null;
-            return `${y}-${monthInt.toString().padStart(2, '0')}-${dayInt.toString().padStart(2, '0')}`;
+            if (monthInt < 1 || monthInt > 12 || dayInt < 1 || dayInt > 31)
+              return null;
+            return `${y}-${monthInt.toString().padStart(2, "0")}-${dayInt.toString().padStart(2, "0")}`;
           })
           .filter((d): d is string => d !== null);
         dates = [...new Set(normalizedDates)].join(",");
       }
 
-      const response = await fetch(`/api/admin/date-strategy-templates/${templateId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          description,
-          region,
-          year: parseInt(year),
-          isPublic,
-          dates,
-        }),
-      });
-      
+      const response = await fetch(
+        `/api/admin/date-strategy-templates/${templateId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            description,
+            region,
+            year: parseInt(year),
+            isPublic,
+            dates,
+          }),
+        },
+      );
+
       // Handle 401 Unauthorized
       if (response.status === 401) {
         redirectToLogin(`/admin/date-strategy-templates/${templateId}`);
         return;
       }
-      
+
       // Handle 403 Forbidden - redirect to parent home
       if (response.status === 403) {
         router.push("/parent");
@@ -244,16 +250,19 @@ export default function DateStrategyTemplateDetailPage({
     if (!confirm("确定要删除此模板吗？")) return;
 
     try {
-      const response = await fetch(`/api/admin/date-strategy-templates/${templateId}`, {
-        method: "DELETE",
-      });
-      
+      const response = await fetch(
+        `/api/admin/date-strategy-templates/${templateId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
       // Handle 401 Unauthorized
       if (response.status === 401) {
         redirectToLogin(`/admin/date-strategy-templates/${templateId}`);
         return;
       }
-      
+
       // Handle 403 Forbidden - redirect to parent home
       if (response.status === 403) {
         router.push("/parent");
@@ -334,7 +343,11 @@ export default function DateStrategyTemplateDetailPage({
           </Badge>
           {!isEditing && (
             <>
-              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsEditing(true)}
+              >
                 <Pencil className="h-4 w-4 mr-1" />
                 编辑
               </Button>
@@ -363,7 +376,11 @@ export default function DateStrategyTemplateDetailPage({
                 此规则已被复制 {template.copy_count} 次，确认更新吗？
               </p>
               <div className="flex gap-2 mt-3">
-                <Button size="sm" variant="outline" onClick={() => setShowConfirm(false)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowConfirm(false)}
+                >
                   取消
                 </Button>
                 <Button size="sm" onClick={handleSave} disabled={isSaving}>
@@ -426,7 +443,9 @@ export default function DateStrategyTemplateDetailPage({
                 />
               ) : (
                 <Input
-                  value={PROVINCES.find((p) => p.id === region)?.label || region}
+                  value={
+                    PROVINCES.find((p) => p.id === region)?.label || region
+                  }
                   disabled
                 />
               )}

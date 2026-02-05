@@ -11,7 +11,7 @@ import { MultiSelectCalendar } from "@/components/multi-select-calendar";
 import { redirectToLogin } from "@/lib/api-client";
 
 const PROVINCES = [
-  { id: "national", label: "全国" },
+  { id: "000000", label: "全国" },
   { id: "110000", label: "北京市" },
   { id: "120000", label: "天津市" },
   { id: "130000", label: "河北省" },
@@ -58,18 +58,28 @@ interface DateStrategyFormProps {
   };
 }
 
-export function DateStrategyForm({ onSuccess, onCancel, initialData }: DateStrategyFormProps) {
+export function DateStrategyForm({
+  onSuccess,
+  onCancel,
+  initialData,
+}: DateStrategyFormProps) {
   const router = useRouter();
-  const [name, setName] = useState(initialData?.name ? `${initialData.name} (复制)` : "");
-  const [description, setDescription] = useState(initialData?.description || "");
-  const [region, setRegion] = useState(initialData?.region || "national");
+  const [name, setName] = useState(
+    initialData?.name ? `${initialData.name} (复制)` : "",
+  );
+  const [description, setDescription] = useState(
+    initialData?.description || "",
+  );
+  const [region, setRegion] = useState(initialData?.region || "000000");
   const [year, setYear] = useState(
-    initialData?.year?.toString() || new Date().getFullYear().toString()
+    initialData?.year?.toString() || new Date().getFullYear().toString(),
   );
   const [isPublic, setIsPublic] = useState(initialData?.isPublic ?? true);
   const [dateMode, setDateMode] = useState<"picker" | "input">("picker");
   const [selectedDates, setSelectedDates] = useState<string[]>(
-    initialData?.dates ? initialData.dates.split(",").filter(d => d.trim()) : []
+    initialData?.dates
+      ? initialData.dates.split(",").filter((d) => d.trim())
+      : [],
   );
   const [dateInput, setDateInput] = useState(initialData?.dates || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,28 +91,31 @@ export function DateStrategyForm({ onSuccess, onCancel, initialData }: DateStrat
     // Match date patterns: YYYY-M-D, YYYY-MM-D, YYYY-M-DD, YYYY-MM-DD
     const match = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if (!match) return null;
-    
+
     const [, year, month, day] = match;
     const monthInt = parseInt(month, 10);
     const dayInt = parseInt(day, 10);
-    
+
     // Validate ranges
     if (monthInt < 1 || monthInt > 12 || dayInt < 1 || dayInt > 31) {
       return null;
     }
-    
+
     // Pad with leading zeros
-    const paddedMonth = monthInt.toString().padStart(2, '0');
-    const paddedDay = dayInt.toString().padStart(2, '0');
-    
+    const paddedMonth = monthInt.toString().padStart(2, "0");
+    const paddedDay = dayInt.toString().padStart(2, "0");
+
     return `${year}-${paddedMonth}-${paddedDay}`;
   };
 
   const deduplicateDates = (datesStr: string): string => {
-    const dates = datesStr.split(",").map(d => d.trim()).filter(d => d);
+    const dates = datesStr
+      .split(",")
+      .map((d) => d.trim())
+      .filter((d) => d);
     // Normalize each date and filter out invalid ones
     const normalizedDates = dates
-      .map(d => normalizeDate(d))
+      .map((d) => normalizeDate(d))
       .filter((d): d is string => d !== null);
     const uniqueDates = [...new Set(normalizedDates)];
     return uniqueDates.join(",");
@@ -115,7 +128,7 @@ export function DateStrategyForm({ onSuccess, onCancel, initialData }: DateStrat
 
     try {
       let dates = dateMode === "picker" ? selectedDates.join(",") : dateInput;
-      
+
       if (dateMode === "input") {
         dates = deduplicateDates(dates);
       }
@@ -138,13 +151,13 @@ export function DateStrategyForm({ onSuccess, onCancel, initialData }: DateStrat
           dates,
         }),
       });
-      
+
       // Handle 401 Unauthorized
       if (response.status === 401) {
         redirectToLogin("/admin/date-strategy-templates/new");
         return;
       }
-      
+
       // Handle 403 Forbidden - redirect to parent home
       if (response.status === 403) {
         router.push("/parent");
@@ -226,7 +239,7 @@ export function DateStrategyForm({ onSuccess, onCancel, initialData }: DateStrat
         <Label htmlFor="isPublic">公开</Label>
       </div>
 
-       <div className="space-y-3">
+      <div className="space-y-3">
         <div className="flex items-center gap-4">
           <Label className="whitespace-nowrap">日期 *</Label>
           <div className="flex items-center gap-4">
@@ -238,7 +251,10 @@ export function DateStrategyForm({ onSuccess, onCancel, initialData }: DateStrat
                   if (e.target.checked) {
                     setDateMode("picker");
                     if (dateInput) {
-                      const dates = dateInput.split(",").map(d => d.trim()).filter(d => d);
+                      const dates = dateInput
+                        .split(",")
+                        .map((d) => d.trim())
+                        .filter((d) => d);
                       setSelectedDates([...new Set(dates)]);
                     }
                   }
@@ -265,7 +281,7 @@ export function DateStrategyForm({ onSuccess, onCancel, initialData }: DateStrat
             </label>
           </div>
         </div>
-        
+
         {dateMode === "picker" ? (
           <MultiSelectCalendar
             selectedDates={selectedDates}
@@ -283,7 +299,7 @@ export function DateStrategyForm({ onSuccess, onCancel, initialData }: DateStrat
         )}
       </div>
 
-       {error && (
+      {error && (
         <div className="bg-red-50 text-red-600 px-4 py-2 rounded-md text-sm">
           {error}
         </div>

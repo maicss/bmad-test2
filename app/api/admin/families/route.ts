@@ -3,7 +3,11 @@ import { z } from "zod";
 import { getSession, isAdmin } from "@/lib/auth";
 import { getRawDb } from "@/database/db";
 import type { User } from "@/lib/db/schema";
-import { ErrorCodes, createErrorResponse, createSuccessResponse } from "@/lib/constant";
+import {
+  ErrorCodes,
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/lib/constant";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,14 +16,17 @@ export async function GET(request: NextRequest) {
     if (!session?.user) {
       return Response.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     if (!isAdmin(session.user as User)) {
       return Response.json(
-        createErrorResponse(ErrorCodes.FORBIDDEN, "Only admins can access this endpoint"),
-        { status: 403 }
+        createErrorResponse(
+          ErrorCodes.FORBIDDEN,
+          "Only admins can access this endpoint",
+        ),
+        { status: 403 },
       );
     }
 
@@ -95,13 +102,17 @@ export async function GET(request: NextRequest) {
 
     // Get primary parent info for each family
     const familiesWithParents = families.map((family) => {
-      const primaryParent = rawDb.query(`
+      const primaryParent = rawDb
+        .query(
+          `
         SELECT u.name, u.phone
         FROM family_member fm
         JOIN user u ON fm.user_id = u.id
         WHERE fm.family_id = ? AND fm.role = 'primary'
         LIMIT 1
-      `).get(family.id) as { name: string; phone: string } | null;
+      `,
+        )
+        .get(family.id) as { name: string; phone: string } | null;
 
       return {
         ...family,
@@ -114,7 +125,7 @@ export async function GET(request: NextRequest) {
     console.error("GET /api/admin/families error:", error);
     return Response.json(
       createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -155,7 +166,10 @@ function generateStrongPassword(): string {
   for (let i = 0; i < 8; i++) {
     password += allChars[Math.floor(Math.random() * allChars.length)];
   }
-  return password.split("").sort(() => Math.random() - 0.5).join("");
+  return password
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
 }
 
 export async function POST(request: NextRequest) {
@@ -165,14 +179,17 @@ export async function POST(request: NextRequest) {
     if (!session?.user) {
       return Response.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Unauthorized"),
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     if (!isAdmin(session.user as User)) {
       return Response.json(
-        createErrorResponse(ErrorCodes.FORBIDDEN, "Only admins can create families"),
-        { status: 403 }
+        createErrorResponse(
+          ErrorCodes.FORBIDDEN,
+          "Only admins can create families",
+        ),
+        { status: 403 },
       );
     }
 
@@ -182,8 +199,11 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       const firstError = validation.error.issues[0];
       return Response.json(
-        createErrorResponse(ErrorCodes.VALIDATION_ERROR, firstError?.message || "Validation failed"),
-        { status: 400 }
+        createErrorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          firstError?.message || "Validation failed",
+        ),
+        { status: 400 },
       );
     }
 
@@ -206,7 +226,7 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       return Response.json(
         createErrorResponse(ErrorCodes.USER_ALREADY_EXISTS, "该手机号已被注册"),
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -233,7 +253,7 @@ export async function POST(request: NextRequest) {
             registration_type, status, province, city, reviewed_at, reviewed_by, created_at, updated_at
           )
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `
+        `,
         )
         .run(
           familyId,
@@ -250,7 +270,7 @@ export async function POST(request: NextRequest) {
           now.toISOString(),
           session.user.id,
           now.toISOString(),
-          now.toISOString()
+          now.toISOString(),
         );
 
       rawDb
@@ -258,7 +278,7 @@ export async function POST(request: NextRequest) {
           `
           INSERT INTO user (id, email, name, email_verified, image, created_at, updated_at, role, phone, gender, pin_hash)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `
+        `,
         )
         .run(
           userId,
@@ -271,7 +291,7 @@ export async function POST(request: NextRequest) {
           "parent",
           parentPhone,
           parentGender,
-          null
+          null,
         );
 
       rawDb
@@ -280,7 +300,7 @@ export async function POST(request: NextRequest) {
           INSERT INTO account (id, account_id, provider_id, user_id, access_token, refresh_token, id_token, 
             access_token_expires_at, refresh_token_expires_at, scope, password, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `
+        `,
         )
         .run(
           crypto.randomUUID(),
@@ -295,7 +315,7 @@ export async function POST(request: NextRequest) {
           null,
           passwordHash,
           now.toISOString(),
-          now.toISOString()
+          now.toISOString(),
         );
 
       rawDb
@@ -303,7 +323,7 @@ export async function POST(request: NextRequest) {
           `
           INSERT INTO family_member (id, family_id, user_id, role, display_name, current_points, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `
+        `,
         )
         .run(
           crypto.randomUUID(),
@@ -313,12 +333,12 @@ export async function POST(request: NextRequest) {
           parentName,
           0,
           now.toISOString(),
-          now.toISOString()
+          now.toISOString(),
         );
 
       rawDb.exec("COMMIT");
 
-      const host = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const host = process.env.NEXT_PUBLIC_APP_URL;
       const familyLink = `${host}/parent?familyId=${familyId}`;
 
       return Response.json(
@@ -327,7 +347,7 @@ export async function POST(request: NextRequest) {
           password,
           link: familyLink,
         }),
-        { status: 201 }
+        { status: 201 },
       );
     } catch (error) {
       rawDb.exec("ROLLBACK");
@@ -337,8 +357,12 @@ export async function POST(request: NextRequest) {
     console.error("POST /api/admin/families error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return Response.json(
-      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error", errorMessage),
-      { status: 500 }
+      createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        "Internal server error",
+        errorMessage,
+      ),
+      { status: 500 },
     );
   }
 }

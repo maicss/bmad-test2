@@ -36,7 +36,7 @@ export function getStorageConfig(): StorageConfig {
 
   const config: StorageConfig = {
     mode,
-    localPath: process.env.OSS_PATH || path.join(process.cwd(), 'image-bed'),
+    localPath: process.env.OSS_PATH || path.join(process.cwd(), "image-bed"),
   };
 
   if (mode === "oss") {
@@ -63,7 +63,7 @@ export function generateFilename(originalName: string): string {
 async function saveLocal(
   buffer: Buffer,
   storagePath: string,
-  filename: string
+  filename: string,
 ): Promise<string> {
   // Ensure directory exists
   if (!existsSync(storagePath)) {
@@ -89,10 +89,7 @@ async function getLocal(filePath: string): Promise<Buffer | null> {
 }
 
 // OSS storage implementation (placeholder for future)
-async function saveOSS(
-  buffer: Buffer,
-  _filename: string
-): Promise<string> {
+async function saveOSS(buffer: Buffer, _filename: string): Promise<string> {
   // TODO: Implement OSS upload using Aliyun SDK
   // For now, fall back to local storage
   throw new Error("OSS not implemented yet. Please use local storage mode.");
@@ -122,7 +119,7 @@ export async function saveImage(
   filename: string,
   originalName: string,
   mimeType: string,
-  size: number
+  size: number,
 ): Promise<StoredImage> {
   const config = getStorageConfig();
   const storagePath = config.mode === "local" ? config.localPath! : "";
@@ -133,7 +130,7 @@ export async function saveImage(
   if (config.mode === "local") {
     fullPath = await saveLocal(buffer, storagePath, filename);
     // Generate URL based on environment
-    const host = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const host = process.env.NEXT_PUBLIC_APP_URL;
     url = `${host}/api/image-bed/files/${filename}`;
   } else {
     fullPath = await saveOSS(buffer, filename);

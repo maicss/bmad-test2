@@ -30,43 +30,44 @@ export default async function NewTaskPlanPage() {
 
   if (isParent(user)) {
     const member = rawDb
-      .query(`
+      .query(
+        `
     SELECT family_id FROM family_member WHERE user_id = ?
-  `)
+  `,
+      )
       .get(user.id) as { family_id: string } | null;
     familyId = member?.family_id || null;
   }
 
   // 3. Fetch initial data in parallel
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3344";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const [familyMembersResponse, dateStrategiesResponse, badgesResponse] =
+    await Promise.all([
+      // Family members (for parent role)
+      familyId
+        ? fetch(`${baseUrl}/api/family/members`, {
+            headers: { cookie: requestHeaders.get("cookie") || "" },
+          })
+        : Promise.resolve({
+            ok: true,
+            json: async () => ({ data: { members: [] } }),
+          }),
 
-  const [
-    familyMembersResponse,
-    dateStrategiesResponse,
-    badgesResponse,
-  ] = await Promise.all([
-    // Family members (for parent role)
-    familyId
-      ? fetch(`${baseUrl}/api/family/members`, {
+      // Date strategies based on role
+      fetch(
+        isAdmin(user)
+          ? `${baseUrl}/api/admin/date-strategy-templates`
+          : `${baseUrl}/api/family/date-strategies`,
+        {
           headers: { cookie: requestHeaders.get("cookie") || "" },
-        })
-      : Promise.resolve({ ok: true, json: async () => ({ data: { members: [] } }) }),
+        },
+      ),
 
-    // Date strategies based on role
-    fetch(
-      isAdmin(user)
-        ? `${baseUrl}/api/admin/date-strategy-templates`
-        : `${baseUrl}/api/family/date-strategies`,
-      {
+      // Badges/medals based on role
+      fetch(`${baseUrl}/api/admin/medal-templates`, {
         headers: { cookie: requestHeaders.get("cookie") || "" },
-      },
-    ),
-
-    // Badges/medals based on role
-    fetch(`${baseUrl}/api/admin/medal-templates`, {
-      headers: { cookie: requestHeaders.get("cookie") || "" },
-    }),
-  ]);
+      }),
+    ]);
 
   // 4. Parse responses
   const [familyMembersData, strategiesData, badgesData] = await Promise.all([
@@ -83,14 +84,19 @@ export default async function NewTaskPlanPage() {
           {isAdmin(user) ? "创建计划任务模板" : "创建计划任务"}
         </h1>
         <p className="text-muted-foreground">
-          {isAdmin(user) ? "创建可被所有家庭使用的任务模板" : "为您的家庭创建任务计划"}
+          {isAdmin(user)
+            ? "创建可被所有家庭使用的任务模板"
+            : "为您的家庭创建任务计划"}
         </p>
       </div>
 
       <TaskPlanForm
         initialData={{
           familyMembers: familyMembersData.data?.members || [],
-          dateStrategies: strategiesData.data?.templates || strategiesData.data?.strategies || [],
+          dateStrategies:
+            strategiesData.data?.templates ||
+            strategiesData.data?.strategies ||
+            [],
           badges: badgesData.data || [],
         }}
         userRole={user.role}

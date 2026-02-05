@@ -1,10 +1,5 @@
 import { getRawDb } from "@/database/db";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -24,7 +19,7 @@ interface DateStrategyTemplate {
 }
 
 const PROVINCE_MAP: Record<string, string> = {
-  national: "全国",
+  "000000": "全国",
   "110000": "北京市",
   "120000": "天津市",
   "130000": "河北省",

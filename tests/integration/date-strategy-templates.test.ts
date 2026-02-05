@@ -16,12 +16,12 @@ describe("Date Strategy Template API", () => {
   beforeAll(async () => {
     db = new Database(SERVER_DB_PATH);
     db.exec("PRAGMA foreign_keys = ON");
-    
+
     const session = await createTestAdminSession();
     if (!session) {
       throw new Error("Failed to create test admin session");
     }
-    
+
     adminUserId = session.userId;
     adminSession = session.cookie;
   });
@@ -40,20 +40,23 @@ describe("Date Strategy Template API", () => {
       const payload = {
         name: "Spring Festival",
         description: "Spring festival special dates",
-        region: "national",
+        region: "000000",
         year: 2026,
         isPublic: true,
         dates: "2026-02-11,2026-02-12,2026-02-13",
       };
 
-      const response = await fetch(`${API_BASE}/api/admin/date-strategy-templates`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: adminSession,
+      const response = await fetch(
+        `${API_BASE}/api/admin/date-strategy-templates`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: adminSession,
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       const data = await response.json();
       expect(response.status).toBe(201);
@@ -65,14 +68,17 @@ describe("Date Strategy Template API", () => {
     test("should reject creation without required fields", async () => {
       const payload = { name: "", region: "", year: null, dates: "" };
 
-      const response = await fetch(`${API_BASE}/api/admin/date-strategy-templates`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: adminSession,
+      const response = await fetch(
+        `${API_BASE}/api/admin/date-strategy-templates`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: adminSession,
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       expect(response.status).toBe(400);
       const data = await response.json();
@@ -80,11 +86,14 @@ describe("Date Strategy Template API", () => {
     });
 
     test("should reject non-admin access", async () => {
-      const response = await fetch(`${API_BASE}/api/admin/date-strategy-templates`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: "test" }),
-      });
+      const response = await fetch(
+        `${API_BASE}/api/admin/date-strategy-templates`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "test" }),
+        },
+      );
 
       expect(response.status).toBe(401);
     });
@@ -98,14 +107,17 @@ describe("Date Strategy Template API", () => {
         dates: "2026-03-01",
       };
 
-      const response = await fetch(`${API_BASE}/api/admin/date-strategy-templates`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: adminSession,
+      const response = await fetch(
+        `${API_BASE}/api/admin/date-strategy-templates`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: adminSession,
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       const data = await response.json();
       expect(data.success).toBe(true);
@@ -115,9 +127,12 @@ describe("Date Strategy Template API", () => {
 
   describe("GET /api/admin/date-strategy-templates", () => {
     test("should return list of templates", async () => {
-      const response = await fetch(`${API_BASE}/api/admin/date-strategy-templates`, {
-        headers: { Cookie: adminSession },
-      });
+      const response = await fetch(
+        `${API_BASE}/api/admin/date-strategy-templates`,
+        {
+          headers: { Cookie: adminSession },
+        },
+      );
 
       const data = await response.json();
       expect(response.status).toBe(200);
@@ -127,8 +142,8 @@ describe("Date Strategy Template API", () => {
 
     test("should filter by region", async () => {
       const response = await fetch(
-        `${API_BASE}/api/admin/date-strategy-templates?region=national`,
-        { headers: { Cookie: adminSession } }
+        `${API_BASE}/api/admin/date-strategy-templates?region="000000"`,
+        { headers: { Cookie: adminSession } },
       );
 
       const data = await response.json();
@@ -138,7 +153,7 @@ describe("Date Strategy Template API", () => {
     test("should filter by year", async () => {
       const response = await fetch(
         `${API_BASE}/api/admin/date-strategy-templates?year=2026`,
-        { headers: { Cookie: adminSession } }
+        { headers: { Cookie: adminSession } },
       );
 
       const data = await response.json();
@@ -155,7 +170,7 @@ describe("Date Strategy Template API", () => {
       const payload = {
         name: "Updated Name",
         description: "Updated description",
-        region: "national",
+        region: "000000",
         year: 2026,
         isPublic: true,
         dates: "2026-02-11,2026-02-12",
@@ -170,7 +185,7 @@ describe("Date Strategy Template API", () => {
             Cookie: adminSession,
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       const data = await response.json();
@@ -185,21 +200,25 @@ describe("Date Strategy Template API", () => {
         return;
       }
 
-      db.run(`UPDATE date_strategy_template SET copy_count = 5 WHERE id = ?`, [createdTemplateId]);
+      db.run(`UPDATE date_strategy_template SET copy_count = 5 WHERE id = ?`, [
+        createdTemplateId,
+      ]);
 
       const response = await fetch(
         `${API_BASE}/api/admin/date-strategy-templates/${createdTemplateId}`,
         {
           method: "DELETE",
           headers: { Cookie: adminSession },
-        }
+        },
       );
 
       expect(response.status).toBe(400);
       const data = await response.json();
       expect(data.code).toBeDefined();
 
-      db.run(`UPDATE date_strategy_template SET copy_count = 0 WHERE id = ?`, [createdTemplateId]);
+      db.run(`UPDATE date_strategy_template SET copy_count = 0 WHERE id = ?`, [
+        createdTemplateId,
+      ]);
     });
   });
 });
@@ -214,13 +233,15 @@ describe("Public Date Strategy API", () => {
     }
   });
 
-  afterAll(async () => {
-  });
+  afterAll(async () => {});
 
   test("GET /api/date-strategy-templates should return public templates", async () => {
-    const response = await fetch(`${API_BASE}/api/date-strategy-templates?is_public=true`, {
-      headers: { Cookie: publicTestSession },
-    });
+    const response = await fetch(
+      `${API_BASE}/api/date-strategy-templates?is_public=true`,
+      {
+        headers: { Cookie: publicTestSession },
+      },
+    );
 
     const data = await response.json();
     expect(response.status).toBe(200);

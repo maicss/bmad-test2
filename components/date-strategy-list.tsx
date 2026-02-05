@@ -21,7 +21,7 @@ interface DateStrategyTemplate {
 }
 
 const PROVINCE_MAP: Record<string, string> = {
-  national: "全国",
+  "000000": "全国",
   "110000": "北京市",
   "120000": "天津市",
   "130000": "河北省",
@@ -58,7 +58,9 @@ const PROVINCE_MAP: Record<string, string> = {
 export function DateStrategyList() {
   const [templates, setTemplates] = useState<DateStrategyTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
+    null,
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -97,7 +99,7 @@ export function DateStrategyList() {
       {templates.length === 0 ? (
         <p className="text-sm text-slate-500">暂无日期策略模板</p>
       ) : (
-         <div className="grid gap-3">
+        <div className="grid gap-3">
           {templates.slice(0, 5).map((template) => {
             const dateCount = template.dates.split(",").length;
             return (
@@ -111,8 +113,10 @@ export function DateStrategyList() {
                     <Calendar className="h-4 w-4 text-blue-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900">{template.name}</p>
-                     <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                    <p className="font-medium text-slate-900">
+                      {template.name}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
                         {PROVINCE_MAP[template.region] || template.region}
@@ -146,7 +150,7 @@ export function DateStrategyList() {
               </Button>
             </Link>
           )}
-         </div>
+        </div>
       )}
 
       <DateStrategyDetailModal

@@ -4,7 +4,8 @@
       "Bash(sqlite3:*)",
       "Bash(bunx drizzle-kit generate:*)",
       "Bash(printf:*)",
-      "Bash(bun run build)"
+      "Bash(bun run build)",
+      "Bash(find:*)"
     ]
   }
 }
