@@ -1,0 +1,11 @@
+- 项目只运行在 bun 环境
+- 使用bun自带的sqlite、password等
+- 使用 bunx --bun shadcn@latest create --preset "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=neutral&theme=neutral&iconLibrary=lucide&font=inter&menuAccent=subtle&menuColor=default&radius=default&template=next&rtl=false" --template next 初始化项目
+- 使用bette-auth+bun.sqlite+bun.password+drizzle初始化项目必要的数据库和表
+
+- 初始服务
+  - 云服务商只考虑 阿里云和腾讯云
+  - 图床服务
+    - 开发阶段使用本地图床，文件存储在本地，但是要有修改env之后无痛接入到 云服务商 OSS的能力，数据不保留，详情参考 ../image/index.md
+  - 手机OTP验证码服务
+    - 开发阶段使用env硬编码所有OTP验证码为1111，实现修改 env 之后无痛接入到云服务商的OTP服务的能力

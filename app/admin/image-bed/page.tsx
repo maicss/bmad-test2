@@ -5,7 +5,10 @@ import { Upload, Filter, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageWaterfall } from "@/components/image-waterfall";
-import { SearchableSelect, type SelectOption } from "@/components/searchable-select";
+import {
+  SearchableSelect,
+  type SelectOption,
+} from "@/components/searchable-select";
 
 interface Image {
   id: string;
@@ -61,7 +64,7 @@ export default function ImageBedPage() {
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
       });
-      
+
       if (ownerFilter && ownerFilter !== "all") {
         if (ownerFilter === "admin") {
           params.append("owner", "admin");
@@ -93,7 +96,7 @@ export default function ImageBedPage() {
 
       if (data.success && data.data) {
         const families = data.data;
-        
+
         const familiesWithParents = families.map((f: any) => ({
           id: f.id,
           name: f.name,
@@ -104,10 +107,16 @@ export default function ImageBedPage() {
 
         const options: FamilyOption[] = [
           { id: "all", name: "全部", type: "all" },
-          { id: "admin", name: "管理员", parentName: "admin", parentPhone: null, type: "admin" },
+          {
+            id: "admin",
+            name: "管理员",
+            parentName: "admin",
+            parentPhone: null,
+            type: "admin",
+          },
           ...familiesWithParents,
         ];
-        
+
         setFamilyOptions(options);
       }
     } catch (error) {
@@ -135,25 +144,28 @@ export default function ImageBedPage() {
     setPagination((prev) => ({ ...prev, page: 1 }));
   }, []);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!confirm("确定要删除这张图片吗？")) return;
+  const handleDelete = useCallback(
+    async (id: string) => {
+      if (!confirm("确定要删除这张图片吗？")) return;
 
-    try {
-      const response = await fetch(`/api/image-bed/${id}`, {
-        method: "DELETE",
-      });
+      try {
+        const response = await fetch(`/api/image-bed/${id}`, {
+          method: "DELETE",
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.success) {
-        fetchImages();
-      } else {
-        alert(data.error || "删除失败");
+        if (data.success) {
+          fetchImages();
+        } else {
+          alert(data.error || "删除失败");
+        }
+      } catch (error) {
+        alert("删除失败，请重试");
       }
-    } catch (error) {
-      alert("删除失败，请重试");
-    }
-  }, [fetchImages]);
+    },
+    [fetchImages],
+  );
 
   const selectOptions: SelectOption[] = familyOptions.map((option) => ({
     id: option.id,
@@ -161,8 +173,8 @@ export default function ImageBedPage() {
       option.type === "all"
         ? "全部"
         : option.type === "admin"
-        ? "管理员(admin)"
-        : `${option.name}(${option.parentName || "未知"})(${option.parentPhone || "未知"})`,
+          ? "管理员(admin)"
+          : `${option.name}(${option.parentName || "未知"})(${option.parentPhone || "未知"})`,
     data: option,
   }));
 
@@ -174,13 +186,13 @@ export default function ImageBedPage() {
           <h1 className="text-2xl font-bold">图床管理</h1>
           <p className="text-muted-foreground">管理所有上传的图片</p>
         </div>
-         <div className="flex items-center gap-2">
-           <input
-             type="file"
-             ref={fileInputRef}
-             accept="image/*"
-             className="hidden"
-           />
+        <div className="flex items-center gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            className="hidden"
+          />
           <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
@@ -207,7 +219,7 @@ export default function ImageBedPage() {
         </div>
       )}
 
-       {/* Filter */}
+      {/* Filter */}
       <div className="flex items-center gap-2">
         <Filter className="w-4 h-4 text-muted-foreground" />
         <SearchableSelect
@@ -245,7 +257,9 @@ export default function ImageBedPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
+            onClick={() =>
+              setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+            }
             disabled={pagination.page === 1}
           >
             上一页
@@ -256,7 +270,9 @@ export default function ImageBedPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
+            onClick={() =>
+              setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+            }
             disabled={pagination.page === pagination.totalPages}
           >
             下一页
