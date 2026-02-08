@@ -2,7 +2,7 @@
  * PIN Code Authentication Service
  *
  * 专为儿童设计的 PIN 码认证系统
- * - 支持 4-6 位数字 PIN
+ * - 支持 6 位数字 PIN
  * - 使用 Bun.password 进行哈希存储
  * - 2 分钟无操作自动锁定
  * - 共享设备安全隔离
@@ -46,15 +46,15 @@ export interface ChildSession {
  * 设置 PIN 码
  *
  * @param userId 用户 ID
- * @param pin 4-6 位数字 PIN 码
+ * @param pin 6 位数字 PIN 码
  * @throws Error 如果 PIN 格式无效
  */
 export async function setPIN(userId: string, pin: string): Promise<void> {
   const db = getDb();
   
   // 验证 PIN 格式
-  if (!/^[0-9]{4,6}$/.test(pin)) {
-    throw new Error("PIN 码必须是 4-6 位数字");
+  if (!/^[0-9]{6}$/.test(pin)) {
+    throw new Error("PIN 码必须是 6 位数字");
   }
 
   // 使用 Bun.password 哈希 PIN

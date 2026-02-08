@@ -53,7 +53,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 - **Data Validation:** Drizzle Schema + Zod应用层验证
 - **Cryptography:** Bun.password，禁止第三方加密包
 - **Testing:** bun test（禁止Vitest/Jest/Mocha）
-- **Authentication:** Better-Auth + phone+password插件 + @better-auth/skills + onmax/next-skills
+- **Authentication:** Better-Auth + phone+password插件 + @better-auth/skills
 - **Framework:** Next.js 16（最新稳定版），强制Server Components，最小化'use client'
 - **UI System:** Shadcn UI + Tailwind CSS + Radix UI Primitives + Lucide Icons
 - **Build Target:** PWA（Progressive Web App），需通过Lighthouse PWA审计>90分

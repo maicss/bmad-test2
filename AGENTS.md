@@ -1,100 +1,223 @@
-# Agent Development Guidelines & Project Requirements
+# AGENTS.md
 
-## I. CRITICAL CONSTRAINTS (Environment & Tech Stack)
-
-### 1. Runtime & Core APIs
-
-- **Runtime:** Use **Bun** exclusively. Do not implement Node.js compatibility layers.
-- **Database:** Use built-in `bun:sqlite` only with Drizzle ORM.
-  - **Path:** `database/db.sql`.
-  - **Logic:** All complex SQL queries must be abstracted into `lib/db/queries.ts`.
-  - **Security:** Use **parameterized queries** to prevent SQL injection.
-  - **Prohibition:** Strictly no third-party database drivers.
-- **Cryptography:** Use `Bun.password` for all hashing and verification. Do not install third-party crypto packages.
-- **Testing:** Use `bun test` for unit and integration testing. No Vitest, Jest, or Mocha.
-- **Typing:** Install and use `@types/bun` for native Bun API support.
-
-### 2. Authentication & UI Framework
-
-- **Authentication:** **Better-Auth** integration.
-  - **Plugin:** `phone + password` (Must support both Password and OTP flows).
-  - **Adapter:** Follow the [Bun-native SQLite adapter](https://www.better-auth.com/docs/adapters/sqlite#bun-built-in-sqlite) implementation.
-  - **Skills:** use `@better-auth/skills` and `onmax/next-skills` following best practices.
-- **Framework:** **Next.js 16 (Latest Stable)**.
-  - **Documentation:** Refer strictly to v16 docs. No legacy patterns (v15 or below).
-  - **Data Fetching:** Force **Server Components** for data fetching; minimize `'use client'` usage.
-- **UI System:** **Shadcn UI**, **Tailwind CSS**, **Radix UI Primitives**, and **Lucide Icons**.
-  - **Rule:** Priority goes to Shadcn UI components. Do not re-implement existing Shadcn components using raw Tailwind.
-  - **Error Display Rule:** Never use `alert()` to display error messages in the UI. Always use Shadcn UI Dialog, Toast, or inline error messages for better UX.
-
-### 3. Build Target: PWA (Progressive Web App)
-
-- **Objective:** The final build must be a fully functional PWA.
-- **Requirements:**
-  - Implement a valid `manifest.json` (Web App Manifest).
-  - Configure **Service Workers** for offline capability and caching.
-  - Ensure **Responsive Design** for all components (Mobile-first).
-  - Include all necessary PWA icons and metadata (theme-color, apple-touch-icon, etc.).
-- **Validation:** Must pass **Lighthouse PWA audit** with a score > 90.
-
-### 4. Development Environment
-
-- **OS:** Windows + PowerShell.
-- **Strict Prohibition:** Do not use Unix-like commands (e.g., `rm -rf`, `grep`, `export`). Use PowerShell equivalents only.
+> **AI 决策手册** - 本文档为 AI 代理提供关键决策依据
+> 
+> 详细技术规范请参考 [docs/TECH_SPEC.md](./docs/TECH_SPEC.md)
 
 ---
 
-## II. TYPESCRIPT & ARCHITECTURE STANDARDS
+## 🚨 平台检测（每次会话开始时执行）
 
-- **Global Registry:** All shared definitions must reside in `types/`.
-- **Inheritance Pattern:** 1. Define **Base Data Types** (Atomic entities). 2. Extend Base Types for specific contexts (Database, API DTOs, Frontend Props).
-- **Strict Typing:** Usage of `any` is strictly prohibited.
-- **Dependency Control:** Do not introduce uninstalled packages or new dependencies without explicit confirmation.
+**在每次会话开始时，你必须先确定当前平台，以使用正确的命令：**
 
----
+```bash
+# 检测操作系统
+uname -s  # Linux/macOS
+ver       # Windows
 
-## III. VERIFICATION & WORKFLOW
+# 检测 Shell
+echo $SHELL
+```
 
-### 1. Pre-execution Thought Process
+| 平台 | 检测特征 | 命令风格 |
+|------|----------|----------|
+| Windows | `ver` 成功 | PowerShell / CMD |
+| Linux | `uname -s` = Linux | Bash |
+| macOS | `uname -s` = Darwin | Bash/Zsh |
 
-Before any write operation, the Agent must document the following in `THOUGHTS.md` or as a response prefix:
-
-1. **Impacted Files:** List all files to be created or modified.
-2. **Schema Changes:** Detail any database migrations or structural changes.
-3. **PWA Impact:** Does this change affect service workers, caching, or manifest?
-4. **Breaking Risks:** Assess potential impact on existing features.
-
-### 2. Verification Flow
-
-- **Resource Reporting:** Report all new/updated Web Routes, API Endpoints, and Database Schemas.
-- **Server Pre-flight Check:**
-  - Verify if the port is occupied.
-  - **Identity Check:** Run `curl http://localhost:[port]/` and verify if the `<title>` matches the metadata in Next.js.
-  - If identity mismatches, terminate the conflicting process and restart the service.
-- **Route Validation:**
-  - **Web:** Use `curl` to ensure web routes resolve (200 OK).
-  - **API:** Test "Happy Paths" using defined test data payloads.
-
-### 3. Error Handling & Migrations
-
-- **Standardized Errors:** Define all `errorcodes` in `constant.ts`.
-- **Response Format:** All API errors must return: `{ "code": string, "message": string, "details": any }`.
-- **Migrations:** All DB changes must be recorded as raw SQL scripts in `database/migrations/`.
-
-### 4. Testing & Coverage
-
-- **Hierarchy:** Integration Tests (Primary) > Unit Tests > E2E Tests (Playwright with local Chrome).
-- **Metric:** Minimum **80% code coverage** required. Report actual coverage metrics upon completion.
+**命令选择优先级：**
+1. 如果用户明确指定了平台，使用用户指定的命令
+2. 如果检测为 Windows，优先使用 PowerShell 命令
+3. 其他平台使用标准 Unix 命令
 
 ---
 
-## IV. TEST DATA SUITE
+## 🔴 RED LIST（绝对禁止）
 
-| Role       | Last Name | First Name | Gender | Phone       | PIN  | Password | Family ID  | Description          |
-| :--------- | :-------- | :--------- | :----- | :---------- | :--- | :------- | :--------- | :------------------- |
-| **admin**  | -         | admin      | Male   | 13800000001 | -    | 1111     | -          | System Administrator |
-| **parent** | Zhang     | 1          | Male   | 13800000100 | -    | 1111     | family-001 | Family 1 (Primary)   |
-| **child**  | Zhang     | 3          | Male   | -           | 1111 | -        | family-001 | Family 1 (Child)     |
-| **parent** | Zhang     | 2          | Male   | 12800000200 | -    | 1111     | family-001 | Family 1 (Secondary) |
-| **parent** | Li        | 1          | Male   | 13800000300 | -    | 1111     | family-002 | Family 2 (Primary)   |
-| **parent** | Li        | 2          | Male   | 13800000400 | -    | 1111     | family-002 | Family 2 (Secondary) |
+违反以下任何一条将导致任务失败：
+
+### 数据库（强制 Drizzle ORM）
+- ❌ **禁止使用原生 SQL 操作数据库** - 必须使用 Drizzle ORM
+- ❌ **禁止字符串拼接 SQL** - 必须使用 Drizzle 的查询构建器
+- ❌ **禁止在组件/路由中直接写 SQL** - 所有查询必须封装到 `lib/db/queries.ts`
+- ❌ **使用第三方数据库驱动** - 只能用 `bun:sqlite` + Drizzle ORM
+
+```typescript
+// ✅ 正确 - 必须使用 Drizzle ORM
+import { db } from '@/lib/db';
+import { tasks } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+
+// 查询
+const result = await db.query.tasks.findMany({
+  where: eq(tasks.familyId, familyId)
+});
+
+// 插入
+await db.insert(tasks).values({ title: 'xxx', points: 10 });
+
+// ❌ 绝对禁止 - 原生 SQL
+const result = db.execute(`SELECT * FROM tasks WHERE id = ${id}`);
+```
+
+### 运行时与类型
+- ❌ **使用 `any` 类型** - 必须用 `unknown` + 类型守卫
+- ❌ **使用 `@ts-ignore` / `@ts-expect-error`** - 必须修复类型错误
+- ❌ **使用 Node.js 兼容层** - 如 `node-fetch`, `node-crypto`, `fs/promises`
+- ❌ **使用 `process.env`** - 改用 `Bun.env`
+- ❌ **使用 `alert()` 显示错误** - 必须用 Shadcn Dialog/Toast
+- ❌ **引入新依赖** - 未经明确确认禁止安装
+
+### Git
+- ❌ **提交 `.env` 文件** - 敏感配置禁止入库
+
+### BDD（行为驱动开发）
+- ❌ **先写实现后写测试** - 必须先写测试/规范，后写实现（红-绿-重构）
+- ❌ **测试使用技术术语** - 必须使用业务语言（Given-When-Then 格式）
+- ❌ **测试与需求脱节** - 每个测试必须对应一个业务场景
+
+```typescript
+// ❌ 禁止 - 传统单元测试写法
+it('should return 200', async () => {
+  const res = await request(app).get('/api/tasks');
+  expect(res.status).toBe(200);
+});
+
+// ✅ 正确 - BDD 风格（Given-When-Then）
+it('given 家长已登录，when 查询任务列表，then 返回该家庭的任务', async () => {
+  // Given: 家长已登录且有任务
+  const parent = await createParent();
+  const task = await createTask({ familyId: parent.familyId });
+  
+  // When: 查询任务列表
+  const res = await request(app)
+    .get('/api/tasks')
+    .set('Cookie', parent.session);
+  
+  // Then: 返回该家庭的任务
+  expect(res.status).toBe(200);
+  expect(res.body.tasks).toHaveLength(1);
+  expect(res.body.tasks[0].id).toBe(task.id);
+});
+```
+
+---
+
+## ✅ 决策检查清单（每个任务前必须执行）
+
+```markdown
+## 任务分析：[功能名称]
+
+### 1. 影响文件清单
+| 文件路径 | 操作 | 说明 |
+|----------|------|------|
+| `app/api/x/route.ts` | 新增 | API 端点 |
+| `lib/db/queries.ts` | 修改 | 数据库查询 |
+| `types/dto/x.ts` | 新增 | DTO 类型 |
+
+### 2. 数据库变更
+- [ ] 无需变更
+- [ ] 需要迁移：`database/migrations/XXX_description.sql`
+
+### 3. PWA 影响
+- [ ] 影响 Service Worker / manifest
+
+### 4. 风险评估
+| 风险 | 等级 | 缓解措施 |
+|------|------|----------|
+| 示例 | 中 | 措施 |
+```
+
+---
+
+## 📋 快速参考
+
+### 关键路径
+
+| 资源 | 路径 | 说明 |
+|------|------|------|
+| **数据库文件** | `database/db.sql` | 开发/生产共用（Git 跟踪） |
+| **数据库查询** | `lib/db/queries.ts` | 所有 Drizzle 查询封装 |
+| **类型定义** | `types/[模块].ts` | 按模块命名，如 `types/task.ts` |
+| **迁移脚本** | `database/migrations/` | SQL 迁移 |
+| **错误码** | `constants/error-codes.ts` | 统一错误码 |
+
+### 技术栈
+
+| 技术 | 版本 |
+|------|------|
+| Bun | 1.3.x+ |
+| Next.js | 16.x |
+| Drizzle ORM | 0.45.x+ |
+| Better-Auth | 1.4.x |
+
+### 数据库表
+
+| 表名 | 说明 |
+|------|------|
+| `users` | 用户（家长/儿童） |
+| `families` | 家庭 |
+| `task_plans` | 计划任务模板 |
+| `tasks` | 具体任务实例 |
+| `wishlists` | 愿望单 |
+
+### 测试数据
+
+| 角色 | 姓名 | 手机号 | PIN | 密码 |
+|------|------|--------|-----|------|
+| Admin | admin | 13800000001 | - | 1111 |
+| Parent | Zhang 1 | 13800000100 | - | 1111 |
+| Child | Zhang 3 | - | 1111 | - |
+
+---
+
+## 🛑 升级路径（必须询问人类）
+
+以下情况**不得擅自决定**，必须询问：
+
+- 需要使用未列出的 npm 包
+- 修改技术栈（如更换数据库）
+- 修改数据库表结构（已有数据）
+- 需求文档描述模糊或冲突
+- Better-Auth/Drizzle/Next.js 有 breaking change
+- 发现潜在安全漏洞
+
+---
+
+## 🧪 验证流程
+
+### 提交前检查
+
+- [ ] `bun tsc --noEmit` 通过
+- [ ] `bun test` 通过
+- [ ] 新功能有测试
+- [ ] 数据库迁移已创建（如有变更）
+- [ ] 不使用 `any` 类型
+- [ ] UI 错误使用 Shadcn 组件
+- [ ] **文件长度检查：所有文件不超过 800 行**
+  - 如文件过大，必须先拆分为小组件再提交
+- [ ] **BDD 规范检查**
+  - 测试使用 Given-When-Then 格式
+  - 使用业务语言（非技术术语）
+  - 先写测试/规范，后写实现
+
+---
+
+## 📚 扩展阅读
+
+- **[docs/TECH_SPEC.md](./docs/TECH_SPEC.md)** - 完整技术规范索引
+- **[docs/TECH_SPEC_DATABASE.md](./docs/TECH_SPEC_DATABASE.md)** - 数据库详细规范
+- **[docs/TECH_SPEC_TYPES.md](./docs/TECH_SPEC_TYPES.md)** - 类型系统规范
+- **[docs/TECH_SPEC_BDD.md](./docs/TECH_SPEC_BDD.md)** - BDD 开发规范
+- **[specs/prd.md](./specs/prd.md)** - 产品需求
+
+---
+
+## 📝 变更日志
+
+| 日期 | 版本 | 变更 |
+|------|------|------|
+| 2026-02-06 | 3.1 | 新增：强制 BDD 开发规范（Given-When-Then） |
+| 2026-02-06 | 3.0 | 重构：强制 Drizzle ORM，平台检测，精简内容 |
+| 2026-02-06 | 2.0 | 分离 TECH_SPEC.md |
+| 2026-02-05 | 1.0 | 初始版本 |
