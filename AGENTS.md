@@ -68,6 +68,40 @@ const result = db.execute(`SELECT * FROM tasks WHERE id = ${id}`);
 - ❌ **使用 `alert()` 显示错误** - 必须用 Shadcn Dialog/Toast
 - ❌ **引入新依赖** - 未经明确确认禁止安装
 
+### Bun 工具函数使用规范（强制）
+
+**详细规范请参考 [docs/TECH_SPEC_BUN.md](./docs/TECH_SPEC_BUN.md)**
+
+- ❌ **重复实现 Bun 已提供的工具函数** - 严禁！必须优先使用 Bun 内置工具
+- ❌ **手动实现文件操作** - 必须用 `Bun.file()`, `Bun.write()`
+- ❌ **手动实现密码哈希** - 必须用 `Bun.password.hash()`, `Bun.password.verify()`
+- ❌ **手动实现 HTTP 服务器** - 必须用 `Bun.serve()`
+- ❌ **手动实现环境变量读取** - 必须用 `Bun.env`
+- ❌ **手动实现路径拼接** - 必须用 `import.meta.dir`, `import.meta.resolve()`
+
+```typescript
+// ✅ 正确 - 使用 Bun 内置工具
+import { Bun } from 'bun';
+
+// 文件操作
+const file = Bun.file('./data.txt');
+const content = await file.text();
+await Bun.write('./output.txt', 'content');
+
+// 密码哈希
+const hash = await Bun.password.hash('password', 'bcrypt');
+const isValid = await Bun.password.verify('password', hash);
+
+// 环境变量
+const dbUrl = Bun.env.DATABASE_URL;
+
+// ❌ 禁止 - 重复实现
+import { readFile } from 'fs/promises';     // 禁止
+import { hash, compare } from 'bcrypt';      // 禁止
+import { createServer } from 'http';         // 禁止
+const env = process.env;                     // 禁止
+```
+
 ### Git
 - ❌ **提交 `.env` 文件** - 敏感配置禁止入库
 
@@ -206,6 +240,9 @@ it('given 家长已登录，when 查询任务列表，then 返回该家庭的任
 ## 📚 扩展阅读
 
 - **[docs/TECH_SPEC.md](./docs/TECH_SPEC.md)** - 完整技术规范索引
+- **[docs/TECH_SPEC_BUN.md](./docs/TECH_SPEC_BUN.md)** - Bun 运行时使用规范
+- **[docs/TECH_SPEC_PERFORMANCE.md](./docs/TECH_SPEC_PERFORMANCE.md)** - 性能优化规范
+- **[docs/TECH_SPEC_LOGGING.md](./docs/TECH_SPEC_LOGGING.md)** - 日志规范
 - **[docs/TECH_SPEC_DATABASE.md](./docs/TECH_SPEC_DATABASE.md)** - 数据库详细规范
 - **[docs/TECH_SPEC_TYPES.md](./docs/TECH_SPEC_TYPES.md)** - 类型系统规范
 - **[docs/TECH_SPEC_BDD.md](./docs/TECH_SPEC_BDD.md)** - BDD 开发规范
@@ -217,6 +254,7 @@ it('given 家长已登录，when 查询任务列表，then 返回该家庭的任
 
 | 日期 | 版本 | 变更 |
 |------|------|------|
+| 2026-02-10 | 3.2 | 新增：Bun 工具函数使用规范（强制使用 Bun 内置工具） |
 | 2026-02-06 | 3.1 | 新增：强制 BDD 开发规范（Given-When-Then） |
 | 2026-02-06 | 3.0 | 重构：强制 Drizzle ORM，平台检测，精简内容 |
 | 2026-02-06 | 2.0 | 分离 TECH_SPEC.md |

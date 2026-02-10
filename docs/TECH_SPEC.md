@@ -17,6 +17,9 @@
 | [TECH_SPEC_PWA.md](./TECH_SPEC_PWA.md) | PWA 配置、Service Worker、缓存策略 | PWA 实现 |
 | [TECH_SPEC_TESTING.md](./TECH_SPEC_TESTING.md) | 测试策略、覆盖率、示例 | 测试开发 |
 | [TECH_SPEC_BDD.md](./TECH_SPEC_BDD.md) | BDD 规范、Given-When-Then 实践 | 编写业务测试 |
+| [TECH_SPEC_BUN.md](./TECH_SPEC_BUN.md) | Bun 运行时使用规范、API 详解 | Bun 开发 |
+| [TECH_SPEC_PERFORMANCE.md](./TECH_SPEC_PERFORMANCE.md) | 性能优化策略、前端/后端/数据库优化 | 性能优化 |
+| [TECH_SPEC_LOGGING.md](./TECH_SPEC_LOGGING.md) | 日志规范、logs 表设计、API 日志 | 日志开发 |
 
 ---
 
