@@ -180,14 +180,14 @@ my-app/
       ↓
 API 路由 (Next.js App)
       ↓
-查询抽象层 (lib/db/queries.ts)
+查询抽象层 (lib/db/queries/)
       ↓
 Drizzle ORM
       ↓
 bun:sqlite (database/db.sql)
 ```
 
-**重要**：所有数据库查询必须通过 `lib/db/queries.ts`，禁止在组件/路由中直接操作数据库。
+**重要**：所有数据库查询必须通过 `lib/db/queries/`，禁止在组件/路由中直接操作数据库。
 
 ---
 

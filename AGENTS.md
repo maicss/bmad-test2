@@ -39,7 +39,7 @@ echo $SHELL
 ### 数据库（强制 Drizzle ORM）
 - ❌ **禁止使用原生 SQL 操作数据库** - 必须使用 Drizzle ORM
 - ❌ **禁止字符串拼接 SQL** - 必须使用 Drizzle 的查询构建器
-- ❌ **禁止在组件/路由中直接写 SQL** - 所有查询必须封装到 `lib/db/queries.ts`
+- ❌ **禁止在组件/路由中直接写 SQL** - 所有查询必须封装到 `lib/db/queries/` 目录下，按表分文件存储（如 `lib/db/queries/tasks.ts`, `lib/db/queries/users.ts`）
 - ❌ **使用第三方数据库驱动** - 只能用 `bun:sqlite` + Drizzle ORM
 
 ```typescript
@@ -146,7 +146,7 @@ it('given 家长已登录，when 查询任务列表，then 返回该家庭的任
 | 文件路径 | 操作 | 说明 |
 |----------|------|------|
 | `app/api/x/route.ts` | 新增 | API 端点 |
-| `lib/db/queries.ts` | 修改 | 数据库查询 |
+| `lib/db/queries/[table].ts` | 修改 | 数据库查询（按表分文件，如 `tasks.ts`, `users.ts`） |
 | `types/dto/x.ts` | 新增 | DTO 类型 |
 
 ### 2. 数据库变更
@@ -171,7 +171,7 @@ it('given 家长已登录，when 查询任务列表，then 返回该家庭的任
 | 资源 | 路径 | 说明 |
 |------|------|------|
 | **数据库文件** | `database/db.sql` | 开发/生产共用（Git 跟踪） |
-| **数据库查询** | `lib/db/queries.ts` | 所有 Drizzle 查询封装 |
+| **数据库查询** | `lib/db/queries/` | Drizzle 查询按表分文件存储（如 `tasks.ts`, `users.ts`） |
 | **类型定义** | `types/[模块].ts` | 按模块命名，如 `types/task.ts` |
 | **迁移脚本** | `database/migrations/` | SQL 迁移 |
 | **错误码** | `constants/error-codes.ts` | 统一错误码 |
@@ -254,6 +254,7 @@ it('given 家长已登录，when 查询任务列表，then 返回该家庭的任
 
 | 日期 | 版本 | 变更 |
 |------|------|------|
+| 2026-02-12 | 3.3 | 重构：数据库查询从单文件 `lib/db/queries.ts` 改为按表分文件 `lib/db/queries/*.ts` |
 | 2026-02-10 | 3.2 | 新增：Bun 工具函数使用规范（强制使用 Bun 内置工具） |
 | 2026-02-06 | 3.1 | 新增：强制 BDD 开发规范（Given-When-Then） |
 | 2026-02-06 | 3.0 | 重构：强制 Drizzle ORM，平台检测，精简内容 |

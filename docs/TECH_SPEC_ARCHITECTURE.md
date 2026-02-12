@@ -27,7 +27,7 @@
                     ↓
 ┌─────────────────────────────────────────┐
 │              业务逻辑层                  │
-│        (lib/db/queries.ts)               │
+│        (lib/db/queries/)               │
 │     所有数据库查询抽象层（强制）          │
 └─────────────────────────────────────────┘
                     ↓
@@ -45,7 +45,7 @@
 
 ### 关键原则
 
-1. **强制查询抽象层**：所有数据库操作必须通过 `lib/db/queries.ts`
+1. **强制查询抽象层**：所有数据库操作必须通过 `lib/db/queries/`
 2. **强制 Drizzle ORM**：禁止任何原生 SQL
 3. **Server Components 优先**：数据获取在服务端完成
 4. **类型安全**：全链路 TypeScript，禁止 `any`
@@ -95,7 +95,7 @@ lib/
 └── utils.ts                    # 通用工具函数
 ```
 
-**重要**：`lib/db/queries.ts` 是唯一允许操作数据库的文件。
+**重要**：所有查询必须封装到 `lib/db/queries/` 目录下，按表分文件存储（如 `lib/db/queries/tasks.ts`, `lib/db/queries/users.ts`）。
 
 ### `types/` - 类型定义（按模块命名）
 
@@ -180,7 +180,7 @@ draft → activated → redeemed → completed
 // 2. 系统根据 dateStrategy 计算有效日期
 // 3. 为每个日期生成 task
 
-// lib/db/queries.ts
+// lib/db/queries/tasks.ts
 export async function createTaskPlan(data: CreateTaskPlanDto) {
   // 插入 plan
   const plan = await db.insert(taskPlans).values({...}).returning();
@@ -208,7 +208,7 @@ export async function createTaskPlan(data: CreateTaskPlanDto) {
 // 3. 计算积分（考虑 combo）
 // 4. 写入积分历史
 
-// lib/db/queries.ts
+// lib/db/queries/tasks.ts
 export async function approveTask(taskId: string, approvedBy: string) {
   return await db.transaction(async (tx) => {
     // 更新任务状态
@@ -240,7 +240,7 @@ export async function approveTask(taskId: string, approvedBy: string) {
 // 3. 扣除积分
 // 4. 更新愿望状态
 
-// lib/db/queries.ts
+// lib/db/queries/wishlists.ts
 export async function redeemWishlist(wishlistId: string, userId: string) {
   return await db.transaction(async (tx) => {
     // 检查余额

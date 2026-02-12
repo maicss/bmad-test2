@@ -198,8 +198,8 @@ async function changePoints(userId: string, amount: number, reason: string) {
                     ↓
 ┌─────────────────────────────────────────┐
 │              业务逻辑层                  │
-│        (lib/db/queries.ts)               │
-│     所有数据库查询抽象层（强制）          │
+│        (lib/db/queries/)               │
+│     所有数据库查询按表抽象层（强制）          │
 └─────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────┐
@@ -216,7 +216,7 @@ async function changePoints(userId: string, amount: number, reason: string) {
 
 ### 3.2 关键架构原则
 
-1. **强制查询抽象层**：所有数据库操作必须通过 `lib/db/queries.ts`
+1. **强制查询抽象层**：所有查询必须封装到 `lib/db/queries/` 目录下，按表分文件存储（如 `lib/db/queries/tasks.ts`, `lib/db/queries/users.ts`）
 2. **强制 Drizzle ORM**：禁止任何原生 SQL
 3. **Server Components 优先**：数据获取在服务端完成
 4. **类型安全**：全链路 TypeScript，禁止 `any`
@@ -1006,7 +1006,7 @@ types/
 **一致性：** 符合"线性叠加不回退"和"家长完全控制"原则
 
 **实施要点：**
-- 创建 `lib/db/queries.ts` 封装所有数据库查询
+- 创建 `lib/db/queries/` 封装所有数据库查询
 - 实现任务管理 API（创建、生成、完成、驳回、暂停、删除）
 - 实现积分结算逻辑（审批后结算、线性叠加）
 - 实现愿望管理 API（创建、审核、兑换）
@@ -1113,7 +1113,7 @@ types/
 
 #### 第 2-3 周：核心功能逻辑（任务 + 积分 + 愿望）
 
-- [ ] 创建 `lib/db/queries.ts` 封装所有数据库查询
+- [ ] 创建 `lib/db/queries/` 封装所有数据库查询，按表分文件存储（如 `lib/db/queries/tasks.ts`, `lib/db/queries/users.ts`）
 - [ ] 实现任务管理 API（创建、生成、完成、驳回、暂停、删除）
 - [ ] 实现积分结算逻辑（审批后结算、线性叠加）
 - [ ] 实现愿望管理 API（创建、审核、兑换）

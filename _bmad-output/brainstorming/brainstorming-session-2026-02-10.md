@@ -216,7 +216,7 @@ workflow_completed: true
 - 所需资源：better-auth文档参考，认证逻辑开发，约8-12小时开发时间
 
 **行动 3：核心功能逻辑代码化（任务管理）**
-- 创建lib/db/queries.ts封装所有数据库查询
+- 创建lib/db/queries/ 按表封装所有数据库查询
 - 实现任务管理API（创建、生成、完成、驳回、暂停、删除）
 - 测试任务状态流转
 - 所需资源：后端开发人员，API路由设计（Next.js API routes），约16-24小时开发时间

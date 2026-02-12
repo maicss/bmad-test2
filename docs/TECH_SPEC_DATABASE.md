@@ -353,7 +353,7 @@ export const pointsHistory = sqliteTable('points_history', {
 
 ## 查询抽象层
 
-### lib/db/queries.ts（强制使用）
+### lib/db/queries/.ts（强制使用，所有查询必须封装到 `lib/db/queries/` 目录下，按表分文件存储（如 `lib/db/queries/tasks.ts`, `lib/db/queries/users.ts`））
 
 ```typescript
 /**
