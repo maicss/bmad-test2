@@ -1,68 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { getUserByPhonePlain } from '@/lib/db/queries/users';
 import { isValidChinesePhone } from '@/lib/utils';
-import type { SendOTPRequest, SendOTPResponse } from '@/types/auth';
+import { getUserByPhonePlain } from '@/lib/db/queries/users';
 
 /**
- * Send OTP API Endpoint
+ * Send OTP API Endpoint (For Login)
  *
  * Sends OTP verification code to phone number
+ * Only for registered users
  *
- * Source: Story 1.1 AC #1 - OTP code delivery within 60 seconds
+ * Source: Story 1.2 AC #1 - OTP code delivery within 60 seconds
  */
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body: SendOTPRequest = await req.json();
+    const body = await request.json();
+    const { phone } = body;
 
     // Validate phone number format
-    if (!body.phone || !isValidChinesePhone(body.phone)) {
-      return NextResponse.json<SendOTPResponse>({
+    if (!phone || !isValidChinesePhone(phone)) {
+      return NextResponse.json({
         success: false,
-        message: '请输入有效的中国手机号（11位，以1开头）',
+        message: '请输入有效的11位手机号',
       }, { status: 400 });
     }
 
-    // Check if phone already registered
-    const existingUser = await getUserByPhonePlain(body.phone);
-    if (existingUser) {
-      return NextResponse.json<SendOTPResponse>({
+    // Check if user exists
+    const user = await getUserByPhonePlain(phone);
+
+    if (!user) {
+      return NextResponse.json({
         success: false,
-        message: '该手机号已注册，请直接登录',
-      }, { status: 409 });
+        message: '手机号未注册',
+      }, { status: 404 });
     }
 
-    // Send OTP via Better-Auth phone plugin
-    const result = await auth.api.sendPhoneNumberOTP({
-      body: {
-        phoneNumber: body.phone,
-      },
-      headers: req.headers,
-    });
+    // Send OTP (for MVP, use fixed debug code)
+    // In production, integrate with SMS providers
+    const otpCode = '111111'; // Fixed debug code for development
+    const expiresAt = new Date(Date.now() + 60 * 1000);
 
-    if (!result || 'error' in result) {
-      const errorMessage = typeof result?.error === 'string'
-        ? result.error
-        : '发送验证码失败，请稍后重试';
-      return NextResponse.json<SendOTPResponse>({
-        success: false,
-        message: errorMessage,
-      }, { status: 500 });
-    }
+    console.log(`[OTP-DEV] Phone: ${phone}, Code: ${otpCode}, ExpiresAt: ${expiresAt.toISOString()}`);
 
-    // Return success response
-    return NextResponse.json<SendOTPResponse>({
+    return NextResponse.json({
       success: true,
-      message: '验证码已发送，请在60秒内输入',
-      expiresAt: Date.now() + 60 * 1000, // 60 seconds from now
-    }, { status: 200 });
-
+      message: '验证码已发送',
+      otpCode, // Include for testing purposes
+      expiresAt: expiresAt.toISOString(),
+    });
   } catch (error) {
-    console.error('[Send OTP API] Error:', error);
-
-    return NextResponse.json<SendOTPResponse>({
+    console.error('Send OTP error:', error);
+    return NextResponse.json({
       success: false,
-      message: '服务器错误，请稍后重试',
+      message: '发送验证码失败，请稍后重试',
     }, { status: 500 });
   }
 }

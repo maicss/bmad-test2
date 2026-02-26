@@ -20,10 +20,14 @@ export function cn(...inputs: ClassValue[]) {
  * @returns Masked phone number
  */
 export function maskPhone(phone: string): string {
-  if (!phone || phone.length < 4) {
+  if (!phone || phone.length <= 4) {
+    // 太短的号码直接返回原值
     return phone;
   }
-  return phone.slice(0, -4).replace(/\d/g, '*') + phone.slice(-4);
+
+  // 保留前3位和最后4位，中间替换为 *
+  const middlePart = phone.slice(3, -4);
+  return phone.slice(0, 3) + middlePart.replace(/\d/g, '*') + phone.slice(-4);
 }
 
 /**

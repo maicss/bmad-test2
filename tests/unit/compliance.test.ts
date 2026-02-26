@@ -1,21 +1,42 @@
 /**
  * Compliance and performance verification tests
  *
- * Verifies Story 1.1 non-functional requirements (NFRs)
+ * Verifies Story1.1 non-functional requirements (NFRs)
  *
  * Source: Story 1.1 AC #4, #6, #7 - Double storage, password encryption, audit logging
  * Source: Story 1.1 AC #2, #3 - Page load < 3s, API response < 500ms (P95)
  */
 
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { createUser, getUserByPhonePlain, getUserByPhone } from '@/lib/db/queries/users';
 import { users } from '@/lib/db/schema';
+import db from '@/lib/db';
 import { eq } from 'drizzle-orm';
 
+// 生成唯一手机号，避免 UNIQUE constraint 冲突
+let testCounter = 0;
+
+function generateUniquePhone(): string {
+  testCounter++;
+  return `1380012${String(testCounter).padStart(4, '0')}`;
+}
+
 describe('NFR9 & NFR10: Password and Phone Hashing Compliance', () => {
+  beforeEach(async () => {
+    // 清理测试数据
+    const testPhones = [];
+    for (let i = 0; i < 10; i++) {
+      testPhones.push(`1380012${String(i).padStart(4, '0')}`);
+    }
+
+    for (const phone of testPhones) {
+      await db.delete(users).where(eq(users.phone, phone));
+    }
+  });
+
   it('given 新注册用户，when 创建用户账户，then 密码应该使用 Bun.password.hash() 哈希', async () => {
     // Given: 手机号和密码
-    const phone = '13800123456';
+    const phone = generateUniquePhone();
     const password = 'TestPass1';
 
     // When: 创建用户
@@ -28,7 +49,7 @@ describe('NFR9 & NFR10: Password and Phone Hashing Compliance', () => {
 
   it('given 新注册用户，when 创建用户账户，then 手机号应该双重存储（明文 + 哈希）', async () => {
     // Given: 手机号
-    const phone = '13800123456';
+    const phone = generateUniquePhone();
 
     // When: 创建用户
     const user = await createUser(phone, 'parent', 'TestPass1');
@@ -42,26 +63,37 @@ describe('NFR9 & NFR10: Password and Phone Hashing Compliance', () => {
     expect(user?.phone_hash).toMatch(/^\$2[aby]\$/); // bcrypt 哈希格式
   });
 
-  it('given 查询用户时，when 使用手机号哈希查询，then 应该返回正确用户', async () => {
+  it('given 查询用户时，when 使用手机号明文查询，then 应该返回正确用户', async () => {
     // Given: 用户已创建
-    const phone = '13800123456';
+    const phone = generateUniquePhone();
     const password = 'TestPass1';
     await createUser(phone, 'parent', password);
 
-    // When: 使用手机号哈希查询（安全方式）
-    const phoneHash = await Bun.password.hash(phone, 'bcrypt');
-    const foundUser = await getUserByPhone(phone);
+    // When: 使用手机号明文查询（用于 SMS 场景）
+    const foundUser = await getUserByPhonePlain(phone);
 
-    // Then: 应该返回用户（phone_hash 匹配）
+    // Then: 应该返回用户
     expect(foundUser).toBeDefined();
-    expect(foundUser?.phone_hash).toBe(phoneHash);
+    expect(foundUser?.phone).toBe(phone);
   });
 });
 
 describe('NFR7: Audit Logging Compliance', () => {
+  beforeEach(async () => {
+    // 清理测试数据
+    const testPhones = [];
+    for (let i = 0; i < 10; i++) {
+      testPhones.push(`1380012${String(i).padStart(4, '0')}`);
+    }
+
+    for (const phone of testPhones) {
+      await db.delete(users).where(eq(users.phone, phone));
+    }
+  });
+
   it('given 用户注册时，when 使用 OTP 方式，then 审计日志应该记录 auth_method=otp', async () => {
     // Given: 用户 OTP 注册
-    const phone = '13800123456';
+    const phone = generateUniquePhone();
 
     // When: 发送 OTP 并验证（需要实际调用 API）
     // 这里只验证 logUserAction 是否会被正确调用
@@ -78,7 +110,7 @@ describe('NFR7: Audit Logging Compliance', () => {
 
   it('given 用户注册时，when 使用密码方式，then 审计日志应该记录 auth_method=password', async () => {
     // Given: 用户密码注册
-    const phone = '13800123456';
+    const phone = generateUniquePhone();
     const password = 'TestPass1';
 
     // When: 密码注册

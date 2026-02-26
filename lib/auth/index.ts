@@ -38,6 +38,7 @@ export const auth = betterAuth({
         if (otpProvider === 'console') {
           // Development mode: output OTP to console
           console.log(`[OTP] Phone: ${phoneNumber}, Code: ${code}`);
+          // No return value - Better-Auth handles internally
         } else if (otpProvider === 'console-debug') {
           // Debug mode: use fixed code from OTP_DEBUG_CODE
           console.log(`[OTP-DEBUG] Phone: ${phoneNumber}, Code: ${Bun.env.OTP_DEBUG_CODE}`);
@@ -48,6 +49,8 @@ export const auth = betterAuth({
           // TODO: Implement Tencent SMS sending
           console.log(`[SMS-TENCENT] Phone: ${phoneNumber}, Code: ${code}`);
         }
+        // Better-Auth doesn't check return value
+        // We just log and let Better-Auth handle OTP storage
       },
 
       // OTP configuration

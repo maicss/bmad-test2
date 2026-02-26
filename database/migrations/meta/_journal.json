@@ -8,6 +8,13 @@
       "when": 1770969378220,
       "tag": "0000_special_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1772066117838,
+      "tag": "0001_easy_pet_avengers",
+      "breakpoints": true
     }
   ]
 }

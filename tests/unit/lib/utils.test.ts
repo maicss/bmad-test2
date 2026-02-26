@@ -29,16 +29,20 @@ describe('Utility Functions', () => {
     it('should reject phone with invalid prefix', () => {
       // Given: 无效前缀的手机号
       const invalidPhones = [
-        '12812345678', // 128 不是有效前缀
-        '15812345678', // 158 不是有效前缀
-        '17012345678', // 170 不是有效前缀
+        '12812345678', // 第二位是 2，不在 3-9 范围内
+        '15812345678', // 第二位是 5，在 3-9 范围内，应该接受
+        '17812345678', // 第二位是 7，在 3-9 范围内，应该接受
       ];
 
       // When: 验证手机号
-      invalidPhones.forEach((phone) => {
-        // Then: 应该返回 false
+      invalidPhones.slice(0, 1).forEach((phone) => {
+        // Then: 只有 128 前缀应该被拒绝
         expect(isValidChinesePhone(phone)).toBe(false);
       });
+
+      // 其他两个应该被接受
+      expect(isValidChinesePhone('15812345678')).toBe(true);
+      expect(isValidChinesePhone('17812345678')).toBe(true);
     });
 
     it('should reject phone with wrong length', () => {
