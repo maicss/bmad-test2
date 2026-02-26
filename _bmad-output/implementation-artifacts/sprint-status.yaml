@@ -1,5 +1,5 @@
 # Sprint Status Tracking for bmad-test2
-# generated: 2026-02-13
+# generated: 2026-02-26
 # project: bmad-test2
 # project_key: NOKEY
 # tracking_system: file-system
@@ -29,7 +29,7 @@
 #
 # WORKFLOW NOTES:
 # ===============
-# - Epic transitions to 'in-progress' automatically when first story is created
+# - Epic transitions to 'in-progress' automatically when first story is created (via create-story)
 # - Stories can be worked in parallel if team capacity allows
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
@@ -47,78 +47,27 @@ development_status:
   1-2-parent-phone-login: done
   1-3-child-pin-login: done
   1-4-invite-other-parent: done
-   1-4-invite-other-parent: done
-   1-5-add-child-to-family: in-progress
-   1-6-multi-device-login: backlog
+   1-5-add-child-to-family: done
+  1-6-multi-device-login: in-progress
   1-7-primary-parent-manage-members: backlog
   epic-1-retrospective: optional
 
   # Epic 2: Task Planning & Management (With Notifications)
   epic-2: backlog
-  2-1-create-task-plan-template: backlog
-  2-2-auto-generate-tasks: backlog
-  2-3-pause-resume-task-plan: backlog
-  2-4-use-template-create-task: backlog
-  2-5-batch-approve-tasks: backlog
-  2-6-child-view-today-tasks: backlog
-  2-7-child-mark-task-complete: backlog
-  2-8-parent-approve-task: backlog
-  2-9-parent-reject-task: backlog
-  2-10-create-temporary-task: backlog
-  2-11-task-reminder-push: backlog
-  2-12-task-completion-notification: backlog
-  epic-2-retrospective: optional
 
   # Epic 3: Points System & Balance Management (With Notifications)
   epic-3: backlog
-  3-1-calculate-points-on-task-approval: backlog
-  3-2-adjust-points-manually: backlog
-  3-3-points-history: backlog
-  3-4-points-trend-charts: backlog
-  3-5-child-view-balance: backlog
-  3-6-points-export-gdpr: backlog
-  epic-3-retrospective: optional
 
   # Epic 4: Wishlist Management & Redemption (With Notifications)
   epic-4: backlog
-  4-1-child-create-wish: backlog
-  4-2-parent-approve-wish: backlog
-  4-3-wish-progress-bar: backlog
-  4-4-child-view-all-wishes: backlog
-  4-5-redemption-request: backlog
-  4-6-parent-confirm-reject-redemption: backlog
-  4-7-redeemed-wish-history: backlog
-  4-8-wish-notifications: backlog
-  epic-4-retrospective: optional
 
   # Epic 5: Combo Incentives & Gamification (With Notifications)
   epic-5: backlog
-  5-1-combo-tracking: backlog
-  5-2-combo-interruption-alert: backlog
-  5-3-daily-checkin: backlog
-  5-4-badge-showcase-wall: backlog
-  5-5-badge-celebration-animation: backlog
-  5-6-growth-curves: backlog
-  5-7-level-system: backlog
-  epic-5-retrospective: optional
 
   # Epic 6: Admin & System Management (Simplified)
   epic-6: in-progress
-  6-1-admin-creates-task-template: ready-for-dev
-  6-2-admin-creates-wish-template: ready-for-dev
-  6-3-admin-creates-combo-rules-template: ready-for-dev
-  6-4-admin-manages-image-hosting: ready-for-dev
-  6-5-admin-views-global-statistics: ready-for-dev
-  6-6-admin-sends-system-announcement: ready-for-dev
-  6-7-global-notification-center: ready-for-dev
-  6-8-family-rule-configuration: ready-for-dev
-  epic-6-retrospective: optional
 
   # Epic 7: Offline Support & Data Synchronization (Simplified)
   epic-7: in-progress
-  7-1-offline-task-completion-marking: ready-for-dev
-  7-2-offline-wish-creation: backlog
-  7-3-queue-limit-blocking-prompt: backlog
-  7-4-automatic-synchronization-network-restore: backlog
-  7-5-network-status-indicator: backlog
-  epic-7-retrospective: optional
+
+  # Epic 8: ...
