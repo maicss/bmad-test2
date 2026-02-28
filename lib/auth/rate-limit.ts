@@ -19,6 +19,9 @@ const rateLimitStore = new Map<string, RateLimitEntry>();
 const MAX_ATTEMPTS = 5;
 const LOCK_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
+// Development mode: Skip rate limiting for easier testing
+const DEV_MODE = false;
+
 /**
  * Check if login should be rate limited
  *
@@ -29,6 +32,11 @@ const LOCK_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
  * @returns Error message if rate limited, null otherwise
  */
 export function rateLimitLoginAttempts(ipAddress: string): string | null {
+  // Skip rate limiting in development mode
+  if (DEV_MODE) {
+    return null;
+  }
+
   const now = Date.now();
   const entry = rateLimitStore.get(ipAddress);
 

@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Story 1.3: Child PIN Login - E2E', () => {
   test.beforeEach(async ({ page }) => {
     // 重置 rate limit，避免测试之间相互干扰
-    const resetResponse = await fetch('http://localhost:3344/api/test/reset-rate-limit');
+    const resetResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/test/reset-rate-limit`);
     await resetResponse.text(); // Ensure response is fully received
 
     // 清除 cookies 和存储，确保每个测试从干净状态开始
@@ -20,7 +20,7 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 已注册儿童输入正确PIN码，when 提交PIN登录表单，then 成功登录并重定向到儿童Dashboard', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // When: 输入正确的4位PIN码
@@ -37,7 +37,7 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 儿童输入错误PIN码，when 提交PIN登录表单，then 显示错误提示', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // When: 输入错误的PIN码（使用一个不存在的PIN）
@@ -55,7 +55,7 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 儿童输入不足4位PIN码，when 尝试点击登录按钮，then 按钮应该被禁用', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // When: 输入不足4位的PIN码
@@ -68,7 +68,7 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 使用家长账号的PIN码登录，when 尝试登录，then 显示错误提示（非儿童角色）', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // When: 输入一个肯定不存在的PIN码
@@ -89,7 +89,7 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test.skip('given 连续5次PIN登录失败，when 尝试第6次登录，then 显示锁定提示（10分钟）', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // When: 连续5次输入错误的PIN码（使用一个不存在的PIN码）
@@ -117,12 +117,12 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test.afterAll(async () => {
     // 在所有测试完成后重置 rate limit
-    await fetch('http://localhost:3344/api/test/reset-rate-limit');
+    await fetch(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/test/reset-rate-limit`);
   });
 
   test('given 访问PIN登录页面，when 检查页面元素，then 页面应该包含所有必需的UI组件', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // When: 检查页面元素
@@ -136,7 +136,7 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given PIN输入框，when 页面加载，then 应该自动聚焦', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // When: 检查PIN输入框
@@ -151,7 +151,7 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // When: 访问PIN登录页面
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // Then: PIN输入框应该使用数字键盘
@@ -162,7 +162,7 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 儿童输入PIN码超过4位，when 输入，then 自动截断为4位', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // When: 输入超过4位的PIN码
@@ -176,7 +176,7 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 儿童输入非数字字符，when 输入，then 自动过滤非数字字符', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // When: 输入非数字字符（分步输入）

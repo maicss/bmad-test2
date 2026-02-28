@@ -6,14 +6,14 @@
  * Source: Story 1.3 AC #1-#8
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test';
 import { createUser, getChildByPIN } from '@/lib/db/queries/users';
 import { resetAllRateLimits } from '@/lib/auth/rate-limit';
 import db from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
-const BASE_URL = 'http://localhost:3344';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
 
 describe('Story 1.3: Child PIN Login - Integration', () => {
   let childName: string;
@@ -28,6 +28,11 @@ describe('Story 1.3: Child PIN Login - Integration', () => {
     childPin = `${Math.floor(Math.random() * 9000 + 1000)}`;
     childName = `child_${Date.now()}`;
     await createUser(childName, 'child', childPin, familyId);
+  });
+
+  beforeEach(async () => {
+    // 每个测试前重置速率限制（避免相互干扰）
+    resetAllRateLimits();
   });
 
   afterAll(async () => {

@@ -34,7 +34,7 @@ describe('Story 1.2: Parent Phone Login - OTP Flow', () => {
     await createUser(testPhone, 'parent', testPassword);
 
     // When: 点击发送验证码
-    const response = await fetch('http://localhost:3344/api/auth/send-otp', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/send-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone: testPhone }),
@@ -51,7 +51,7 @@ describe('Story 1.2: Parent Phone Login - OTP Flow', () => {
     await createUser(testPhone, 'parent', testPassword);
 
     // When: 提交登录表单（OTP 方式）
-    const response = await fetch('http://localhost:3344/api/auth/login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -73,7 +73,7 @@ describe('Story 1.2: Parent Phone Login - OTP Flow', () => {
     await createUser(testPhone, 'parent', testPassword);
 
     // When: 提交登录表单（错误 OTP）
-    const response = await fetch('http://localhost:3344/api/auth/login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -113,7 +113,7 @@ describe('Story 1.2: Parent Phone Login - Password Flow', () => {
     await createUser(testPhone, 'parent', testPassword);
 
     // When: 提交登录表单（密码方式）
-    const response = await fetch('http://localhost:3344/api/auth/login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -135,7 +135,7 @@ describe('Story 1.2: Parent Phone Login - Password Flow', () => {
     await createUser(testPhone, 'parent', testPassword);
 
     // When: 提交登录表单（错误密码）
-    const response = await fetch('http://localhost:3344/api/auth/login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -159,7 +159,7 @@ describe('Story 1.2: Parent Phone Login - Error Handling', () => {
     const phone = '13800009999';
 
     // When: 尝试登录
-    const response = await fetch('http://localhost:3344/api/auth/login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -200,7 +200,7 @@ describe('Story 1.2: Parent Phone Login - Rate Limiting', () => {
     const ipAddress = '127.0.0.1';
 
     for (let i = 0; i < 5; i++) {
-      await fetch('http://localhost:3344/api/auth/login', {
+      await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -215,7 +215,7 @@ describe('Story 1.2: Parent Phone Login - Rate Limiting', () => {
     }
 
     // When: 尝试第6次登录
-    const response = await fetch('http://localhost:3344/api/auth/login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

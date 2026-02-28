@@ -11,7 +11,7 @@ import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 describe('Registration API Integration Tests', () => {
-  const baseUrl = 'http://localhost:3344';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
 
   afterAll(async () => {
     // Clean up test users
@@ -36,8 +36,10 @@ describe('Registration API Integration Tests', () => {
       const data = await response.json();
       expect(data.success).toBe(true);
       expect(data.message).toContain('验证码已发送');
-      expect(data.expiresAt).toBeGreaterThan(Date.now());
-      expect(data.expiresAt).toBeLessThan(Date.now() + 65 * 1000); // Within 65 seconds
+      expect(data.expiresAt).toBeDefined();
+      const expiresTime = new Date(data.expiresAt).getTime();
+      expect(expiresTime).toBeGreaterThan(Date.now());
+      expect(expiresTime).toBeLessThan(Date.now() + 65 * 1000); // Within 65 seconds
     });
 
     it('should reject invalid phone number', async () => {
@@ -56,14 +58,14 @@ describe('Registration API Integration Tests', () => {
 
       const data = await response.json();
       expect(data.success).toBe(false);
-      expect(data.message).toContain('有效的中国手机号');
+      expect(data.message).toContain('请输入有效的中国手机号');
     });
   });
 
   describe('given 家长选择 OTP 方式，when 输入正确验证码，then 创建用户账户和家庭记录', () => {
     it('should register successfully with OTP', async () => {
       // Given: 有效手机号和 OTP 码
-      const phone = `13800000${Math.floor(Math.random() * 9000 + 1000)}`;
+      const phone = `138${String(Math.floor(Math.random() * 90000000 + 10000000)).padStart(8, '0')}`;
       const otp = '111111'; // Use debug code
 
       // When: 提交注册
@@ -90,7 +92,7 @@ describe('Registration API Integration Tests', () => {
 
     it('should create family for new parent', async () => {
       // Given: OTP 注册成功
-      const phone = `13800000${Math.floor(Math.random() * 9000 + 1000)}`;
+      const phone = `138${String(Math.floor(Math.random() * 90000000 + 10000000)).padStart(8, '0')}`;
       const otp = '111111';
 
       // When: 注册并创建家庭
@@ -111,7 +113,7 @@ describe('Registration API Integration Tests', () => {
 
     it('should reject invalid OTP code', async () => {
       // Given: 错误的 OTP
-      const phone = `13800000${Math.floor(Math.random() * 9000 + 1000)}`;
+      const phone = `138${String(Math.floor(Math.random() * 90000000 + 10000000)).padStart(8, '0')}`;
       const otp = '999999';
 
       // When: 提交注册
@@ -133,7 +135,7 @@ describe('Registration API Integration Tests', () => {
   describe('given 家长选择密码方式，when 输入强密码，then 创建用户账户和家庭记录', () => {
     it('should register successfully with password', async () => {
       // Given: 有效手机号和强密码
-      const phone = `13800000${Math.floor(Math.random() * 9000 + 1000)}`;
+      const phone = `138${String(Math.floor(Math.random() * 90000000 + 10000000)).padStart(8, '0')}`;
       const password = 'TestPass1';
 
       // When: 提交注册
@@ -161,8 +163,8 @@ describe('Registration API Integration Tests', () => {
 
     it('should reject weak password', async () => {
       // Given: 弱密码
-      const phone = `13800000${Math.floor(Math.random() * 9000 + 1000)}`;
-      const password = 'weak'; // No uppercase or number
+      const phone = `138${String(Math.floor(Math.random() * 90000000 + 10000000)).padStart(8, '0')}`;
+      const password = 'weakpassword'; // No uppercase or number
 
       // When: 提交注册
       const response = await fetch(`${baseUrl}/api/auth/register`, {
@@ -186,7 +188,7 @@ describe('Registration API Integration Tests', () => {
 
     it('should reject mismatched password confirmation', async () => {
       // Given: 密码不匹配
-      const phone = `13800000${Math.floor(Math.random() * 9000 + 1000)}`;
+      const phone = `138${String(Math.floor(Math.random() * 90000000 + 10000000)).padStart(8, '0')}`;
 
       // When: 提交注册
       const response = await fetch(`${baseUrl}/api/auth/register`, {
@@ -248,7 +250,7 @@ describe('Registration API Integration Tests', () => {
   describe('given API 响应时间，when 执行注册操作，then 响应时间 < 500ms (NFR3)', () => {
     it('should respond within 500ms for OTP registration', async () => {
       // Given: 注册操作
-      const phone = `13800000${Math.floor(Math.random() * 9000 + 1000)}`;
+      const phone = `138${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`;
 
       // When: 测量响应时间
       const startTime = Date.now();
@@ -267,7 +269,7 @@ describe('Registration API Integration Tests', () => {
 
     it('should respond within 500ms for password registration', async () => {
       // Given: 注册操作
-      const phone = `13800000${Math.floor(Math.random() * 9000 + 1000)}`;
+      const phone = `138${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`;
 
       // When: 测量响应时间
       const startTime = Date.now();

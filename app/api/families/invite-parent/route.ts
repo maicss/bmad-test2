@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Generate invitation link
-    const invitationLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3344'}/accept-invitation?token=${invitation.token}`;
+    const invitationLink = `${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/accept-invitation?token=${invitation.token}`;
 
     // Log invitation creation
     await logUserAction(currentUserId, 'invitation_created', {

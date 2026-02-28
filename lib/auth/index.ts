@@ -14,10 +14,16 @@ import db from '@/lib/db';
  *
  * Source: Story 1.1 Task 1
  * Source: Story 1.1 AC #3 - 36-hour session, HttpOnly Cookie
+ *
+ * Note: Better-Auth will auto-generate user, session, account tables.
+ * Only verification table needs to be manually provided for phone plugin.
  */
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: 'sqlite' }),
+  database: drizzleAdapter(db, {
+    provider: 'sqlite',
+    usePlural: true, // Our schema uses plural table names (users, families, etc.)
+  }),
 
   // Email & Password Authentication
   emailAndPassword: {
@@ -41,7 +47,7 @@ export const auth = betterAuth({
           // No return value - Better-Auth handles internally
         } else if (otpProvider === 'console-debug') {
           // Debug mode: use fixed code from OTP_DEBUG_CODE
-          console.log(`[OTP-DEBUG] Phone: ${phoneNumber}, Code: ${Bun.env.OTP_DEBUG_CODE}`);
+          console.log(`[OTP-DEBUG] Phone: ${phoneNumber}, Fixed Code: ${Bun.env.OTP_DEBUG_CODE}`);
         } else if (otpProvider === 'aliyun') {
           // TODO: Implement Aliyun SMS sending
           console.log(`[SMS-ALIYUN] Phone: ${phoneNumber}, Code: ${code}`);
@@ -52,6 +58,15 @@ export const auth = betterAuth({
         // Better-Auth doesn't check return value
         // We just log and let Better-Auth handle OTP storage
       },
+
+      // Custom OTP verification (for debug mode)
+      // Source: specs/init-project/index.md - dev phase uses hardcoded OTP 1111
+      verifyOTP: Bun.env.OTP_PROVIDER === 'console-debug'
+        ? async ({ code }) => {
+            const debugCode = Bun.env.OTP_DEBUG_CODE || '111111';
+            return code === debugCode;
+          }
+        : undefined,
 
       // OTP configuration
       otpLength: 6,

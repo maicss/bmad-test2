@@ -10,7 +10,7 @@ import { test, expect } from '@playwright/test';
 test.describe('given 访问注册页面，when 填写注册信息，then 应该成功注册', () => {
   test('should register with OTP method', async ({ page }) => {
     // Given: 访问注册页面
-    await page.goto('http://localhost:3344/register');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/register');
 
     // When: 选择 OTP 验证方式
     await page.click('input[value="otp"]');
@@ -36,7 +36,7 @@ test.describe('given 访问注册页面，when 填写注册信息，then 应该�
 
   test('should register with password method', async ({ page }) => {
     // Given: 访问注册页面
-    await page.goto('http://localhost:3344/register');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/register');
 
     // When: 选择密码验证方式
     await page.click('input[value="password"]');
@@ -59,7 +59,7 @@ test.describe('given 访问注册页面，when 填写注册信息，then 应该�
 
   test('should show error for weak password', async ({ page }) => {
     // Given: 访问注册页面
-    await page.goto('http://localhost:3344/register');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/register');
 
     // When: 选择密码验证方式
     await page.click('input[value="password"]');
@@ -82,7 +82,7 @@ test.describe('given 访问注册页面，when 填写注册信息，then 应该�
 
   test('should show error for password mismatch', async ({ page }) => {
     // Given: 访问注册页面
-    await page.goto('http://localhost:3344/register');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/register');
 
     // When: 选择密码验证方式
     await page.click('input[value="password"]');
@@ -105,7 +105,7 @@ test.describe('given 访问注册页面，when 填写注册信息，then 应该�
 
   test('should show error for existing phone', async ({ page }) => {
     // Given: 访问注册页面
-    await page.goto('http://localhost:3344/register');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/register');
 
     // When: 选择 OTP 验证方式
     await page.click('input[value="otp"]');

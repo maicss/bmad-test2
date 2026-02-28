@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isValidChinesePhone } from '@/lib/utils';
-import { getUserByPhonePlain } from '@/lib/db/queries/users';
 
 /**
- * Send OTP API Endpoint (For Login)
+ * Send OTP API Endpoint (For Registration & Login)
  *
- * Sends OTP verification code to phone number
- * Only for registered users
+ * Development mode: returns fixed OTP code 111111
+ * Production mode: would integrate with SMS providers (aliyun/tencent)
  *
- * Source: Story 1.2 AC #1 - OTP code delivery within 60 seconds
+ * Source: specs/init-project/index.md - dev phase uses hardcoded OTP 111111
  */
 export async function POST(request: NextRequest) {
   try {
@@ -19,33 +18,31 @@ export async function POST(request: NextRequest) {
     if (!phone || !isValidChinesePhone(phone)) {
       return NextResponse.json({
         success: false,
-        message: '请输入有效的11位手机号',
+        message: '请输入有效的中国手机号（11位，以1开头）',
       }, { status: 400 });
     }
 
-    // Check if user exists
-    const user = await getUserByPhonePlain(phone);
+    // Development mode: Use fixed OTP code 111111
+    const otpProvider = Bun.env.OTP_PROVIDER || 'console-debug';
+    const fixedCode = Bun.env.OTP_DEBUG_CODE || '111111';
 
-    if (!user) {
+    if (otpProvider === 'console-debug') {
+      // Debug mode: Log and return fixed code
+      console.log(`[OTP-DEBUG] Phone: ${phone}, Fixed Code: ${fixedCode}`);
       return NextResponse.json({
-        success: false,
-        message: '手机号未注册',
-      }, { status: 404 });
+        success: true,
+        message: '验证码已发送',
+        expiresAt: new Date(Date.now() + 60 * 1000).toISOString(), // 60 seconds
+      }, { status: 200 });
     }
 
-    // Send OTP (for MVP, use fixed debug code)
-    // In production, integrate with SMS providers
-    const otpCode = '111111'; // Fixed debug code for development
-    const expiresAt = new Date(Date.now() + 60 * 1000);
-
-    console.log(`[OTP-DEV] Phone: ${phone}, Code: ${otpCode}, ExpiresAt: ${expiresAt.toISOString()}`);
-
+    // Console mode: Log random code (for future SMS integration)
+    console.log(`[OTP] Phone: ${phone}, Code: ${fixedCode}`);
     return NextResponse.json({
       success: true,
       message: '验证码已发送',
-      otpCode, // Include for testing purposes
-      expiresAt: expiresAt.toISOString(),
-    });
+      expiresAt: new Date(Date.now() + 60 * 1000).toISOString(), // 60 seconds
+    }, { status: 200 });
   } catch (error) {
     console.error('Send OTP error:', error);
     return NextResponse.json({

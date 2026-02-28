@@ -28,7 +28,7 @@ export default defineConfig({
   /* 共享设置 */
   use: {
     /* 基础 URL */
-    baseURL: "http://localhost:3344",
+    baseURL: process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`,
 
     /* 收集追踪 */
     trace: "on-first-retry",

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Debug PIN Login Page', () => {
   test('检查页面是否加载', async ({ page }) => {
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // 获取页面标题
@@ -16,7 +16,7 @@ test.describe('Debug PIN Login Page', () => {
   });
 
   test('检查页面元素', async ({ page }) => {
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // 检查h1
@@ -38,7 +38,7 @@ test.describe('Debug PIN Login Page', () => {
   });
 
   test('测试错误PIN登录', async ({ page }) => {
-    await page.goto('http://localhost:3344/pin');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
     await page.waitForLoadState('networkidle');
 
     // 输入错误PIN

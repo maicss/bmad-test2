@@ -75,7 +75,7 @@
 - **BDD格式：** 测试使用Given-When-Then
 - **类型安全：** 禁止使用`any`类型
 - **数据库：** 必须使用Drizzle ORM
-- **端口配置：** 严格遵守3334端口
+- **端口配置：** 严格遵守3344端口
 
 ### 代码风格
 - **命名：** camelCase（函数），PascalCase（组件），kebab-case（文件）

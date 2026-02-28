@@ -39,7 +39,7 @@ describe('Story 1.3: Child PIN Login - API Flow', () => {
   it('given 已注册儿童输入正确PIN码，when 提交PIN登录表单，then 创建会话并重定向到儿童Dashboard', async () => {
     // Given: 已注册儿童（在beforeEach中创建）
     // When: 提交PIN登录表单
-    const response = await fetch('http://localhost:3344/api/auth/pin-login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/pin-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pin: childPin }),
@@ -59,7 +59,7 @@ describe('Story 1.3: Child PIN Login - API Flow', () => {
     // User created in beforeEach
 
     // When: 提交错误PIN
-    const response = await fetch('http://localhost:3344/api/auth/pin-login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/pin-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pin: '9999' }),
@@ -79,7 +79,7 @@ describe('Story 1.3: Child PIN Login - API Flow', () => {
     await createUser(parentName, 'parent', parentPin, 'test-family-id');
 
     // When: 使用家长账号的PIN尝试登录
-    const response = await fetch('http://localhost:3344/api/auth/pin-login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/pin-login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ describe('Story 1.3: Child PIN Login - API Flow', () => {
     await createUser(noFamilyName, 'child', noFamilyPin); // No family_id
 
     // When: 尝试登录
-    const response = await fetch('http://localhost:3344/api/auth/pin-login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/pin-login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ describe('Story 1.3: Child PIN Login - API Flow', () => {
     const invalidPin = '123';
 
     // When: 尝试登录
-    const response = await fetch('http://localhost:3344/api/auth/pin-login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/pin-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pin: invalidPin }),
@@ -150,7 +150,7 @@ describe('Story 1.3: Child PIN Login - API Flow', () => {
 
     // 连续5次失败
     for (let i = 0; i < 5; i++) {
-      await fetch('http://localhost:3344/api/auth/pin-login', {
+      await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/pin-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ describe('Story 1.3: Child PIN Login - API Flow', () => {
     }
 
     // When: 尝试第6次登录
-    const response = await fetch('http://localhost:3344/api/auth/pin-login', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/api/auth/pin-login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

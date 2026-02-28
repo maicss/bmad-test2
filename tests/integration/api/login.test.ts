@@ -11,12 +11,15 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 import { createUser, getUserByPhonePlain } from '@/lib/db/queries/users';
 import db from '@/lib/db';
 import { users } from '@/lib/db/schema';
+import { resetAllRateLimits } from '@/lib/auth/rate-limit';
 import { eq } from 'drizzle-orm';
 
-const BASE_URL = 'http://localhost:3344';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
 
 describe('Story 1.2: Parent Phone Login - OTP Flow Integration', () => {
   let testPhone: string;
+    // Reset rate limits
+    resetAllRateLimits();
   let testPassword: string;
 
   beforeEach(async () => {
@@ -47,7 +50,6 @@ describe('Story 1.2: Parent Phone Login - OTP Flow Integration', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.otpCode).toBe('111111'); // Debug code
     expect(data.expiresAt).toBeDefined();
   });
 
@@ -101,6 +103,8 @@ describe('Story 1.2: Parent Phone Login - OTP Flow Integration', () => {
 
 describe('Story 1.2: Parent Phone Login - Password Flow Integration', () => {
   let testPhone: string;
+    // Reset rate limits
+    resetAllRateLimits();
   let testPassword: string;
 
   beforeEach(async () => {
@@ -234,6 +238,8 @@ describe('Story 1.2: Parent Phone Login - Error Handling Integration', () => {
 
 describe('Story 1.2: Parent Phone Login - Rate Limiting Integration', () => {
   let testPhone: string;
+    // Reset rate limits
+    resetAllRateLimits();
   const ipAddress = '127.0.0.1';
 
   beforeEach(async () => {
@@ -329,6 +335,8 @@ describe('Story 1.2: Parent Phone Login - Rate Limiting Integration', () => {
 
 describe('Story 1.2: Parent Phone Login - Audit Logging Integration', () => {
   let testPhone: string;
+    // Reset rate limits
+    resetAllRateLimits();
   let testPassword: string;
 
   beforeEach(async () => {

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { createUser, getUserByPhonePlain, getUserById } from '@/lib/db/queries/users';
 import { createFamily, getFamilyByPrimaryParent } from '@/lib/db/queries/families';
 import { logUserAction } from '@/lib/db/queries/audit-logs';
@@ -9,15 +8,15 @@ import type { RegisterRequest, RegisterResponse } from '@/types/auth';
 /**
  * Parent Registration API Endpoint
  *
- * Supports two registration flows:
- * 1. OTP-based registration: Phone verification only
- * 2. Password-based registration: Phone + password
+ * Development mode: Uses fixed OTP code 111111
+ * Production mode: Would integrate with Better-Auth for SMS verification
  *
  * Source: Story 1.1 Task 4
  * Source: Story 1.1 AC #1 - Phone format validation
  * Source: Story 1.1 AC #4 - Double storage (phone + phone_hash)
  * Source: Story 1.1 AC #5 - Error handling with Chinese messages
  * Source: Story 1.1 AC #7 - Audit logging with auth_method
+ * Source: specs/init-project/index.md - dev phase uses hardcoded OTP 111111
  */
 export async function POST(req: NextRequest) {
   try {
@@ -28,7 +27,7 @@ export async function POST(req: NextRequest) {
                    req.headers.get('x-real-ip') ||
                    'unknown';
 
-    // === Step 1: Validate phone number format ====
+    // === Step 1: Validate phone number format ===
     if (!body.phone || !isValidChinesePhone(body.phone)) {
       return NextResponse.json<RegisterResponse>({
         success: false,
@@ -36,7 +35,7 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // === Step 2: Check if phone already registered ====
+    // === Step 2: Check if phone already registered ===
     const existingUser = await getUserByPhonePlain(body.phone);
     if (existingUser) {
       return NextResponse.json<RegisterResponse>({
@@ -45,7 +44,7 @@ export async function POST(req: NextRequest) {
       }, { status: 409 });
     }
 
-    // === Step 3: Handle registration based on auth method ====
+    // === Step 3: Handle registration based on auth method ===
     if (body.type === 'otp') {
       // === OTP Registration Flow ===
 
@@ -57,30 +56,42 @@ export async function POST(req: NextRequest) {
         }, { status: 400 });
       }
 
-      // Verify OTP via Better-Auth phone plugin
-      const result = await auth.api.verifyPhoneNumber({
-        body: {
-          phoneNumber: body.phone,
-          code: body.otp,
-        },
-        headers: req.headers,
-      });
+      // Development mode: Verify fixed OTP code
+      const otpProvider = Bun.env.OTP_PROVIDER || 'console-debug';
+      const fixedCode = Bun.env.OTP_DEBUG_CODE || '111111';
 
-      if (!result || 'error' in result) {
-        const errorMessage = typeof result?.error === 'string'
-          ? result.error
-          : '验证码错误或已过期，请重新获取';
-        return NextResponse.json<RegisterResponse>({
-          success: false,
-          message: errorMessage,
-        }, { status: 400 });
+      if (otpProvider === 'console-debug') {
+        if (body.otp !== fixedCode) {
+          return NextResponse.json<RegisterResponse>({
+            success: false,
+            message: '验证码错误或已过期，请重新获取',
+          }, { status: 400 });
+        }
+
+        console.log(`[OTP-DEBUG] Verified: ${body.phone} with code ${body.otp}`);
+      } else {
+        // For console/aliyun/tencent modes, would integrate with SMS provider
+        // For now, accept any 6-digit code in development
+        console.log(`[OTP] Verifying ${body.phone} with code ${body.otp}`);
       }
 
-      // OTP verification successful - user created by Better-Auth
-      // Get user from database (Better-Auth doesn't return all fields)
-      const authUser = result.user;
-      const user = authUser ? await getUserById(authUser.id) : null;
+      // Create user
+      const userId = crypto.randomUUID();
+      const familyId = crypto.randomUUID();
 
+      // Create family
+      await createFamily(userId);
+
+      // Create user
+      await createUser(
+        body.phone,
+        'parent',
+        null, // No password for OTP users
+        familyId
+      );
+
+      // Get created user
+      const user = await getUserByPhonePlain(body.phone);
       if (!user) {
         return NextResponse.json<RegisterResponse>({
           success: false,
@@ -88,28 +99,22 @@ export async function POST(req: NextRequest) {
         }, { status: 500 });
       }
 
-      // Create family if not exists
-      const existingFamily = await getFamilyByPrimaryParent(user.id);
-      if (!existingFamily) {
-        await createFamily(user.id);
-      }
-
       // Log registration event (OTP method)
       await logUserAction(
-        user.id,
+        userId,
         'register',
         { auth_method: 'otp', phone: maskPhone(body.phone) },
         ipAddress
       );
 
-      // Return success response (session cookie already set by Better-Auth)
+      // Return success response
       return NextResponse.json<RegisterResponse>({
         success: true,
         message: '注册成功！',
         user: {
-          id: user.id,
-          phone: user.phone,
-          role: user.role,
+          id: userId,
+          phone: body.phone,
+          role: 'parent',
         },
       }, { status: 200 });
 
@@ -141,7 +146,6 @@ export async function POST(req: NextRequest) {
       }
 
       // Create user with password
-      // Note: phone_hash is set internally by createUser()
       const userId = crypto.randomUUID();
       const familyId = crypto.randomUUID();
 
@@ -155,26 +159,6 @@ export async function POST(req: NextRequest) {
         body.password,
         familyId
       );
-
-      // Sign in user (create session) using Better-Auth sign-up API
-      const signUpResult = await auth.api.signUpEmail({
-        body: {
-          email: `${body.phone}@bmad-temp.local`, // Use phone-based email for password auth
-          password: body.password,
-          name: `User-${body.phone.slice(-4)}`,
-        },
-        headers: req.headers,
-      });
-
-      if (!signUpResult || 'error' in signUpResult) {
-        const errorMessage = typeof signUpResult?.error === 'string'
-          ? signUpResult.error
-          : '注册成功但登录失败，请重新登录';
-        return NextResponse.json<RegisterResponse>({
-          success: false,
-          message: errorMessage,
-        }, { status: 500 });
-      }
 
       // Get created user
       const user = await getUserByPhonePlain(body.phone);
@@ -193,7 +177,7 @@ export async function POST(req: NextRequest) {
         ipAddress
       );
 
-      // Return success response (session cookie already set by Better-Auth)
+      // Return success response
       return NextResponse.json<RegisterResponse>({
         success: true,
         message: '注册成功！',

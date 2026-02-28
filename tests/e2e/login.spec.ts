@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
   test('given 已注册家长选择OTP方式，when 输入正确手机号和验证码，then 成功登录并重定向到Dashboard', async ({ page }) => {
     // Given: 访问登录页面
-    await page.goto('http://localhost:3344/login');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/login');
     await page.waitForLoadState('networkidle');
 
     // When: 选择 OTP 认证方式
@@ -44,7 +44,7 @@ test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
 
   test('given 已注册家长选择密码方式，when 输入正确手机号和密码，then 成功登录并重定向到Dashboard', async ({ page }) => {
     // Given: 访问登录页面
-    await page.goto('http://localhost:3344/login');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/login');
     await page.waitForLoadState('networkidle');
 
     // When: 选择密码认证方式
@@ -70,7 +70,7 @@ test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
 
   test('given 家长输入错误手机号，when 点击登录，then 显示格式错误提示', async ({ page }) => {
     // Given: 访问登录页面
-    await page.goto('http://localhost:3344/login');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/login');
     await page.waitForLoadState('networkidle');
 
     // When: 输入无效手机号（不足11位）
@@ -85,7 +85,7 @@ test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
 
   test('given 家长输入未注册手机号，when 点击登录，then 显示手机号未注册错误', async ({ page }) => {
     // Given: 访问登录页面
-    await page.goto('http://localhost:3344/login');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/login');
     await page.waitForLoadState('networkidle');
 
     // When: 选择密码认证方式
@@ -106,7 +106,7 @@ test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
 
   test('given 家长输入错误验证码，when 点击登录，then 显示验证码错误提示', async ({ page }) => {
     // Given: 访问登录页面
-    await page.goto('http://localhost:3344/login');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/login');
     await page.waitForLoadState('networkidle');
 
     // When: 选择 OTP 认证方式
@@ -136,7 +136,7 @@ test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
 
   test('given 家长输入错误密码，when 点击登录，then 显示密码错误提示', async ({ page }) => {
     // Given: 访问登录页面
-    await page.goto('http://localhost:3344/login');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/login');
     await page.waitForLoadState('networkidle');
 
     // When: 选择密码认证方式
@@ -158,7 +158,7 @@ test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
 
   test('given 连续5次登录失败，when 尝试第6次登录，then 显示账户锁定提示', async ({ page }) => {
     // Given: 访问登录页面
-    await page.goto('http://localhost:3344/login');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/login');
     await page.waitForLoadState('networkidle');
 
     // When: 连续5次使用错误密码登录
@@ -183,7 +183,7 @@ test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
 
   test('given 访问登录页面，when 检查页面元素，then 页面应该包含所有必需的UI组件', async ({ page }) => {
     // Given: 访问登录页面
-    await page.goto('http://localhost:3344/login');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/login');
     await page.waitForLoadState('networkidle');
 
     // When: 检查页面元素
@@ -200,7 +200,7 @@ test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
 
   test('given 点击注册链接，when 导航到注册页面，then 应该显示注册页面', async ({ page }) => {
     // Given: 访问登录页面
-    await page.goto('http://localhost:3344/login');
+    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/login');
     await page.waitForLoadState('networkidle');
 
     // When: 点击注册链接
