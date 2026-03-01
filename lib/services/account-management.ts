@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import db from '@/lib/db';
 import { users, sessions } from '@/lib/db/schema';
 import { logUserAction } from '@/lib/db/queries/audit-logs';
 import { eq, and } from 'drizzle-orm';

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isValidChinesePhone } from '@/lib/utils';
 import { getUserByPhone, getUserByPhonePlain } from '@/lib/db/queries/users';
+import { isUserSuspended } from '@/lib/services/account-management';
 import { rateLimitLoginAttempts, resetRateLimit } from '@/lib/auth/rate-limit';
 import { logUserAction } from '@/lib/db/queries/audit-logs';
 import {
@@ -180,6 +181,23 @@ async function handleOTPLogin(
 
   // Reset device lock on successful login
   await resetDeviceLock(user.id, deviceId);
+  // Check if user account is suspended (Story 1.7 AC #2)
+  const suspended = await isUserSuspended(user.id);
+  if (suspended) {
+    await logUserAction(user.id, 'login_failed', {
+      phone,
+      ip_address: ipAddress,
+      auth_method: 'otp',
+      query_type: 'plain',
+      reason: 'account_suspended',
+      device_id: deviceId,
+      device_type: deviceType,
+    });
+    return NextResponse.json(
+      { error: '该账户已被家长挂起' },
+      { status: 403 }
+    );
+  }
 
   // Create session with device tracking (Story 1.6 AC #2)
   const sessionToken = generateSessionToken();
@@ -214,7 +232,7 @@ async function handleOTPLogin(
   });
 
   // Return user data and session token
-  return NextResponse.json({
+  const response = NextResponse.json({
     success: true,
     user: {
       id: user.id,
@@ -231,6 +249,18 @@ async function handleOTPLogin(
       expires_at: session.expires_at,
     },
   });
+  
+  // Set HttpOnly session cookie
+  const cookieMaxAge = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60 * 36; // 7 days or 36 hours
+  response.cookies.set('better-auth.session_token', sessionToken, {
+    httpOnly: true,
+    secure: Bun.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: cookieMaxAge,
+  });
+  
+  return response;
 }
 
 /**
@@ -342,6 +372,23 @@ async function handlePasswordLogin(
 
   // Reset device lock on successful login
   await resetDeviceLock(user.id, deviceId);
+  // Check if user account is suspended (Story 1.7 AC #2)
+  const suspended = await isUserSuspended(user.id);
+  if (suspended) {
+    await logUserAction(user.id, 'login_failed', {
+      phone,
+      ip_address: ipAddress,
+      auth_method: 'otp',
+      query_type: 'plain',
+      reason: 'account_suspended',
+      device_id: deviceId,
+      device_type: deviceType,
+    });
+    return NextResponse.json(
+      { error: '该账户已被家长挂起' },
+      { status: 403 }
+    );
+  }
 
   // Create session with device tracking (Story 1.6 AC #2)
   const sessionToken = generateSessionToken();
@@ -376,7 +423,7 @@ async function handlePasswordLogin(
   });
 
   // Return user data and session token
-  return NextResponse.json({
+  const response = NextResponse.json({
     success: true,
     user: {
       id: user.id,
@@ -393,4 +440,16 @@ async function handlePasswordLogin(
       expires_at: session.expires_at,
     },
   });
+  
+  // Set HttpOnly session cookie
+  const cookieMaxAge = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60 * 36; // 7 days or 36 hours
+  response.cookies.set('better-auth.session_token', sessionToken, {
+    httpOnly: true,
+    secure: Bun.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: cookieMaxAge,
+  });
+  
+  return response;
 }
