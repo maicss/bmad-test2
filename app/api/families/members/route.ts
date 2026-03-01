@@ -1,60 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSessionByToken } from '@/lib/db/queries/sessions';
+import { getUserById } from '@/lib/db/queries/users';
 import { getFamilyMembers } from '@/lib/db/queries/members';
-import { verifySessionToken } from '@/lib/auth/session-utils';
-import { logUserAction } from '@/lib/db/queries/audit-logs';
 
 /**
- * List all family members
+ * List Family Members API Endpoint
  *
- * Story 1.7 Task 3 - Family Member Management API
+ * Returns all family members for the authenticated user's family
  *
- * GET /api/families/members?familyId=xxx
+ * Requires authentication and primary parent role
  *
- * Returns all family members with status and role information
- *
- * AC #1: 主要家长可以查看所有家庭成员列表
+ * Source: Story 1.7 AC #1
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify session
-    const session = await verifySessionToken(request);
-    if (!session) {
+    // Get session token from cookie
+    const sessionToken = request.cookies.get('better-auth.session_token')?.value;
+
+    if (!sessionToken) {
       return NextResponse.json(
-        { error: '未登录或会话已过期' },
+        { error: '未登录' },
         { status: 401 }
       );
     }
 
-    // Get familyId from query params
-    const { searchParams } = new URL(request.url);
-    const familyId = searchParams.get('familyId');
-
-    if (!familyId) {
+    // Verify session
+    const session = await getSessionByToken(sessionToken);
+    if (!session || new Date(session.expires_at) < new Date()) {
       return NextResponse.json(
-        { error: '缺少家庭 ID' },
-        { status: 400 }
+        { error: '会话已过期，请重新登录' },
+        { status: 401 }
       );
     }
 
-    // Get family members
-    const members = await getFamilyMembers(familyId);
+    // Get user
+    const user = await getUserById(session.user_id);
+    if (!user) {
+      return NextResponse.json(
+        { error: '用户不存在' },
+        { status: 404 }
+      );
+    }
 
-    // Log view action
-    await logUserAction(session.user_id, 'view_family_members', {
-      family_id: familyId,
-      member_count: members.length,
-    });
+    // Check if user is primary parent
+    if (user.role !== 'parent') {
+      return NextResponse.json(
+        { error: '只有主要家长可以查看家庭成员' },
+        { status: 403 }
+      );
+    }
+
+    // Get all family members
+    const members = await getFamilyMembers(user.family_id!);
 
     return NextResponse.json({
       success: true,
-      family_id: familyId,
       members,
-      total: members.length,
     });
   } catch (error) {
     console.error('Get family members error:', error);
     return NextResponse.json(
-      { error: '获取家庭成员列表失败' },
+      { error: '获取家庭成员失败，请稍后重试' },
       { status: 500 }
     );
   }
