@@ -11,6 +11,7 @@ const db = drizzle({
   connection: {
     source: Bun.env.DATABASE_URL || 'database/db.sqlite',
   },
+  logger: false,
 });
 
 export default db;

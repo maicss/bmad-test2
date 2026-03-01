@@ -20,7 +20,9 @@ const MAX_ATTEMPTS = 5;
 const LOCK_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 // Development mode: Skip rate limiting for easier testing
-const DEV_MODE = false;
+// TEST_MODE: Force enable rate limiting even in development mode
+const DEV_MODE = Bun.env.NODE_ENV === 'development';
+const TEST_MODE = Bun.env.TEST_MODE === 'true';
 
 /**
  * Check if login should be rate limited
@@ -28,12 +30,22 @@ const DEV_MODE = false;
  * Tracks failed login attempts by IP address
  * Returns error message if rate limit exceeded
  *
- * @param ipAddress - IP address of the request
+ * @param ipAddress - IP address of request
+ * @param headers - Optional request headers (for X-Test-Rate-Limit override)
  * @returns Error message if rate limited, null otherwise
  */
-export function rateLimitLoginAttempts(ipAddress: string): string | null {
-  // Skip rate limiting in development mode
-  if (DEV_MODE) {
+export function rateLimitLoginAttempts(
+  ipAddress: string,
+  headers?: Headers | Record<string, string>
+): string | null {
+  // Check if rate limiting is forced via header (for testing)
+  const forceRateLimit = headers && (
+    (headers instanceof Headers && headers.get('X-Test-Rate-Limit') === 'true') ||
+    (typeof headers === 'object' && headers['X-Test-Rate-Limit'] === 'true')
+  );
+
+  // Skip rate limiting in development mode (unless TEST_MODE or forced)
+  if (DEV_MODE && !TEST_MODE && !forceRateLimit) {
     return null;
   }
 
@@ -80,7 +92,7 @@ export function rateLimitLoginAttempts(ipAddress: string): string | null {
 /**
  * Reset rate limit for successful login
  *
- * @param ipAddress - IP address of the successful login
+ * @param ipAddress - IP address of successful login
  */
 export function resetRateLimit(ipAddress: string): void {
   rateLimitStore.delete(ipAddress);

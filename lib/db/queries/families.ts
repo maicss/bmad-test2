@@ -1,6 +1,6 @@
 import db from '../index';
 import { families } from '../schema';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import type { Family, NewFamily } from '../schema';
 
 /**
@@ -19,7 +19,7 @@ export async function createFamily(primaryParentId: string): Promise<Family> {
   const [family] = await db
     .insert(families)
     .values({
-      id: crypto.randomUUID(), // Generate UUID for primary key
+      id: Bun.randomUUIDv7(),
       primary_parent_id: primaryParentId,
     })
     .returning();
@@ -46,6 +46,8 @@ export async function getFamilyById(id: string): Promise<Family | null> {
 /**
  * Get family by primary parent ID
  *
+ * Returns the most recent family for the given primary parent (ORDER BY created_at DESC)
+ *
  * @param primaryParentId - Primary parent ID
  * @returns Family or null
  */
@@ -54,6 +56,7 @@ export async function getFamilyByPrimaryParent(primaryParentId: string): Promise
     .select()
     .from(families)
     .where(eq(families.primary_parent_id, primaryParentId))
+    .orderBy(desc(families.created_at))
     .limit(1);
 
   return family || null;

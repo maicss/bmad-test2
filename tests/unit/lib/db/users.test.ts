@@ -144,13 +144,14 @@ describe('User Query Functions', () => {
       const newPassword = 'NewPass5678';
 
       // When: 更新密码
-      await updateUser(user.id, { password_hash: newPassword });
+      await updateUser(user.id, { password: newPassword });
 
-      // Then: password_hash 应该是新值
+      // Then: password_hash 应该是新值（bcrypt 哈希）
       const updatedUser = await getUserByPhone(testPhone);
-      expect(updatedUser?.password_hash).toBe(newPassword);
-    });
+      expect(updatedUser?.password_hash).not.toBe(newPassword); // 不应该是明文
+      expect(updatedUser?.password_hash).toMatch(/^\$2[aby]\$/); // 应该是 bcrypt 哈希
   });
+    });
 
   describe('given 用户使用 OTP 注册，when 不提供密码，then 不创建密码哈希', () => {
     it('should create user with null password_hash for OTP-only users', async () => {

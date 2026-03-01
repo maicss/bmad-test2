@@ -1,12 +1,22 @@
 /**
+
  * E2E Tests for Child PIN Login Flow
+
  *
+
  * BDD Testing Requirement: Given-When-Then format with business language
+
  * Source: Story 1.3 AC #1-#5 - Child PIN Login
+
  * Source: AGENTS.md - Use Playwright for E2E tests
+
  */
 
+
+
 import { test, expect } from '@playwright/test';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || \`http://localhost:${process.env.PORT}\`;
+
 
 test.describe('Story 1.3: Child PIN Login - E2E', () => {
   test.beforeEach(async ({ page }) => {

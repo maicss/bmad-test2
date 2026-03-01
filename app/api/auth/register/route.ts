@@ -76,8 +76,8 @@ export async function POST(req: NextRequest) {
       }
 
       // Create user
-      const userId = crypto.randomUUID();
-      const familyId = crypto.randomUUID();
+      const userId = Bun.randomUUIDv7();
+      const familyId = Bun.randomUUIDv7();
 
       // Create family
       await createFamily(userId);
@@ -146,8 +146,8 @@ export async function POST(req: NextRequest) {
       }
 
       // Create user with password
-      const userId = crypto.randomUUID();
-      const familyId = crypto.randomUUID();
+      const userId = Bun.randomUUIDv7();
+      const familyId = Bun.randomUUIDv7();
 
       // Create family
       await createFamily(userId);

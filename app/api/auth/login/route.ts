@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check rate limiting
-    const rateLimitError = rateLimitLoginAttempts(ipAddress);
+    const rateLimitError = rateLimitLoginAttempts(ipAddress, request.headers);
     if (rateLimitError) {
       return NextResponse.json(
         { error: rateLimitError },

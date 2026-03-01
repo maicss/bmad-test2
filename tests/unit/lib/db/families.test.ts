@@ -9,7 +9,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import db from '@/lib/db';
 import { createFamily, getFamilyById, getFamilyByPrimaryParent } from '@/lib/db/queries/families';
 import { families } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 describe('Family Query Functions', () => {
   let testUserId: string;
@@ -19,6 +19,9 @@ describe('Family Query Functions', () => {
     // Create test user
     testUserId = `test-user-${Date.now()}`;
     testFamilyId = `test-family-${Date.now()}`;
+
+    // Clean all test data (parent-*) before each test to avoid conflicts
+    await db.delete(families).where(sql`primary_parent_id LIKE 'parent-%'`);
 
     // Clean database before each test
     await db.delete(families).where(eq(families.id, testFamilyId));
@@ -92,7 +95,8 @@ describe('Family Query Functions', () => {
     });
 
     it('should return family by primary parent', async () => {
-      // Given: 已创建家庭
+      // Given: 已创建家庭（先清理旧数据）
+      await db.delete(families).where(sql`primary_parent_id = 'parent-1'`);
       const createdFamily = await createFamily('parent-1');
 
       // When: 使用主要家长 ID 查询

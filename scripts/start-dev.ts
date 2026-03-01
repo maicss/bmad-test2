@@ -8,14 +8,14 @@
 const PORT = process.env.PORT;
 
 if (!PORT) {
-  console.error('❌ Error: PORT environment variable is not set!');
-  console.error('');
-  console.error('Please set PORT before starting the dev server:');
-  console.error('  bun run dev');
-  console.error('');
-  console.error('Or set it in your .env file:');
-  console.error('  PORT=3344');
-  console.error('');
+  console.error("❌ Error: PORT environment variable is not set!");
+  console.error("");
+  console.error("Please set PORT before starting dev server:");
+  console.error("  bun run dev");
+  console.error("");
+  console.error("Or set it in your .env file:");
+  console.error("  PORT=3344");
+  console.error("");
   process.exit(1);
 }
 
@@ -27,24 +27,18 @@ if (isNaN(port) || port < 1024 || port > 65535) {
 
 console.log(`✅ PORT is valid: ${port}`);
 console.log(`🚀 Starting Next.js dev server on port ${port}...`);
-console.log('');
+console.log("");
 
-// Start Next.js dev server
-const { spawn } = await import('child_process');
-
-const nextProcess = spawn('bun', ['next', 'dev', '-p', port.toString()], {
-  stdio: 'inherit',
+// Start Next.js dev server using Bun subprocess
+const nextProcess = Bun.spawn(['bun', 'next', 'dev', '-p', port.toString()], {
+  stdout: 'inherit',
+  stderr: 'inherit',
   env: {
     ...process.env,
     PORT: port.toString(),
   },
 });
 
-nextProcess.on('exit', (code) => {
-  process.exit(code ?? 0);
-});
-
-nextProcess.on('error', (err) => {
-  console.error('Failed to start Next.js:', err);
-  process.exit(1);
-});
+// Wait for process to exit
+await nextProcess.exited;
+process.exit(nextProcess.exitCode ?? 0);

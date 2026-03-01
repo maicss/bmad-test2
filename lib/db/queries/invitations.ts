@@ -29,7 +29,7 @@ export async function createInvitation(
   expiresHours: number = 24
 ): Promise<PendingInvitation> {
   // Generate unique token (UUID + timestamp)
-  const token = `${crypto.randomUUID()}-${Date.now()}`;
+  const token = `${Bun.randomUUIDv7()}-${Date.now()}`;
 
   // Encrypt invited phone using Bun.password.hash()
   const invitedPhoneHash = await Bun.password.hash(invitedPhone);
@@ -41,7 +41,7 @@ export async function createInvitation(
   const result = await db
     .insert(pendingInvitations)
     .values({
-      id: crypto.randomUUID(),
+      id: Bun.randomUUIDv7(),
       token,
       inviter_user_id: inviterUserId,
       family_id: familyId,

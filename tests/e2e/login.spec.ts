@@ -1,12 +1,30 @@
 /**
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
  * E2E Tests for Login Flow
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
  *
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
  * BDD Testing Requirement: Given-When-Then format with business language
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
  * Source: Story 1.2 AC #1-#5 - Parent Phone Login
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
  * Source: AGENTS.md - Use Playwright for E2E tests
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
  */
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
+
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
 import { test, expect } from '@playwright/test';
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`;
 
 test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
   test('given 已注册家长选择OTP方式，when 输入正确手机号和验证码，then 成功登录并重定向到Dashboard', async ({ page }) => {

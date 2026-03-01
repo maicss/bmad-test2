@@ -19,8 +19,8 @@ describe('Story 1.4: Invite Other Parent - Unit Tests', () => {
 
   beforeAll(async () => {
     // 创建测试数据
-    testUserId = crypto.randomUUID();
-    testFamilyId = crypto.randomUUID();
+    testUserId = Bun.randomUUIDv7();
+    testFamilyId = Bun.randomUUIDv7();
 
     // 创建测试家庭
     await db.insert(families).values({

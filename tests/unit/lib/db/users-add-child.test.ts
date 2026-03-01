@@ -25,8 +25,8 @@ describe('Story 1.5: Add Child to Family - Unit Tests', () => {
 
   beforeEach(async () => {
     // Create fresh test data for each test to avoid phone conflicts
-    testUserId = crypto.randomUUID();
-    testFamilyId = crypto.randomUUID();
+    testUserId = Bun.randomUUIDv7();
+    testFamilyId = Bun.randomUUIDv7();
 
     // Clean up old data
     await db.delete(users).where(eq(users.family_id, testFamilyId));

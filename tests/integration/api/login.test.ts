@@ -265,6 +265,7 @@ describe('Story 1.2: Parent Phone Login - Rate Limiting Integration', () => {
         headers: {
           'Content-Type': 'application/json',
           'X-Forwarded-For': ipAddress,
+        'X-Test-Rate-Limit': 'true',
         },
         body: JSON.stringify({
           phone: testPhone,
@@ -280,6 +281,7 @@ describe('Story 1.2: Parent Phone Login - Rate Limiting Integration', () => {
       headers: {
         'Content-Type': 'application/json',
         'X-Forwarded-For': ipAddress,
+        'X-Test-Rate-Limit': 'true',
       },
       body: JSON.stringify({
         phone: testPhone,
@@ -303,6 +305,7 @@ describe('Story 1.2: Parent Phone Login - Rate Limiting Integration', () => {
         headers: {
           'Content-Type': 'application/json',
           'X-Forwarded-For': ipAddress,
+        'X-Test-Rate-Limit': 'true',
         },
         body: JSON.stringify({
           phone: testPhone,
@@ -318,6 +321,7 @@ describe('Story 1.2: Parent Phone Login - Rate Limiting Integration', () => {
       headers: {
         'Content-Type': 'application/json',
         'X-Forwarded-For': ipAddress,
+        'X-Test-Rate-Limit': 'true',
       },
       body: JSON.stringify({
         phone: testPhone,

@@ -34,7 +34,7 @@ export async function logUserAction(
   const [log] = await db
     .insert(auditLogs)
     .values({
-      id: crypto.randomUUID(),
+      id: Bun.randomUUIDv7(),
       user_id: userId,
       action_type: actionType,
       metadata: metadata ? JSON.stringify(metadata) : null,

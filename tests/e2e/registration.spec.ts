@@ -1,11 +1,20 @@
 /**
+
  * E2E Tests for Registration Flow
+
  *
+
  * BDD Testing Requirement: Given-When-Then format with business language
+
  * Source: AGENTS.md - Use Playwright for E2E tests
+
  */
 
+
+
 import { test, expect } from '@playwright/test';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || \`http://localhost:${process.env.PORT}\`;
+
 
 test.describe('given 访问注册页面，when 填写注册信息，then 应该成功注册', () => {
   test('should register with OTP method', async ({ page }) => {
