@@ -7,9 +7,14 @@ import { useRouter } from 'next/navigation';
 /**
  * Parent Login Page
  *
+ * Story 1.6 Task 5 - Enhanced with "Remember Me" functionality
+ *
  * Supports two authentication methods:
  * - OTP: Phone + OTP code
  * - Password: Phone + password
+ *
+ * New feature (Story 1.6 AC #8):
+ * - "Remember Me" checkbox for 7-day session
  *
  * Source: Story 1.2 AC #1, #2, #3
  */
@@ -19,6 +24,7 @@ export default function LoginPage() {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -78,6 +84,7 @@ export default function LoginPage() {
           authMethod,
           otp: authMethod === 'otp' ? otp : undefined,
           password: authMethod === 'password' ? password : undefined,
+          rememberMe, // Story 1.6 AC #8: "Remember Me" feature
         }),
       });
 
@@ -127,7 +134,7 @@ export default function LoginPage() {
                 pattern="[0-9]*"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-3 border border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 required
               />
             </div>
@@ -179,7 +186,7 @@ export default function LoginPage() {
                       pattern="[0-9]*"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
-                      className="flex-1 px-4 py-3 border border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                       required
                     />
                     <button
@@ -208,7 +215,7 @@ export default function LoginPage() {
                     placeholder="请输入密码"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 border border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                     required
                   />
                 </div>
@@ -220,6 +227,20 @@ export default function LoginPage() {
                 </div>
               </>
             )}
+
+            {/* Story 1.6 AC #8: "Remember Me" Checkbox */}
+            <div className="flex items-center">
+              <input
+                id="rememberMe"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+              />
+              <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-700">
+                记住我（7天免登录）
+              </label>
+            </div>
 
             {/* Submit Button */}
             <button

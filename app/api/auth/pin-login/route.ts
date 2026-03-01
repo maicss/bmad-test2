@@ -2,14 +2,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getChildByPIN } from '@/lib/db/queries/users';
 import { rateLimitLoginAttempts, resetRateLimit } from '@/lib/auth/rate-limit';
 import { logUserAction } from '@/lib/db/queries/audit-logs';
+import {
+  createSession,
+  getActiveChildSession,
+  upsertUserSessionDevice,
+} from '@/lib/db/queries/sessions';
+import {
+  generateDeviceFingerprint,
+  detectDeviceType,
+  generateDeviceName,
+  generateSessionToken,
+  extractDeviceInfo,
+} from '@/lib/auth/device-fingerprint';
 
 /**
  * Child PIN Login API Endpoint
  *
+ * Story 1.6: Multi-device Login - Enhanced with device tracking
+ *
  * Children login using 4-digit PIN code
  * Faster than phone login, suitable for shared devices
  *
+ * New features (Story 1.6 AC #9):
+ * - Single-device restriction for child accounts
+ * - Device tracking
+ * - Session management
+ *
  * Source: Story 1.3 AC #1-#5, #8
+ * Source: Story 1.6 AC #9 - Child single-device restriction
  */
 export async function POST(request: NextRequest) {
   try {
@@ -21,20 +41,18 @@ export async function POST(request: NextRequest) {
                      request.headers.get('x-real-ip') ||
                      'unknown';
 
+    // Extract device information
+    const { userAgent, ipAddress: clientIp, deviceType, deviceName } =
+      extractDeviceInfo(request);
+
+    // Generate device fingerprint
+    const deviceId = await generateDeviceFingerprint(userAgent, clientIp);
+
     // Validate PIN format (4 digits, numeric only)
     if (!pin || !/^\d{4}$/.test(pin)) {
       return NextResponse.json(
         { error: '请输入4位数字PIN码' },
         { status: 400 }
-      );
-    }
-
-    // Check rate limiting
-    const rateLimitError = rateLimitLoginAttempts(ipAddress);
-    if (rateLimitError) {
-      return NextResponse.json(
-        { error: rateLimitError },
-        { status: 429 }
       );
     }
 
@@ -48,10 +66,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user) {
-      await logUserAction(user?.id, 'pin_login_failed', {
+      await logUserAction(null, 'pin_login_failed', {
         ip_address: ipAddress,
         auth_method: 'pin',
         reason: 'user_not_found_or_invalid_pin',
+        device_id: deviceId,
+        device_type: deviceType,
       });
       return NextResponse.json(
         { error: 'PIN码错误' },
@@ -65,6 +85,8 @@ export async function POST(request: NextRequest) {
         ip_address: ipAddress,
         auth_method: 'pin',
         reason: 'not_child_role',
+        device_id: deviceId,
+        device_type: deviceType,
       });
       return NextResponse.json(
         { error: 'PIN码仅用于儿童账号' },
@@ -78,6 +100,8 @@ export async function POST(request: NextRequest) {
         ip_address: ipAddress,
         auth_method: 'pin',
         reason: 'no_family',
+        device_id: deviceId,
+        device_type: deviceType,
       });
       return NextResponse.json(
         { error: '账号未加入家庭，请联系家长' },
@@ -85,16 +109,57 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Story 1.6 AC #9: Check for existing active child session
+    // Child accounts can only be logged in on one device at a time (security)
+    const existingSession = await getActiveChildSession(user.id);
+    if (existingSession && existingSession.device_id !== deviceId) {
+      await logUserAction(user.id, 'pin_login_failed', {
+        ip_address: ipAddress,
+        auth_method: 'pin',
+        reason: 'concurrent_login_blocked',
+        device_id: deviceId,
+        device_type: deviceType,
+        existing_device_id: existingSession.device_id,
+      });
+      return NextResponse.json(
+        { error: '儿童账户只能在一个设备上登录' },
+        { status: 403 }
+      );
+    }
+
     // Reset rate limit on successful login
     resetRateLimit(ipAddress);
+
+    // Create session with device tracking (Story 1.6 AC #2)
+    const sessionToken = generateSessionToken();
+    const session = await createSession({
+      userId: user.id,
+      token: sessionToken,
+      deviceId,
+      deviceType,
+      userAgent,
+      ipAddress: clientIp,
+      rememberMe: false, // Children cannot use "Remember Me"
+    });
+
+    // Create or update user session device
+    await upsertUserSessionDevice({
+      userId: user.id,
+      deviceId,
+      deviceType,
+      deviceName,
+    });
 
     // Log successful login
     await logUserAction(user.id, 'pin_login_success', {
       ip_address: ipAddress,
       auth_method: 'pin',
+      device_id: deviceId,
+      device_type: deviceType,
+      session_id: session.id,
     });
 
-    // Return user data (excluding sensitive info)
+    // Return user data and session token
     return NextResponse.json({
       success: true,
       user: {
@@ -102,6 +167,13 @@ export async function POST(request: NextRequest) {
         name: user.phone, // Using phone as name for children (placeholder)
         role: user.role,
         family_id: user.family_id,
+      },
+      session: {
+        id: session.id,
+        token: sessionToken,
+        device_type: deviceType,
+        device_name: deviceName,
+        expires_at: session.expires_at,
       },
     });
   } catch (error) {
