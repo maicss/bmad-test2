@@ -31,9 +31,20 @@ export const users = sqliteTable('users', {
   createdAt: integer('createdAt', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
   remember_me: integer('remember_me', { mode: 'boolean' }).notNull().default(false),
+  // Story 1.7: Account suspension fields
+  is_suspended: integer('is_suspended', { mode: 'boolean' }).notNull().default(false),
+  suspended_at: integer('suspended_at', { mode: 'timestamp' }),
+  suspended_by: text('suspended_by').references(() => users.id),
+  suspended_reason: text('suspended_reason'),
+  // Story 1.7: Primary role transfer tracking fields
+  primary_parent_transfer_count: integer('primary_parent_transfer_count').notNull().default(0),
+  last_primary_transfer_at: integer('last_primary_transfer_at', { mode: 'timestamp' }),
 }, (table) => [
   index('idx_users_phone_hash').on(table.phone_hash),
   index('idx_users_family_id').on(table.family_id),
+  index('idx_users_is_suspended').on(table.is_suspended),
+  index('idx_users_primary_transfer_count').on(table.primary_parent_transfer_count),
+  index('idx_users_last_primary_transfer_at').on(table.last_primary_transfer_at),
 ]);
 
 export const families = sqliteTable('families', {
