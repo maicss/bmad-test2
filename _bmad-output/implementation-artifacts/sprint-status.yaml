@@ -71,7 +71,39 @@ YS|XW|  2-9-child-marks-task-complete: ready-for-dev
   2-12-parent-creates-one-time-task: ready-for-dev
 #WY|XW|  2-13-task-reminder-push-notification: ready-for-dev
   2-14-real-time-approval-notification: ready-for-dev
-HQ|
+PB|HQ|
+
+SZ|  # Epic 3: Points System & Balance Management (With Notifications)
+SZ|  epic-3: in-progress
+SZ|  3-1-system-calculates-points-on-task-approval: ready-for-dev
+SZ|  3-2-positive-points-reward-good-behavior: ready-for-dev
+SZ|  3-3-negative-points-deduction-bad-behavior: ready-for-dev
+SZ|  3-4-points-settlement-after-approval: ready-for-dev
+SZ|  3-5-parent-temporary-points-adjustment: ready-for-dev
+SZ|  3-6-parent-views-points-history: ready-for-dev
+SZ|  3-7-parent-views-points-trend-chart: ready-for-dev
+SZ|  3-8-child-views-current-points-balance: ready-for-dev
+SZ|  3-9-points-linear-accumulation-no-rollback: ready-for-dev
+SZ|  3-10-points-change-notification: ready-for-dev
+SZ|  3-11-points-milestone-achievement-notification: ready-for-dev
+
+SZ|  # Epic 4: Wishlist Management & Redemption (With Notifications)
+VQ|SZ|  epic-4: in-progress
+JQ|SZ|  4-1-child-creates-wish: ready-for-dev
+VS|SZ|  4-2-parent-reviews-wish: ready-for-dev
+PW|SZ|  4-3-parent-sets-wish-points-threshold: ready-for-dev
+PS|SZ|  4-4-wish-progress-bar-display: ready-for-dev
+SV|SZ|  4-5-smart-wish-estimation: ready-for-dev
+XR|SZ|  4-6-child-views-all-wishes: ready-for-dev
+VZ|SZ|  4-7-child-initiates-wish-redemption: ready-for-dev
+BN|SZ|  4-8-parent-confirms-rejects-wish-redemption: ready-for-dev
+JS|SZ|  4-9-points-deducted-on-redemption: ready-for-dev
+HY|SZ|  4-10-redeemed-wish-history: ready-for-dev
+4-11-wish-created-notification-to-parent: ready-for-dev
+4-12-wish-redemption-request-notification-to-parent: ready-for-dev
+  4-13-wish-approved-rejected-notification-to-child: ready-for-dev
+
+TT|
 
   # Epic 3: Points System & Balance Management (With Notifications)
   epic-3: in-progress

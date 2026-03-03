@@ -984,7 +984,304 @@ NH|---
 - Depends on Epic 3's points for redemption eligibility
 - Sends notifications via notification system
 
----
+JP|---
+
+JP|### Story 4.1: Child Creates Wish
+
+JP|As a 儿童,
+JP|I want 创建愿望,
+JP|So that 我可以设定自己想要的奖励目标。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 我已登录系统（PIN码或家长设备）
+JP|**When** 我进入"愿望清单"页面并点击"添加愿望"按钮
+JP|**Then** 系统显示愿望创建表单，包含：
+JP|  - 愿望名称（必填，最多50字）
+JP|  - 愿望类型选择：物品 / 体验
+JP|  - 期望积分（必填，范围10-10000）
+JP|  - 愿望描述（可选，最多200字）
+JP|  - 图片上传（可选）
+JP|  - 链接（可选，如淘宝商品链接）
+JP|**And** 点击保存后，愿望状态为"等待家长审核"
+JP|**And** 愿望创建后通知家长审核（NFR4）
+
+JP|--- 
+
+JP|### Story 4.2: Parent Reviews Wish
+
+JP|As a 家长,
+JP|I want 审核愿望,
+JP|So that 我可以确保儿童的愿望合理，安全。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 孩子创建了愿望，等待我审核
+JP|**When** 我进入"愿望审核"页面
+JP|**Then** 系统显示待审核愿望列表
+JP|**When** 我点击某个愿望查看详情
+JP|**Then** 显示愿望完整信息：名称、类型、积分、描述、图片、链接
+JP|**And** 我可以选择：
+JP|  - 通过：设置愿望的正式积分门槛，愿望状态变为"已通过"
+JP|  - 拒绝：填写拒绝原因，愿望状态变为"已拒绝"
+JP|  - 修改：调整积分门槛后通过
+JP|**And** 审核结果通知孩子（NFR4）
+
+JP|--- 
+
+JP|### Story 4.3: Parent Sets Wish Points Threshold
+
+JP|As a 家长,
+JP|I want 设置愿望的积分门槛,
+JP|So that 我可以控制儿童兑换愿望的积分要求。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 孩子创建了愿望
+JP|**When** 我审核愿望时
+JP|**Then** 我可以设置或调整愿望的积分门槛
+JP|**And** 系统显示建议积分范围（根据愿望类型和儿童历史）
+JP|**And** 家长可以设置自定义积分（范围10-10000）
+JP|**And** 积分门槛设置后，愿望进度条更新显示
+
+JP|--- 
+
+JP|### Story 4.4: Wish Progress Bar Display
+
+JP|As a 系统,
+JP|I want 显示愿望进度条,
+JP|So that 儿童可以直观看到距离目标还需要多少积分。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 儿童有已通过的愿望
+JP|**When** 愿望详情页面或愿望列表
+JP|**Then** 系统显示进度条，包含：
+JP|  - 当前积分 / 目标积分 格式
+JP|  - 进度百分比
+JP|  - 视觉进度条（填充效果）
+JP|**And** 进度条颜色根据进度变化：
+JP|  - 0-25%：灰色
+JP|  - 26-50%：蓝色
+JP|  - 51-75%：橙色
+JP|  - 76-99%：绿色
+JP|  - 100%+：金色（可兑换）
+
+JP|--- 
+
+JP|### Story 4.5: Smart Wish Estimation
+
+JP|As a 系统,
+JP|I want 显示智能估算,
+JP|So that 儿童可以知道大概什么时候能实现愿望。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 儿童有已通过的愿望且积分不足
+JP|**When** 愿望详情页面
+JP|**Then** 系统显示智能估算信息：
+JP|  - 按历史速度估算："按照你的速度，5天后就能兑换了！"
+JP|  - 按任务估算："还差20分，再完成4个刷牙任务就够啦！"
+JP|**And** 估算基于儿童过去7天的平均每日获得积分
+JP|**And** 如果近期无积分变动，显示"加油！完成更多任务来实现愿望吧"
+
+JP|--- 
+
+JP|### Story 4.6: Child Views All Wishes
+
+JP|As a 儿童,
+JP|I want 查看所有愿望及进度,
+JP|So that 我可以管理自己的愿望清单。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 我已登录系统
+JP|**When** 我进入"愿望清单"页面
+JP|**Then** 系统显示我的所有愿望，包含：
+JP|  - 愿望卡片网格（适合触摸操作）
+JP|  - 每个愿望显示：图片/图标、名称、进度条、积分状态
+JP|  - 愿望按状态分组：可兑换 / 进行中 / 已拒绝
+JP|**And** 支持筛选：全部 / 可兑换 / 进行中
+JP|**And** 愿望数量无限制（家长可设置上限，见FR60）
+
+JP|--- 
+
+JP|### Story 4.7: Child Initiates Wish Redemption
+
+JP|As a 儿童,
+JP|I want 发起兑换请求,
+JP|So that 我可以用积分兑换愿望。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 我的积分足够兑换某个愿望（积分 >= 门槛）
+JP|**When** 我点击愿望上的"兑换"按钮
+JP|**Then** 系统显示兑换确认对话框：
+JP|  - 愿望名称和图片
+JP|  - 消耗积分数量
+JP|  - 当前积分余额
+JP|  - 兑换后积分余额
+JP|  - "确认兑换"和"取消"按钮
+JP|**And** 点击确认后：
+JP|  - 如果需要家长确认（默认开启）→ 发送兑换请求给家长
+JP|  - 如果无需家长确认 → 直接扣除积分，愿望状态变为"已兑换"
+
+JP|--- 
+
+JP|### Story 4.8: Parent Confirms/Rejects Wish Redemption
+
+JP|As a 家长,
+JP|I want 确认或拒绝兑换请求,
+JP|So that 我可以确保兑换是合理的。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 孩子发起兑换请求，等待我确认
+JP|**When** 我进入"兑换审核"页面
+JP|**Then** 系统显示待审核兑换请求，包含：
+JP|  - 愿望名称和图片
+JP|  - 消耗积分数量
+JP|  - 孩子当前积分
+JP|  - 请求时间
+JP|**And** 我可以选择：
+JP|  - 确认：扣除积分，愿望状态变为"已兑换"
+JP|  - 拒绝：填写拒绝原因，愿望状态变回"进行中"
+JP|**And** 审核结果通知孩子（NFR4）
+
+JP|--- 
+
+JP|### Story 4.9: Points Deducted on Redemption
+
+JP|As a 系统,
+JP|I want 兑换成功后自动扣除积分,
+JP|So that 积分系统保持正确。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 家长确认了孩子的兑换请求（或无需确认）
+JP|**When** 兑换操作被确认
+JP|**Then** 系统自动扣除愿望所需的积分
+JP|**And** 积分变动记录到积分历史（类型：愿望兑换）
+JP|**And** 扣除积分后，儿童账户余额更新
+JP|**And** 愿望状态变为"已兑换"
+JP|**And** 兑换操作需要原子事务保证
+
+JP|--- 
+
+JP|### Story 4.10: Redeemed Wish History
+
+JP|As a 儿童,
+JP|I want 查看已兑换愿望的历史记录,
+JP|So that 我可以回顾自己曾经兑换过的愿望。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 我有已兑换的愿望
+JP|**When** 我进入"愿望历史"页面
+JP|**Then** 系统显示已兑换愿望列表，包含：
+JP|  - 愿望名称和图片
+JP|  - 兑换时间
+JP|  - 消耗积分数量
+JP|**And** 历史记录按时间倒序排列
+JP|**And** 支持筛选：最近30天 / 最近90天 / 全部
+
+JP|--- 
+
+JP|### Story 4.11: Wish Created Notification (to Parent)
+
+JP|As a 系统,
+JP|I want 在孩子创建愿望时通知家长,
+JP|So that 家长可以及时审核愿望。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 孩子创建了愿望
+JP|**When** 愿望状态变为"等待家长审核"
+JP|**Then** 系统推送通知给家长，包含：
+JP|  - 通知标题："新愿望待审核"
+JP|  - 通知内容："{孩子姓名}创建了新愿望「{愿望名称}」，请审核"
+JP|  - 点击通知跳转到审核页面
+JP|**And** 通知在3秒内送达（NFR4）
+JP|**And** 通知存储在`notifications`表中，类型为"wish_created"
+
+JP|--- 
+
+JP|### Story 4.12: Wish Redemption Request Notification (to Parent)
+
+JP|As a 系统,
+JP|I want 在孩子发起兑换时通知家长,
+JP|So that 家长可以及时确认兑换。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 孩子发起兑换请求
+JP|**When** 兑换请求状态变为"等待家长确认"
+JP|**Then** 系统推送通知给家长，包含：
+JP|  - 通知标题："兑换请求待确认"
+JP|  - 通知内容："{孩子姓名}请求兑换「{愿望名称}」，消耗{积分}积分"
+JP|  - 点击通知跳转到审核页面
+JP|**And** 通知在3秒内送达（NFR4）
+JP|**And** 通知存储在`notifications`表中，类型为"wish_redemption_request"
+
+JP|--- 
+
+JP|### Story 4.13: Wish Approved/Rejected Notification (to Child)
+
+JP|As a 系统,
+JP|I want 在愿望审核结果出来后通知孩子,
+JP|So that 孩子知道愿望状态变化。
+
+JP|**Acceptance Criteria:**
+
+JP|**Given** 家长审核了愿望（或兑换请求）
+JP|**When** 愿望状态变化
+JP|**Then** 系统推送通知给孩子，包含：
+JP|  - 愿望通过："恭喜！你的愿望「{名称}」已通过，积满{积分}分就能兑换了！"
+JP|  - 愿望拒绝："很遗憾，你的愿望「{名称}」未通过：{原因}"
+JP|  - 兑换通过："太棒了！你的愿望「{名称}」已兑换成功！"
+JP|  - 兑换拒绝："很遗憾，你的兑换请求被拒绝：{原因}"
+JP|**And** 通知在3秒内送达（NFR4）
+JP|**And** 通知存储在`notifications`表中，类型为"wish_approved"或"wish_rejected"
+
+JP|--- 
+
+JP|### Epic 4 Summary
+JP|
+JP|**User Outcome:** Children can manage wishes and redeem them when ready
+JP|
+JP|**Stories Created:**
+JP|- Story 4.1: Child Creates Wish
+JP|- Story 4.2: Parent Reviews Wish
+JP|- Story 4.3: Parent Sets Wish Points Threshold
+JP|- Story 4.4: Wish Progress Bar Display
+JP|- Story 4.5: Smart Wish Estimation
+JP|- Story 4.6: Child Views All Wishes
+JP|- Story 4.7: Child Initiates Wish Redemption
+JP|- Story 4.8: Parent Confirms/Rejects Wish Redemption
+JP|- Story 4.9: Points Deducted on Redemption
+JP|- Story 4.10: Redeemed Wish History
+JP|- Story 4.11: Wish Created Notification (to Parent)
+JP|- Story 4.12: Wish Redemption Request Notification (to Parent)
+JP|- Story 4.13: Wish Approved/Rejected Notification (to Child)
+JP|
+JP|**FR Coverage:**
+JP|- FR29: Story 4.1
+JP|- FR30: Story 4.2
+JP|- FR31: Story 4.3
+JP|- FR32: Story 4.4
+JP|- FR33: Story 4.6
+JP|- FR34: Story 4.7
+JP|- FR35: Story 4.8
+JP|- FR36: Story 4.9
+JP|- FR37: Story 4.10
+JP|- FR57: Story 4.11, 4.12, 4.13
+JP|
+JP|**Integration Notes:**
+JP|- Depends on Epic 3's points for redemption eligibility
+JP|- Smart estimation uses Epic 3's points history (Story 3.6)
+JP|- Notifications via Stories 4.11-4.13
+JP|
+JP|---
 
 ### Epic 5: Combo Incentives & Gamification (With Notifications)
 **User Outcome:** Engagement mechanisms that motivate continued participation
