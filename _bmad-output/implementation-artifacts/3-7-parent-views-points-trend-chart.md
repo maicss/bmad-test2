@@ -39,7 +39,7 @@ so that 我可以直观地了解儿童积分的走势和习惯养成情况。
   - [ ] Subtask 1.4: Add child selector (if multiple children)
   - [ ] Subtask 1.5: Add unit tests for filtering logic
 - [ ] Task 2: Implement chart library integration (AC: 1, 2)
-  - [ ] Subtask 2.1: Install and configure Recharts (from architecture decision)
+  - [ ] Subtask 2.1: Install and configure Recharts (latest stable version: `bun add recharts`)
   - [ ] Subtask 2.2: Create LineChart for daily points change
   - [ ] Subtask 2.3: Create BarChart for task completion count
   - [ ] Subtask 2.4: Add wishlist redemption markers
@@ -70,6 +70,14 @@ so that 我可以直观地了解儿童积分的走势和习惯养成情况。
 - Database: bun:sqlite + Drizzle ORM 0.45.x+
 - UI System: Tailwind CSS 4 + Shadcn UI 3.7.0+
 - Chart Library: Recharts (React-native, TypeScript support)
+
+**Recharts Library Details:**
+- **Latest Stable Version**: recharts@2.10.0+
+- **Installation Command**: `bun add recharts`
+- **TypeScript Support**: Full type definitions included
+- **Performance**: Optimized for large datasets with responsive rendering
+- **Next.js 16 Compatibility**: Full support with App Router
+- **ADR Reference**: Architecture Decision Point 4 (Chart Library Selection)
 
 **Database Schema References:**
 - `points` table: points history/ledger for tracking all changes
@@ -202,6 +210,48 @@ it('given 家长查看积分趋势，when 查看统计摘要，then 显示累计
 - Parent stats page load time < 3 seconds [NFR2]
 - API response time < 500ms (P95) [NFR3]
 - Chart rendering must be optimized for mobile devices
+
+**Animation Implementation Details:**
+
+**Animation Library Decision (ADR-5):**
+- **Primary**: CSS Animations (Tailwind CSS built-in)
+- **Secondary**: Framer Motion (for complex chart animations)
+- **Reference**: Architecture Decision Record 5 (Animation System)
+
+**Implementation Strategy:**
+```typescript
+// Animation Configuration
+export const ANIMATION_CONFIG = {
+  // CSS animations (primary - zero dependency)
+  css: {
+    duration: 300, // milliseconds
+    easing: 'ease-in-out',
+  },
+
+  // Framer Motion (secondary - optional)
+  framerMotion: {
+    initial: { opacity: 0, scale: 0.95 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.95 },
+    transition: {
+      duration: 0.3,
+      ease: [0.4, 0, 0.2, 1], // cubic-bezier
+    },
+  },
+} as const;
+
+// Performance Optimization
+export const CHART_ANIMATION_CONFIG = {
+  // Disable animations for low-end devices
+  prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+
+  // Lazy load chart data
+  lazyLoad: true,
+
+  // Optimize re-renders
+  memoize: true,
+} as const;
+```
 
 ### Security & Compliance
 

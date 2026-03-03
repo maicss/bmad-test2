@@ -21,6 +21,10 @@ So that 我可以记录自己完成的任务并获得积分。
 **And** 点击确认后：
   - 如果任务需要家长审批 → 状态变为"待审批"
   - 如果任务无需审批（如自行打卡类） → 状态变为"已完成"，积分立即到账
+**And** 任务审批规则：
+  - **需要审批的任务类型**：刷牙、学习、运动、家务、自定义
+  - **无需审批的任务类型**：签到（checkin）
+  - 家长可在创建任务时配置是否需要审批
 **And** 任务卡片状态更新显示"待审批"或"已完成"
 **And** 显示乐观UI更新：立即反馈成功状态，后台处理实际请求
 
@@ -41,11 +45,11 @@ So that 我可以记录自己完成的任务并获得积分。
   - [ ] 2.5 添加加载状态指示器（图片上传中）
 
 - [ ] Task 3: 实现图片上传功能 (AC: 可选的完成证明上传拍照或相册选择）
-  - 3.1 实现拍照功能（相机API调用）
+  - [ ] 3.1 实现拍照功能（相机API调用）
   - [ ] 3.2 实现相册选择（Web SpeechRecognition API或文件选择）
   - [ ] 3.3 实现图片预览（上传前确认）
-  [ ] 3.4 实现图片压缩和格式转换（JPEG优化）
-  [ ] 3.5 实现图片删除功能（重新选择）
+  - [ ] 3.4 实现图片压缩和格式转换（JPEG优化）
+  - [ ] 3.5 实现图片删除功能（重新选择）
 
 - [ ] Task 4: 实现任务完成API端点 (AC: 点击确认后，状态变更为待审批或已完成)
   - [ ] 4.1 创建app/api/tasks/[id]/complete/route.ts（POST端点）
@@ -56,42 +60,42 @@ So that 我可以记录自己完成的任务并获得积分。
 
 - [ ] Task 5: 实现无需审批任务的积分结算 (AC: 无需审批，积分立即到账)
   - [ ] 5.1 扩展PointsCalculator服务（从Story 2.2）
-  [ ] 5.2 实现即时积分结算逻辑
-  [ 5.3 更新儿童积分余额（lib/db/queries/point-balances.ts）
-  [ ] 5.4 创建积分历史记录（lib/db/queries/points-history.ts）
-  [ 5.5 使用事务保证原子性（任务状态+积分同时更新）
+  - [ ] 5.2 实现即时积分结算逻辑
+  - [ ] 5.3 更新儿童积分余额（lib/db/queries/point-balances.ts）
+  - [ ] 5.4 创建积分历史记录（lib/db/queries/points-history.ts）
+  - [ ] 5.5 使用事务保证原子性（任务状态+积分同时更新）
 
 - [ ] Task 6: 实现乐观UI更新机制 (AC: 显示乐观UI更新：立即反馈成功状态，后台处理实际请求)
   - [ ] 6.1 实现客户端状态乐观更新（点击确认后立即更新UI）
-  [ ] 6.2 实现请求失败回滚（API失败时恢复原状态）
-  [ ] 6.3 实现加载状态指示器（上传中/处理中）
-  [ ] 6.4 添加成功/失败音效反馈
+  - [ ] 6.2 实现请求失败回滚（API失败时恢复原状态）
+  - [ ] 6.3 实现加载状态指示器（上传中/处理中）
+  - [ ] 6.4 添加成功/失败音效反馈
 
 - [ ] Task 7: 集成到TaskCard组件 (AC: 点击任务卡片上的"完成"按钮)
   - [ ] 7.1 更新TaskCard组件添加"完成"按钮
-  [ ] 7.2 实现点击事件处理（打开完成对话框）
+  - [ ] 7.2 实现点击事件处理（打开完成对话框）
   - [ ] 7.3 实现任务状态显示（待完成/已完成/待审批）
   - [ ] 7.4 集成TaskCompleteDialog到TaskCard
   - [ ] 7.5 实现按钮状态管理（已完成任务禁用"完成"按钮）
 
 - [ ] Task 8: 实现任务状态动画和反馈 (AC: 任务卡片状态更新显示)
   - [ ] 8.1 实现状态变化过渡动画（使用Framer Motion）
-  [ ] 8.2 实现音效播放（Shadcn Audio或Bun内置）
+  - [ ] 8.2 实现音效播放（Shadcn Audio或Bun内置）
   - [ ] 8.3 实现震动反馈（如设备支持）
-  [ ] 8.4 实现游戏化元素（表情、"小助手"表扬）
+  - [ ] 8.4 实现游戏化元素（表情、"小助手"表扬）
 
-- [ ] 9: 编写BDD测试 (AC: 所有验收条件)
+- [ ] Task 9: 编写BDD测试 (AC: 所有验收条件)
   - [ ] 9.1 Given-When-Then格式：任务完成集成测试
   - [ ] 9.2 测试需要审批的任务状态转换
   - [ ] 9.3 测试无需审批的任务状态转换和积分结算
   - [ ] 9.4 测试图片上传功能
-  - 9.5 测试乐观UI更新机制
+  - [ ] 9.5 测试乐观UI更新机制
   - [ ] 9.6 测试任务完成音效和动画
 
 - [ ] Task 10: 实现错误处理和用户反馈 (AC: 用户体验要求)
   - [ ] 10.1 使用Shadcn Toast显示错误提示
-  [ ] 10.2 处理网络错误（离线状态指示）
-  [ 10.3 处理图片上传失败（重试机制）
+  - [ ] 10.2 处理网络错误（离线状态指示）
+  - [ ] 10.3 处理图片上传失败（重试机制）
   - [ ] 10.4 实现友好错误提示（"网络连接失败，请重试"）
   - [ ] 10.5 实现任务状态冲突处理（任务已完成时标记）
 
@@ -167,6 +171,45 @@ export const TASK_TYPES_AUTO_APPROVED = [
   'checkin'
 ] as const;
 ```
+
+**Points History Schema (Epic 3):**
+```typescript
+// database/schema/points-history.ts
+export const pointsHistory = sqliteTable('points_history', {
+  id: text('id').primaryKey(),
+  childId: text('child_id').notNull().references(() => children.id),
+  taskId: text('task_id'), // NULL for manual adjustments
+  type: text('type').notNull(), // 'approval', 'adjustment', 'redemption'
+  points: integer('points').notNull(), // Can be positive or negative
+  balance: integer('balance').notNull(), // Balance after transaction
+  reason: text('reason'), // Optional: Task name or adjustment reason
+  createdAt: timestamp('created_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+});
+```
+
+**Points Balance Calculation:**
+- Balance = SUM of all points history records for the child
+- Points are cumulative (FR28: 线性叠加，不回退)
+- Can be negative (FR22: 负向积分扣除)
+- Query pattern:
+  ```typescript
+  // Get current balance
+  export async function getPointsBalance(childId: string) {
+    const result = await db.select({ balance: sql`COALESCE(SUM(points), 0)` })
+      .from(pointsHistory)
+      .where(eq(pointsHistory.childId, childId));
+    return result[0]?.balance || 0;
+  }
+  ```
+
+**Points Settlement Failure Handling:**
+- If points calculation fails after task completion:
+  - Log error with task ID and child ID
+  - Do NOT complete the task (keep status as 'pending')
+  - Display error message to user: "积分结算失败，请重试"
+  - Retry automatically with exponential backoff (3 attempts)
+  - If all retries fail, create admin alert for manual review
+- Transaction ensures atomicity: task status + points record must succeed together
 
 **API Pattern:**
 ```typescript
@@ -499,6 +542,51 @@ it('given 儿童标记完成时上传照片，when 提交，then 照片存储在
 - Status transitions are validated (pending → pending_approval → completed/rejected)
 - Points calculation is atomic (task status + balance updated together)
 - Proof image is optional (not required for completion)
+
+### Error Handling & Edge Cases
+
+**Optimistic UI Error Recovery:**
+- If API request fails after UI update:
+  - Revert UI to original state immediately
+  - Display Shadcn Toast with specific error message
+  - Preserve user's entered data (proof image) for retry
+  - Add "Retry" button to re-submit completion
+- Implementation pattern:
+  ```typescript
+  // Optimistic update
+  setTaskStatus('completed');
+
+  try {
+    await api.completeTask(taskId);
+  } catch (error) {
+    // Rollback UI
+    setTaskStatus('pending');
+    toast.error('任务完成失败：' + error.message);
+  }
+  ```
+
+**Network Disconnection Handling:**
+- Network status indicator: Green (online), Orange (slow), Red (offline)
+- When offline:
+  - Store completion request in IndexedDB queue
+  - Display "离线模式" banner
+  - Allow marking tasks complete (queued locally)
+- When back online:
+  - Auto-sync queued requests using Background Sync API
+  - Resolve conflicts: server version wins by default, with user confirmation
+  - Display sync progress with "正在同步..." indicator
+
+**Task Conflict Resolution:**
+- If task already completed on server:
+  - Display conflict dialog: "该任务已被完成"
+  - Show completion timestamp and completor
+  - Options: "撤销本地修改" or "覆盖服务器"
+- If task was rejected while offline:
+  - Display rejection reason from server
+  - Task status reverts to "待完成"
+  - Rejection reason shown on task card
+- Conflict resolution strategy: Last-write-wins with timestamp comparison
+```
 
 ### File Length Constraint
 

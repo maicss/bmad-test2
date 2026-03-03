@@ -173,6 +173,118 @@ No recent commits to analyze. This is a fresh implementation.
 - Mobile: Android Chrome supports fully; iOS Safari limited
 - Fallback: In-app notifications for unsupported browsers
 
+### Testing Requirements
+
+**BDD Format (GIVEN-WHEN-THEN):**
+```typescript
+// tests/integration/task-reminder-notification.spec.ts
+
+it('given 用户首次登录应用，when 请求推送通知权限，then 显示权限请求对话框', async () => {
+  // Given: 用户首次登录
+  const child = await createChild();
+  await login(child);
+
+  // When: 应用请求推送通知权限
+  await requestNotificationPermission();
+
+  // Then: 显示权限请求对话框
+  expect(permissionDialogVisible()).toBe(true);
+  expect(permissionMessage).toContain('接收任务提醒，不再忘记完成任务');
+});
+
+it('given 用户授予推送权限，when 任务提醒时间到达，then 发送推送通知', async () => {
+  // Given: 用户已授予推送权限
+  const child = await createChild();
+  const subscription = await requestNotificationPermission();
+  await storePushSubscription(child.id, subscription);
+
+  // And: 创建任务模板并设置提醒时间为08:00
+  const taskPlan = await createTaskPlan({
+    reminderTime: '08:00',
+    reminderEnabled: true
+  });
+
+  // When: 任务提醒时间到达（08:00）
+  await simulateTime('08:00');
+  await runReminderScheduler();
+
+  // Then: 发送推送通知到用户设备
+  const notifications = await getPushNotifications(subscription.endpoint);
+  expect(notifications).toHaveLength(1);
+  expect(notifications[0].title).toBe('时间到！');
+  expect(notifications[0].body).toContain(taskPlan.title);
+});
+
+it('given 任务已完成，when 提醒时间到达，then 不发送提醒', async () => {
+  // Given: 任务已标记为完成
+  const child = await createChild();
+  const task = await createTask({
+    childId: child.id,
+    status: 'completed'
+  });
+
+  // When: 提醒时间到达
+  await simulateTime(task.reminderTime);
+  await runReminderScheduler();
+
+  // Then: 不发送提醒
+  const notifications = await getPushNotifications(child.id);
+  expect(notifications).toHaveLength(0);
+});
+
+it('given 设备离线，when 提醒时间到达，then 通知存储在服务器，上线后同步', async () => {
+  // Given: 设备离线
+  const child = await createChild();
+  const subscription = await storePushSubscription(child.id, offlineDevice());
+  await simulateOffline(true);
+
+  // When: 提醒时间到达
+  const taskPlan = await createTaskPlan({ reminderEnabled: true });
+  await simulateTime(taskPlan.reminderTime);
+  await runReminderScheduler();
+
+  // Then: 通知存储在服务器（不发送）
+  const queuedNotifications = await getQueuedNotifications(child.id);
+  expect(queuedNotifications).toHaveLength(1);
+  expect(queuedNotifications[0].delivered).toBe(false);
+
+  // When: 设备重新上线
+  await simulateOffline(false);
+  await syncOfflineQueue();
+
+  // Then: 通知推送到设备
+  const deliveredNotifications = await getPushNotifications(subscription.endpoint);
+  expect(deliveredNotifications).toHaveLength(1);
+  expect(queuedNotifications[0].delivered).toBe(true);
+});
+
+it('given 用户点击通知，when 点击事件触发，then 导航到任务详情页', async () => {
+  // Given: 用户收到任务提醒通知
+  const task = await createTask();
+  const notification = await sendPushNotification(task);
+
+  // When: 用户点击通知
+  await simulateNotificationClick(notification);
+
+  // Then: 导航到任务详情页
+  expect(currentPath()).toBe(`/tasks/${task.id}`);
+  expect(taskDetailVisible()).toBe(true);
+});
+```
+
+**Test Coverage:**
+- Permission request flow (grant/deny/default states)
+- Reminder scheduling and execution (cron job)
+- Push notification sending (web-push package)
+- Service worker push handler
+- Notification display on different browsers
+- Click navigation to task details
+- Offline queue and sync
+- Notification storage in database
+- Customizable reminder times
+- Completed task filtering
+```
+
 ## Dev Agent Record
 
 ### Agent Model Used

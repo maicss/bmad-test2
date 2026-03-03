@@ -39,7 +39,7 @@ so that 我可以验证孩子是否真正完成了任务后再发放积分。
 
 - [ ] Task 2: Create task rejection API endpoint (AC: 2, 3)
   - [ ] Subtask 2.1: Design API route for `POST /api/tasks/[id]/reject`
-  - [ ] Subtask 2.2: Implement task status update logic (pending -> pending)
+  - [ ] Subtask 2.2: Implement task status update logic (pending_approval -> pending)
   - [ ] Subtask 2.3: Validate rejection reason (required, max 200 chars)
   - [ ] Subtask 2.4: Add rejection audit logging
   - [ ] Subtask 2.5: Test rejection workflow with BDD tests

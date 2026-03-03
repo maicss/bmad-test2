@@ -116,7 +116,7 @@ So that 家长不需要手动创建每天的任务，任务能自动出现在儿
 import { sqliteTable, text, integer, timestamp } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 import { taskPlans } from './task-plans';
-import { children } from './users';
+import { children } from './children';
 
 export const tasks = sqliteTable('tasks', {
   id: text('id').primaryKey(),
@@ -138,6 +138,20 @@ export const tasksUniqueIndex = sqliteTable('tasks_unique', {
   childId: text('child_id').notNull(),
   date: text('date').notNull()
 });
+```
+
+**Table Relationships:**
+- `tasks.task_plan_id` → `task_plans.id` (Foreign Key, nullable)
+  - 当`task_plan_id`不为NULL时，表示任务由计划模板生成
+  - 当`task_plan_id`为NULL时，表示一次性手动任务（Story 2.12）
+- `tasks.child_id` → `children.id` (Foreign Key, not null)
+  - 每个任务实例必须关联一个儿童
+  - 同一模板生成的多个任务，每个儿童有独立实例（不同child_id）
+
+**Query Implications:**
+- 查询计划任务时：`WHERE tasks.task_plan_id IS NOT NULL`
+- 查询一次性任务时：`WHERE tasks.task_plan_id IS NULL`
+- JOIN查询时需要处理NULL值：使用`LEFT JOIN task_plans`
 ```
 
 **Task Generation Architecture:**

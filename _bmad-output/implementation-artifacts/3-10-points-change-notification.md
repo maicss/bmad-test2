@@ -143,6 +143,23 @@ it('given points are adjusted when task is approved then notification is sent wi
 - Uses same notification table structure for all notification types
 - Reuses notification-sender.ts service for all notification delivery
 
+**Reuses Notification Infrastructure from Epic 2:**
+- **Story 2.13 (Task Reminder Push Notification)** provides:
+  - `notifications` table schema (with `type` field for different notification types)
+  - `lib/notifications/push.ts` - Push notification sending service
+  - `public/sw/push-handler.js` - Service Worker for PWA push
+  - VAPID keys configuration
+- **Story 2.14 (Real-Time Approval Notification)** provides:
+  - Real-time notification trigger infrastructure
+  - `lib/services/notification-sender.ts` - Notification sender service
+  - In-app notification polling mechanism (2-3 second intervals)
+  - Offline queue for delayed delivery
+
+**This story (3.10) extends**:
+- Adds new notification type: `points_change`
+- Triggers notification on points settlement (task approval, manual adjustment, wish redemption)
+- Reuses Epic 2's notification infrastructure (no new infrastructure needed)
+
 ### Detected Conflicts or Variances
 
 None - Story aligns with established architecture patterns.

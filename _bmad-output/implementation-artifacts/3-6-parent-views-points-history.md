@@ -61,6 +61,76 @@ so that 我可以了解儿童积分的来源和变动情况。
 - Database: bun:sqlite + Drizzle ORM 0.45.x+
 - UI System: Tailwind CSS 4 + Shadcn UI 3.7.0+
 
+**CSV Export Format Specification:**
+
+```typescript
+// CSV File Format
+export const CSV_EXPORT_CONFIG = {
+  // Column names (in order)
+  columns: [
+    '时间',        // createdAt (ISO 8601 format: 2026-01-01T12:00:00Z)
+    '类型',        // type: 'task_reward' | 'manual_adjust' | 'wish_redemption'
+    '积分值',      // amount (positive/negative, e.g., +10, -50)
+    '原因',        // reason (task name or adjustment reason)
+    '相关任务'     // taskId (optional, task name or empty string)
+  ],
+
+  // File encoding
+  encoding: 'UTF-8',
+
+  // CSV format (RFC 4180 compliant)
+  delimiter: ',',
+  quote: '"',
+  escape: '"',
+  newline: '\n',
+
+  // File naming rule
+  filenameTemplate: (childName: string, dateRange: string) => {
+    return `积分历史_${childName}_${dateRange}.csv`;
+    // Example: "积分历史_张小明_2026-01-01_to_2026-01-31.csv"
+    // Example: "积分历史_张小明_all.csv"
+  },
+
+  // Data volume limit (GDPR compliance - NFR20)
+  maxRecords: 1000, // Maximum records per export
+  // If > 1000 records, prompt user to narrow date range
+} as const;
+
+// CSV export utility implementation
+export async function exportPointsHistoryToCSV(
+  pointsHistory: PointsHistory[],
+  childName: string,
+  dateRange: string
+): Promise<Blob> {
+  // Check data volume limit
+  if (pointsHistory.length > CSV_EXPORT_CONFIG.maxRecords) {
+    throw new Error(
+      `数据量过大（${pointsHistory.length}条），请缩小时间范围或联系管理员导出全部数据`
+    );
+  }
+
+  // Generate CSV content
+  const headers = CSV_EXPORT_CONFIG.columns.join(',');
+  const rows = pointsHistory.map(record => {
+    const date = new Date(record.createdAt).toISOString(); // ISO 8601 format
+    const type = getTypeDisplayName(record.type); // Convert to Chinese
+    const amount = record.amount >= 0 ? `+${record.amount}` : `${record.amount}`;
+    const reason = record.reason || '';
+    const taskId = record.taskId || '';
+
+    return [date, type, amount, reason, taskId]
+      .map(field => `"${field.replace(/"/g, '""')}"`) // Escape quotes
+      .join(',');
+  });
+
+  const csvContent = `${headers}\n${rows.join('\n')}`;
+
+  // Create Blob with UTF-8 encoding and BOM for Excel compatibility
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  return blob;
+}
+```
+
 **Database Schema References:**
 - `points` table: points history/ledger for tracking all changes
   - Fields: `amount`, `reason`, `type`, `createdAt`, `taskId` (optional)
