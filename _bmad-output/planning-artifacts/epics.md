@@ -300,7 +300,378 @@ This document provides the complete epic and story breakdown for bmad-test2, dec
 - Epic 2 triggers Epic 3's points calculation on approval
 - Receives real-time notifications via notification system stories
 
----
+ZP|---
+
+ZP|### Story 2.1: Parent Creates Task Plan Template
+ZP|
+ZP|As a 家长,
+ZP|I want 创建任务计划模板,
+ZP|So that 我可以定义重复性任务的结构和规则，减少重复设置工作。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 我已登录Family Reward系统并有家长权限
+ZP|**When** 我进入"任务计划"页面并点击"创建模板"按钮
+ZP|**Then** 系统显示任务模板创建表单，包含：
+ZP|  - 模板名称（必填，最多50字）
+ZP|  - 任务类型选择（刷牙/学习/运动/家务/自定义）
+ZP|  - 适用儿童选择（可多选）
+ZP|  - 积分值设置（数字输入，1-100）
+ZP|  - 循环规则选择（每日/每周/工作日/周末/自定义）
+ZP|  - 排除日期选择（可选，日历选择器）
+ZP|  - 任务提醒时间设置（可选）
+ZP|  - "保存草稿"和"立即发布"按钮
+ZP|**And** 模板保存后，状态为"草稿"或"已发布"
+ZP|**And** 如果选择"立即发布"，系统根据循环规则生成未来7天的任务实例
+ZP|**And** 模板数据存储在`task_plans`表中
+ZP|**And** API响应时间<500ms（NFR3: P95）
+
+ZP|--- 
+
+ZP|### Story 2.2: Parent Sets Task Points Value
+ZP|
+ZP|As a 家长,
+ZP|I want 为任务设置积分值,
+ZP|So that 我可以根据任务难度和价值设置不同的积分奖励。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 我已创建任务模板或正在创建单个任务
+ZP|**When** 我设置任务的积分值
+ZP|**Then** 积分值必须为正整数（1-100）
+ZP|**And** 系统显示积分值与任务难度的建议对应关系：
+ZP|  - 简单任务（如整理床铺）：1-10分
+ZP|  - 中等任务（如洗碗）：15-30分
+ZP|  - 困难任务（如完成作业）：30-50分
+ZP|  - 特殊任务（如照顾宠物）：50-100分
+ZP|**And** 积分值记录在任务的`points`字段
+ZP|**And** 任务完成并审批后，积分自动累加到儿童账户
+
+ZP|--- 
+
+ZP|### Story 2.3: Parent Sets Task Date Rules
+ZP|
+ZP|As a 家长,
+ZP|I want 设置任务的日期规则（循环、排除、特定日期）,
+ZP|So that 我可以灵活控制任务在哪些日期出现。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 我正在创建或编辑任务模板
+ZP|**When** 我设置日期规则
+ZP|**Then** 系统支持以下规则类型：
+ZP|  - 每日任务：每天重复出现
+ZP|  - 每周任务：按星期选择（可多选，如周一、周三、周五）
+ZP|  - 工作日任务：仅周一至周五出现
+ZP|  - 周末任务：仅周六、周日出现
+ZP|  - 自定义循环：按间隔天数（如每2天）
+ZP|  - 特定日期：仅在指定的日期出现
+ZP|**And** 支持排除日期设置：
+ZP|  - 排除特定节假日
+ZP|  - 排除特殊日期（如生日、纪念日）
+ZP|  - 设置排除规则的生效范围（仅本周/永久）
+ZP|**And** 规则存储在`task_plans`的`rule`JSON字段
+
+ZP|--- 
+
+ZP|### Story 2.4: System Auto-Generates Task Instances
+ZP|
+ZP|As a 系统,
+ZP|I want 根据日期策略自动生成任务实例,
+ZP|So that 家长不需要手动创建每天的任务，任务能自动出现在儿童的任务列表中。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 任务模板已发布且包含日期规则
+ZP|**When** 系统时钟到达每日0点（北京时间0:00）
+ZP|**Then** 系统根据所有已发布模板的规则生成当天的任务实例
+ZP|**And** 任务实例生成规则：
+ZP|  - 如果规则匹配当天日期，则生成实例
+ZP|  - 如果当天在排除日期列表中，则不生成
+ZP|  - 每个儿童根据其关联的模板生成独立的任务实例
+ZP|**And** 任务实例状态默认为"待完成"
+ZP|**And** 生成的任务实例存储在`tasks`表中，关联到`task_plan_id`
+ZP|**And** 如果模板关联多个儿童，为每个儿童生成独立任务实例
+
+ZP|--- 
+
+ZP|### Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
+ZP|
+ZP|As a 家长,
+ZP|I want 暂停、恢复或删除任务计划,
+ZP|So that 我可以灵活控制任务计划的执行状态。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 我已有至少一个任务模板
+ZP|**When** 我进入任务计划管理页面
+ZP|**Then** 每个模板显示以下操作按钮：
+ZP|  - 暂停：暂时停止生成新任务实例（已生成的不受影响）
+ZP|  - 恢复：重新激活暂停的模板，继续生成任务实例
+ZP|  - 删除：永久删除模板（已生成的任务实例保留）
+ZP|**And** 点击暂停时，显示确认对话框并要求选择暂停时长：
+ZP|  - 暂停1天
+ZP|  - 暂停3天
+ZP|  - 暂停7天
+ZP|  - 自定义暂停时长
+ZP|  - 永久暂停
+ZP|**And** 暂停期间，模板状态显示为"已暂停"并显示预计恢复时间
+ZP|**And** 恢复操作立即生效，模板状态变回"已发布"
+ZP|**And** 删除操作显示警告："删除后无法恢复，但已生成的任务实例将保留"
+
+ZP|--- 
+
+ZP|### Story 2.6: Parent Uses Template to Quickly Create Task
+ZP|
+ZP|As a 家长,
+ZP|I want 使用任务模板快速创建单个任务,
+ZP|So that 我可以快速为孩子添加不在计划内的任务。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 系统中已有至少一个任务模板
+ZP|**When** 我在任务计划页面点击"使用模板创建任务"
+ZP|**Then** 系统显示模板列表（仅显示我创建或管理员发布的模板）
+ZP|**When** 我选择一个模板
+ZP|**Then** 系统预填模板中的任务信息，家长可修改：
+ZP|  - 任务名称（可修改）
+ZP|  - 积分值（可修改，默认使用模板值）
+ZP|  - 执行日期（必填，默认今天）
+ZP|  - 适用儿童（必填）
+ZP|  - 备注（可选）
+ZP|**And** 点击"创建"后，任务实例立即生成并出现在儿童今日任务中
+ZP|**And** 任务实例标记为"手动创建"以区分计划任务
+
+ZP|--- 
+
+ZP|### Story 2.7: Parent Batch Approves Tasks
+ZP|
+ZP|As a 家长,
+ZP|I want 批量审批任务完成,
+ZP|So that 我可以一次性处理多个任务审批，提高效率。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 有1个或多个任务等待我的审批
+ZP|**When** 我进入"任务审批"页面
+ZP|**Then** 系统显示所有待审批任务列表，包含：
+ZP|  - 任务名称和图标
+ZP|  - 完成任务的孩子姓名
+ZP|  - 任务完成时间
+ZP|  - 任务完成证明（如有照片）
+ZP|  - 审批按钮："通过"和"驳回"
+ZP|**And** 支持批量操作：
+ZP|  - 全选/取消全选
+ZP|  - 批量通过：一次性审批所有选中任务
+ZP|  - 批量驳回：一次性驳回所有选中任务（需填写驳回原因）
+ZP|**And** 批量操作后，显示操作结果："已通过X个任务，驳回Y个任务"
+ZP|**And** 审批通过后，积分立即累加到儿童账户（NFR3）
+ZP|**And** API响应时间<500ms（NFR3: P95），批量操作需优化查询
+
+ZP|--- 
+
+ZP|### Story 2.8: Child Views Today's Task List
+ZP|
+ZP|As a 儿童,
+ZP|I want 查看今日任务列表,
+ZP|So that 我知道自己今天需要完成哪些任务。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 我已登录系统（PIN码或家长设备）
+ZP|**When** 我打开应用首页
+ZP|**Then** 系统显示今日任务列表，包含：
+ZP|  - 任务卡片网格布局（适合触摸操作）
+ZP|  - 每个任务显示：任务图标、名称、积分值、状态
+ZP|  - 任务状态标签："待完成"、"已完成"、"待审批"
+ZP|**And** 任务按时间排序：
+ZP|  - 有时间要求的任务靠前显示
+ZP|  - 无时间要求的按创建时间排序
+ZP|**And** 任务数量显示："今日任务 (X/Y)" 其中X是已完成数，Y是总数
+ZP|**And** 页面加载时间<2秒（NFR1）
+
+ZP|--- 
+
+ZP|### Story 2.9: Child Marks Task Complete
+ZP|
+ZP|As a 儿童,
+ZP|I want 标记任务为完成,
+ZP|So that 我可以记录自己完成的任务并获得积分。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 我有未完成的任务
+ZP|**When** 我点击任务卡片上的"完成"按钮
+ZP|**Then** 系统显示完成确认对话框：
+ZP|  - 显示任务名称和积分值
+ZP|  - 可选的完成证明上传（拍照或相册选择）
+ZP|  - "确认完成"和"取消"按钮
+ZP|**And** 点击确认后：
+ZP|  - 如果任务需要家长审批 → 状态变为"待审批"
+ZP|  - 如果任务无需审批（如自行打卡类） → 状态变为"已完成"，积分立即到账
+ZP|**And** 任务卡片状态更新显示"待审批"或"已完成"
+ZP|**And** 显示乐观UI更新：立即反馈成功状态，后台处理实际请求
+
+ZP|--- 
+
+ZP|### Story 2.10: Parent Approves Task Completion
+ZP|
+ZP|As a 家长,
+ZP|I want 审批任务完成,
+ZP|So that 我可以验证孩子是否真正完成了任务后再发放积分。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 孩子标记了任务完成，等待我审批
+ZP|**When** 我收到审批通知并进入任务审批页面
+ZP|**Then** 系统显示任务详情，包含：
+ZP|  - 任务名称和计划时间
+ZP|  - 孩子姓名和完成时间
+ZP|  - 完成证明（如有照片）
+ZP|  - 积分值
+ZP|**And** 我可以选择：
+ZP|  - 通过：任务标记为"已完成"，积分累加到孩子账户
+ZP|  - 驳回：填写驳回原因（必填），任务返回到孩子"待完成"列表
+ZP|**And** 审批操作记录到审计日志（NFR14）
+ZP|**And** 审批通过后，积分变动通知立即推送给孩子（NFR4: 实时）
+
+ZP|--- 
+
+ZP|### Story 2.11: Parent Rejects Task Completion
+ZP|
+ZP|As a 家长,
+ZP|I want 驳回任务完成标记,
+ZP|So that 我可以拒绝不符合要求的任务完成并告知孩子原因。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 孩子标记了任务完成
+ZP|**When** 我点击"驳回"按钮
+ZP|**Then** 系统显示驳回原因输入框（必填，最多200字）
+ZP|**And** 我可以选择预设原因或自定义输入：
+ZP|  - 预设原因：
+ZP|    - "任务没有完成"
+ZP|    - "完成质量不达标"
+ZP|    - "时间不符合要求"
+ZP|    - "其他"（自定义输入）
+ZP|**And** 驳回确认后：
+ZP|  - 任务状态变回"待完成"
+ZP|  - 驳回原因显示在任务卡片上
+ZP|  - 孩子收到通知："你的任务被驳回：{原因}"
+ZP|**And** 驳回操作记录到审计日志（NFR14）
+
+ZP|--- 
+
+ZP|### Story 2.12: Parent Creates One-Time Task
+ZP|
+ZP|As a 家长,
+ZP|I want 临时创建一次性任务,
+ZP|So that 我可以快速添加不在计划内的特殊任务。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 我有临时需求想分配给孩子（如帮忙买酱油）
+ZP|**When** 我在任务页面点击"临时任务"按钮
+ZP|**Then** 系统显示一次性任务创建表单：
+ZP|  - 任务名称（必填，最多50字）
+ZP|  - 积分值（可选，默认0分）
+ZP|  - 截止日期和时间（可选）
+ZP|  - 任务说明（可选，最多200字）
+ZP|  - 适用儿童（必填，可多选）
+ZP|  - 需家长审批开关（默认开启）
+ZP|**And** 点击创建后，任务立即生成
+ZP|**And** 任务不关联任何计划模板，单独显示在儿童任务列表中
+ZP|**And** 任务完成后自动消失，不重复生成
+
+ZP|--- 
+
+ZP|### Story 2.13: Task Reminder Push Notification
+ZP|
+ZP|As a 系统,
+ZP|I want 在任务提醒时间推送通知,
+ZP|So that 孩子不会忘记完成每日任务。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 任务模板设置了提醒时间
+ZP|**When** 系统时钟到达提醒时间
+ZP|**Then** 系统推送通知到孩子的设备，包含：
+ZP|  - 通知标题："时间到！"
+ZP|  - 通知内容："{任务名称} - {积分值}分等你来拿"
+ZP|  - 点击通知跳转到任务详情页
+ZP|**And** 提醒时间默认设置为：
+ZP|  - 早上8:00（起床任务）
+ZP|  - 下午5:00（放学后任务）
+ZP|  - 晚上8:00（睡前任务）
+ZP|**And** 家长可在任务模板设置中自定义提醒时间
+ZP|**And** 如果任务已完成或已过期，不发送提醒
+ZP|**And** 通知存储在`notifications`表中，类型为"task_reminder"
+
+ZP|--- 
+
+ZP|### Story 2.14: Real-Time Approval Notification
+ZP|
+ZP|As a 系统,
+ZP|I want 在孩子标记任务完成后实时推送通知给家长,
+ZP|So that 家长可以尽快审批任务，孩子也能快速获得积分反馈。
+ZP|
+ZP|**Acceptance Criteria:**
+ZP|
+ZP|**Given** 孩子标记任务完成且需要家长审批
+ZP|**When** 任务状态变为"待审批"
+ZP|**Then** 系统在3秒内推送通知到家长设备，包含：
+ZP|  - 通知标题："任务待审批"
+ZP|  - 通知内容："{孩子姓名}完成了「{任务名称}」，请审批"
+ZP|  - 点击通知跳转到审批页面
+ZP|**And** 通知支持以下推送渠道：
+ZP|  - PWA推送（需要Service Worker）
+ZP|  - 站内消息通知
+ZP|**And** 如果家长设备离线，通知存储在服务器，待家长上线后同步
+ZP|**And** 通知存储在`notifications`表中，类型为"task_approval_pending"
+
+ZP|--- 
+
+ZP|### Epic 2 Summary
+ZP|
+ZP|**User Outcome:** Parents can create and manage tasks; children can complete them
+ZP|
+ZP|**Stories Created:**
+ZP|- Story 2.1: Parent Creates Task Plan Template
+ZP|- Story 2.2: Parent Sets Task Points Value
+ZP|- Story 2.3: Parent Sets Task Date Rules
+ZP|- Story 2.4: System Auto-Generates Task Instances
+ZP|- Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
+ZP|- Story 2.6: Parent Uses Template to Quickly Create Task
+ZP|- Story 2.7: Parent Batch Approves Tasks
+ZP|- Story 2.8: Child Views Today's Task List
+ZP|- Story 2.9: Child Marks Task Complete
+ZP|- Story 2.10: Parent Approves Task Completion
+ZP|- Story 2.11: Parent Rejects Task Completion
+ZP|- Story 2.12: Parent Creates One-Time Task
+ZP|- Story 2.13: Task Reminder Push Notification
+ZP|- Story 2.14: Real-Time Approval Notification
+ZP|
+ZP|**FR Coverage:**
+ZP|- FR8: Story 2.1
+ZP|- FR9: Story 2.2
+ZP|- FR10: Story 2.3
+ZP|- FR11: Story 2.4
+ZP|- FR12: Story 2.5
+ZP|- FR13: Story 2.6
+ZP|- FR14: Story 2.7
+ZP|- FR15: Story 2.8
+ZP|- FR16: Story 2.9
+ZP|- FR17: Story 2.10
+ZP|- FR18: Story 2.11
+ZP|- FR19: Story 2.12
+ZP|- FR55: Story 2.13
+ZP|- FR56: Story 2.14
+ZP|
+ZP|**Integration Notes:**
+ZP|- Epic 2 triggers Epic 3's points calculation on approval (Story 2.10, 2.11)
+ZP|- Notifications via Stories 2.13 and 2.14 (NFR4: Real-time < 3s)
+
+ZP|---
 
 ### Epic 3: Points System & Balance Management (With Notifications)
 **User Outcome:** Points are calculated, tracked, and visible to all users
@@ -329,7 +700,258 @@ This document provides the complete epic and story breakdown for bmad-test2, dec
 - Triggers Epic 4's wish redemption
 - Notifications via dedicated notification stories
 
----
+NH|---
+
+NH|### Story 3.1: System Calculates Points on Task Approval
+
+NH|As a 系统,
+NH|I want 在任务审批通过后自动计算积分,
+NH|So that 儿童可以根据任务价值获得相应的积分奖励。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 家长审批通过了一个任务完成
+NH|**When** 审批操作被确认
+NH|**Then** 系统自动计算该任务的积分值
+NH|**And** 积分从系统账户转移到儿童账户（原子事务）
+NH|**And** 积分变动记录到积分历史表
+NH|**And** 儿童实时收到积分变动通知
+NH|**And** 如果任务为负向积分（惩罚），则从儿童账户扣除
+NH|**And** 积分settlement事务必须具有原子性（要么全部成功，要么全部回滚）
+NH|
+NH|--- 
+
+NH|### Story 3.2: Positive Points Reward (Good Behavior)
+
+NH|As a 系统,
+NH|I want 支持正向积分奖励,
+NH|So that 好的行为可以获得积分奖励，激励儿童保持良好习惯。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 任务模板设置了正向积分值
+NH|**When** 任务完成并通过家长审批
+NH|**Then** 正向积分值累加到儿童账户
+NH|**And** 积分显示为绿色"+N"标识
+NH|**And** 积分历史记录显示为"任务奖励：{任务名称}"
+NH|
+NH|--- 
+
+NH|### Story 3.3: Negative Points Deduction (Bad Behavior)
+
+NH|As a 系统,
+NH|I want 支持负向积分扣除,
+NH|So that 不良行为可以扣除积分，形成约束机制。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 家长手动扣除儿童积分（负向积分）
+NH|**When** 家长确认扣除操作
+NH|**Then** 负向积分从儿童账户扣除
+NH|**And** 积分可以为负数（账户可到负数，见FR28）
+NH|**And** 积分显示为红色"-N"标识
+NH|**And** 积分历史记录显示为"家长扣分：{原因}"
+NH|**And** 负分需记录原因到审计日志
+NH|
+NH|--- 
+
+NH|### Story 3.4: Points Settlement After Approval
+
+NH|As a 系统,
+NH|I want 在家长审批后才正式结算积分,
+NH|So that 积分发放有家长把关，确保公平性。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 儿童标记任务完成
+NH|**When** 家长审批通过
+NH|**Then** 积分才正式结算到儿童账户
+NH|**And** 如果家长驳回，积分不发放
+NH|**And** 审批通过后，积分变动通知在3秒内推送给儿童（NFR4）
+NH|**And** 积分settlement为原子操作
+NH|
+NH|--- 
+
+NH|### Story 3.5: Parent Temporary Points Adjustment
+
+NH|As a 家长,
+NH|I want 临时加减分,
+NH|So that 我可以灵活地对儿童进行即时的积分奖励或惩罚。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 我有家长权限
+NH|**When** 我进入积分调整页面
+NH|**Then** 系统显示积分调整表单，包含：
+NH|  - 调整方向选择：增加 / 减少
+NH|  - 积分值输入（1-100）
+NH|  - 原因选择或输入（必填）
+NH|    - 预设原因："表现好"、"帮助家务"、"学习进步"、"不听话"、"迟到"、"其他"
+NH|  - 适用儿童选择（必填）
+NH|**And** 点击确认后，积分立即调整
+NH|**And** 积分历史记录显示调整原因
+NH|**And** 家长可以查看所有历史调整记录
+NH|
+NH|--- 
+
+NH|### Story 3.6: Parent Views Points History
+
+NH|As a 家长,
+NH|I want 查看积分历史记录,
+NH|So that 我可以了解儿童积分的来源和变动情况。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 我已登录系统并有家长权限
+NH|**When** 我进入"积分历史"页面
+NH|**Then** 系统显示积分变动列表，包含：
+NH|  - 每条记录显示：时间、类型、积分值（正/负）、原因、相关任务（如果有）
+NH|  - 积分值颜色标识：绿色为增加，红色为减少
+NH|  - 支持时间筛选：最近7天 / 最近30天 / 全部
+NH|  - 支持类型筛选：全部 / 任务奖励 / 手动调整 / 愿望兑换
+NH|**And** 列表按时间倒序排列，最新在前
+NH|**And** 支持导出功能：导出为CSV文件（NFR20: GDPR数据导出权）
+NH|**And** 页面加载时间<3秒（NFR2）
+NH|
+NH|--- 
+
+NH|### Story 3.7: Parent Views Points Trend Chart
+
+NH|As a 家长,
+NH|I want 查看积分变化趋势图表,
+NH|So that 我可以直观地了解儿童积分的走势和习惯养成情况。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 我已登录系统并有家长权限
+NH|**When** 我进入"积分趋势"页面
+NH|**Then** 系统显示积分趋势图表，包含：
+NH|  - 折线图显示每日积分变化
+NH|  - 默认显示最近30天
+NH|  - 支持时间范围选择：7天 / 30天 / 90天
+NH|  - 支持按儿童筛选（家庭有多个儿童时）
+NH|**And** 图表包含：
+NH|  - 积分净变化曲线（收入-支出）
+NH|  - 任务完成次数柱状图
+NH|  - 愿望兑换标记点
+NH|**And** 显示统计摘要：
+NH|  - 累计获得积分
+NH|  - 累计消耗积分
+NH|  - 平均每日积分
+NH|  - 最佳连续正向天数
+NH|**And** 页面加载时间<3秒（NFR2）
+NH|
+NH|--- 
+
+NH|### Story 3.8: Child Views Current Points Balance
+
+NH|As a 儿童,
+NH|I want 查看当前积分余额,
+NH|So that 我知道自己有多少积分可以用于兑换愿望。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 我已登录系统（PIN码或家长设备）
+NH|**When** 我打开应用首页或积分页面
+NH|**Then** 系统显示当前积分余额，大字体突出显示
+NH|**And** 余额实时更新（3秒内同步，NFR4）
+NH|**And** 显示积分变化动画：余额增加时绿色闪烁，减少时红色闪烁
+NH|**And** 页面加载时间<2秒（NFR1）
+NH|
+NH|--- 
+
+NH|### Story 3.9: Points Linear Accumulation (No Rollback)
+
+NH|As a 系统,
+NH|I want 积分线性叠加、不回退、可为负数,
+NH|So that 积分系统简单透明，家长和儿童都能理解。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 儿童的积分账户
+NH|**When** 积分发生变动
+NH|**Then** 新积分 = 原积分 + 变动值（线性叠加）
+NH|**And** 积分只能通过新变动覆盖，永不回滚历史记录
+NH|**And** 积分可以为负数（账户可到负数）
+NH|**And** 积分历史记录永久保留，每笔变动都是独立记录
+NH|
+NH|--- 
+
+NH|### Story 3.10: Points Change Notification
+
+NH|As a 系统,
+NH|I want 在积分变动时推送通知,
+NH|So that 儿童和家长能及时知道积分变化情况。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 发生积分变动（任务审批、手动调整、愿望兑换）
+NH|**When** 积分变动事务完成
+NH|**Then** 系统推送通知到相关用户设备
+NH|**And** 通知内容包含：变动类型、变动积分值、当前余额
+NH|**And** 通知在3秒内送达（NFR4: 实时<3秒）
+NH|**And** 通知存储在`notifications`表中，类型为"points_change"
+NH|
+NH|--- 
+
+NH|### Story 3.11: Points Milestone Achievement Notification
+
+NH|As a 系统,
+NH|I want 在积分达到里程碑时推送通知,
+NH|So that 激励儿童持续努力，增强成就感。
+
+NH|**Acceptance Criteria:**
+
+NH|**Given** 儿童积分达到特定里程碑值
+NH|**When** 积分变动后检查里程碑
+NH|**Then** 系统推送里程碑通知，包含：
+NH|  - 通知标题："恭喜！"
+NH|  - 通知内容："你已经积累了{总分}分！继续加油！"
+NH|**And** 里程碑设置：
+NH|  - 100分："小小起步"
+NH|  - 500分："初露头角"
+NH|  - 1000分："积分达人"
+NH|  - 2000分："超级明星"
+NH|  - 5000分："传奇人物"
+NH|**And** 每个里程碑只通知一次（记录已通知里程碑）
+NH|**And** 通知存储在`notifications`表中，类型为"points_milestone"
+NH|
+NH|--- 
+
+NH|### Epic 3 Summary
+NH|
+NH|**User Outcome:** Points are calculated, tracked, and visible to all users
+NH|
+NH|**Stories Created:**
+NH|- Story 3.1: System Calculates Points on Task Approval
+NH|- Story 3.2: Positive Points Reward (Good Behavior)
+NH|- Story 3.3: Negative Points Deduction (Bad Behavior)
+NH|- Story 3.4: Points Settlement After Approval
+NH|- Story 3.5: Parent Temporary Points Adjustment
+NH|- Story 3.6: Parent Views Points History
+NH|- Story 3.7: Parent Views Points Trend Chart
+NH|- Story 3.8: Child Views Current Points Balance
+NH|- Story 3.9: Points Linear Accumulation (No Rollback)
+NH|- Story 3.10: Points Change Notification
+NH|- Story 3.11: Points Milestone Achievement Notification
+NH|
+NH|**FR Coverage:**
+NH|- FR20: Story 3.1
+NH|- FR21: Story 3.2
+NH|- FR22: Story 3.3
+NH|- FR23: Story 3.4
+NH|- FR24: Story 3.5
+NH|- FR25: Story 3.6
+NH|- FR26: Story 3.7
+NH|- FR27: Story 3.8
+NH|- FR28: Story 3.9
+NH|
+NH|**Integration Notes:**
+NH|- Triggered by Epic 2's task approval (Story 2.10, 2.11)
+NH|- Triggers Epic 4's wish redemption eligibility
+NH|- Points notifications via Stories 3.10 and 3.11
+NH|
+NH|---
 
 ### Epic 4: Wishlist Management & Redemption (With Notifications)
 **User Outcome:** Children can manage wishes and redeem them when ready

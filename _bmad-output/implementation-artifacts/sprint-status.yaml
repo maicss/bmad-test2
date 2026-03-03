@@ -23,11 +23,58 @@ development_status:
   1-7-primary-parent-manage-members: ready-for-dev
   epic-1-retrospective: optional
 
-  # Epic 2: Task Planning & Management (With Notifications)
-  epic-2: backlog
+  MX|  # Epic 2: Task Planning & Management (With Notifications)
+MX|  epic-2: in-progress
+MX|  2-1-parent-creates-task-plan-template: ready-for-dev
+MX|  2-2-parent-sets-task-points-value: ready-for-dev
+MX|  2-3-parent-sets-task-date-rules: ready-for-dev
+MX|  2-4-system-auto-generates-task-instances: ready-for-dev
+MX|  2-5-parent-pauses-resumes-deletes-task-plan: ready-for-dev
+MX|  2-6-parent-uses-template-to-quickly-create-task: ready-for-dev
+MX|  2-7-parent-batch-approves-tasks: ready-for-dev
+MX|  2-8-child-views-todays-task-list: ready-for-dev
+MX|  2-9-child-marks-task-complete: ready-for-dev
+MX|  2-10-parent-approves-task-completion: ready-for-dev
+MX|  2-11-parent-rejects-task-completion: ready-for-dev
+MX|  2-12-parent-creates-one-time-task: ready-for-dev
+MX|  2-13-task-reminder-push-notification: ready-for-dev
+MX|  2-14-real-time-approval-notification: ready-for-dev
+
+MX|  # Epic 3: Points System & Balance Management (With Notifications)
+MX|  epic-3: in-progress
+|  3-1-system-calculates-points-on-task-approval: ready-for-dev
+|  3-2-positive-points-reward-good-behavior: ready-for-dev
+|  3-3-negative-points-deduction-bad-behavior: ready-for-dev
+|  3-4-points-settlement-after-approval: ready-for-dev
+|  3-5-parent-temporary-points-adjustment: ready-for-dev
+|  3-6-parent-views-points-history: ready-for-dev
+|  3-7-parent-views-points-trend-chart: ready-for-dev
+|  3-8-child-views-current-points-balance: ready-for-dev
+YN|MX|  3-9-points-linear-accumulation-no-rollback: ready-for-dev
+|  3-10-points-change-notification: ready-for-dev
+BJ|MX|  3-11-points-milestone-achievement-notification: ready-for-dev
+
+VJ|
+  XW|  # Epic 2: Task Planning & Management (With Notifications)
+XW|  epic-2: in-progress
+YS|XW|  2-1-parent-creates-task-plan-template: ready-for-dev
+BB|XW|  2-2-parent-sets-task-points-value: ready-for-dev
+NW|XW|  2-3-parent-sets-task-date-rules: ready-for-dev
+YZ|XW|  2-4-system-auto-generates-task-instances: ready-for-dev
+WQ|XW|  2-5-parent-pauses-resumes-deletes-task-plan: ready-for-dev
+QQ|XW|  2-6-parent-uses-template-to-quickly-create-task: ready-for-dev
+HM|XW|  2-7-parent-batch-approves-tasks: ready-for-dev
+YH|XW|  2-8-child-views-todays-task-list: ready-for-dev
+YS|XW|  2-9-child-marks-task-complete: ready-for-dev
+  2-10-parent-approves-task-completion: ready-for-dev
+  2-11-parent-rejects-task-completion: ready-for-dev
+  2-12-parent-creates-one-time-task: ready-for-dev
+#WY|XW|  2-13-task-reminder-push-notification: ready-for-dev
+  2-14-real-time-approval-notification: ready-for-dev
+HQ|
 
   # Epic 3: Points System & Balance Management (With Notifications)
-  epic-3: backlog
+  epic-3: in-progress
 
   # Epic 4: Wishlist Management & Redemption (With Notifications)
   epic-4: backlog

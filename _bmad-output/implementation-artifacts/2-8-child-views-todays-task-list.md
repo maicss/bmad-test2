@@ -1,0 +1,509 @@
+# Story 2.8: Child Views Today's Task List
+
+Status: ready-for-dev
+
+<!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
+
+## Story
+
+As a 儿童,
+I want 查看今日任务列表,
+So that 我知道自己今天需要完成哪些任务。
+
+## Acceptance Criteria
+
+**Given** 我已登录系统（PIN码或家长设备）
+**When** 我打开应用首页
+**Then** 系统显示今日任务列表，包含：
+  - 任务卡片网格布局（适合触摸操作）
+  - 每个任务显示：任务图标、名称、积分值、状态
+  - 任务状态标签："待完成"、"已完成"、"待审批"
+**And** 任务按时间排序：
+  - 有时间要求的任务靠前显示
+  - 无时间要求的按创建时间排序
+**And** 任务数量显示："今日任务 (X/Y)" 其中X是已完成数，Y是总数
+**And** 页面加载时间<2秒（NFR1）
+
+## Tasks / Subtasks
+
+- [ ] Task 1: 创建儿童端首页布局 (AC: 打开应用首页，显示今日任务列表)
+  - [ ] 1.1 创建ChildDashboardLayout组件（Shadcn Layout + 游戏化主题）
+  - [ ] 1.2 实现横向布局（平板优化，≥768px）
+  - [ ] 1.3 实现大按钮设计（≥80x80pt触摸目标）
+  - [ ] 1.4 实现鲜艳色彩系统（儿童友好：蓝色、绿色、黄色）
+  - [ ] 1.5 添加顶部状态栏（网络状态、同步指示器）
+
+- [ ] Task 2: 实现今日任务列表组件 (AC: 显示任务卡片网格布局)
+  - [ ] 2.1 创建TaskGridList组件（Shadcn Grid layout）
+  - [ ] 2.2 实现任务卡片网格（2-3列，响应式）
+  - [ ] 2.3 集成TaskCard组件（从Story 2.1扩展）
+  - [ ] 2.4 实现任务数据加载（lib/db/queries/tasks.ts）
+  - [ ] 2.5 实现空状态展示（无任务时的友好提示）
+
+- [ ] Task 3: 实现任务状态显示 (AC: 任务状态标签："待完成"、"已完成"、"待审批")
+  - [ ] 3.1 更新TaskCard组件支持状态徽章
+  - [ ] 3.2 实现状态颜色编码：
+    - 待完成：灰色背景
+    - 已完成：绿色背景+对勾图标
+    - 待审批：橙色背景+锁定图标
+  - [ ] 3.3 实现状态文字标签（Shadcn Badge）
+  - [ ] 3.4 添加任务状态动画（状态变化时的过渡效果）
+
+- [ ] Task 4: 实现任务排序逻辑 (AC: 任务按时间排序，有时间要求的靠前)
+  - [ ] 4.1 实现有时间要求的任务排序逻辑
+  - [ ] 4.2 实现无时间要求的任务排序逻辑（创建时间）
+  - [ ] 4.3 合并排序结果（有时间要求的任务在前）
+  - [ ] 4.4 添加排序下拉选择（时间/创建时间/积分值）
+  - [ ] 4.5 实现排序状态持久化（儿童偏好设置）
+
+- [ ] Task 5: 实现任务进度显示 (AC: 任务数量显示："今日任务(X/Y)")
+  - [ ] 5.1 实现任务统计计算（已完成数/总数）
+  - [ ] 5.2 创建ProgressHeader组件（显示进度）
+  - [ ] 5.3 实现进度条可视化（圆形或线性进度条）
+  - [ ] 5.4 实现任务完成音效（叮~！）
+  - [ ] 5.5 实现任务完成动画（庆祝效果）
+
+- [ ] Task 6: 实现任务刷新机制 (AC: 页面加载时间<2秒，实时同步)
+  - [ ] 6.1 实现下拉刷新手势（React Native Gesture Handler或自定义）
+  - [ ] 6.2 实现自动刷新（2-3秒轮询，从Story 2.14）
+  - [ ] 6.3 实现加载骨架屏（Shadcn Skeleton）
+  - [ ] 6.4 实现刷新指示器（旋转图标+文字）
+  - [ ] 6.5 添加网络状态指示（顶部栏：绿色/橙色/红色）
+
+- [ ] Task 7: 实现任务点击交互 (AC: 点击任务卡片查看详情)
+  - [ ] 7.1 实现任务卡片点击事件
+  - [ ] 7.2 创建TaskDetailDialog组件（Shadcn Dialog）
+  - [ ] 7.3 实现任务详情展示（完整信息）
+  - [ ] 7.4 实现任务详情页面（可选：独立页面）
+  - [ ] 7.5 添加任务操作按钮（完成按钮，返回）
+
+- [ ] Task 8: 实现儿童端游戏化元素 (AC: 游戏化界面，适合7岁以上儿童)
+  - [ ] 8.1 实现角色头像/表情（完成任务后的反馈）
+  - [ ] 8.2 实现任务完成庆祝动画（彩虹、烟花效果）
+  - [ ] 8.3 实现任务进度音效（不同状态的音效）
+  - [ ] 8.4 实现儿童友好的文案（避免技术术语）
+  - [ ] 8.5 实现视觉反馈（震动反馈，如支持）
+
+- [ ] Task 9: 编写BDD测试 (AC: 所有验收条件)
+  - [ ] 9.1 Given-When-Then格式：儿童查看今日任务列表集成测试
+  - [ ] 9.2 测试任务卡片网格布局
+  - [ ] 9.3 测试任务状态显示（待完成/已完成/待审批）
+  - [ ] 9.4 测试任务排序逻辑
+  - [ ] 9.5 测试任务进度显示
+  - [ ] 9.6 测试刷新机制（下拉刷新+自动刷新）
+  - [ ] 9.7 性能测试（页面加载<2秒）
+  - [ ] 9.8 游戏化元素测试（音效、动画、庆祝效果）
+
+- [ ] Task 10: 实现错误处理和用户反馈 (AC: 用户体验要求)
+  - [ ] 10.1 使用Shadcn Toast显示错误提示
+  - [ ] 10.2 处理网络错误（离线状态指示）
+  - [ ] 10.3 处理加载错误（友好提示+重试按钮）
+  - [ ] 10.4 实现空状态展示（"今天没有任务，去玩吧！"）
+  - [ ] 10.5 添加儿童引导（首次使用的步骤提示）
+
+## Dev Notes
+
+### Technical Requirements
+
+**Technology Stack (MUST USE):**
+- Runtime: Bun 1.3.x+ (NO Node.js compatibility layer)
+- Framework: Next.js 16.x + React 19.x
+- Database: bun:sqlite + Drizzle ORM 0.45.1+ (NO native SQL)
+- Auth: Better-Auth 1.4.x+ with phone plugin
+- UI: Tailwind CSS 4 + Shadcn UI 3.7.0+
+- Testing: Bun Test + Playwright (BDD style)
+- Types: TypeScript 5 strict mode (NO `any`, NO `@ts-ignore`)
+- State Management: Zustand
+
+**RED LIST Rules (CRITICAL - DO NOT VIOLATE):**
+1. ❌ NO native SQL - MUST use Drizzle ORM
+2. ❌ NO string concatenation for SQL - use Drizzle query builder
+3. ❌ NO SQL in components/routes - encapsulate in lib/db/queries/
+4. ❌ NO `any` type - use `unknown` + type guards
+5. ❌ NO `@ts-ignore` - fix type errors
+6. ❌ NO Node.js compatibility layer - use Bun built-ins
+7. ❌ NO process.env - use Bun.env
+8. ❌ NO alert() - use Shadcn Dialog/Toast
+9. ❌ NO new dependencies without explicit approval
+
+**Child-End UX Requirements:**
+- Large touch targets: ≥80x80pt for buttons
+- Colorful, gamified interface: Bright, engaging colors
+- Simple navigation: No deep menus, one-tap to complete tasks
+- Visual feedback: Animations, sounds, progress indicators
+- Optimistic UI: Instant feedback, background sync
+- Tablet-optimized layout: Landscape, ≥768px
+
+**Database Query Pattern:**
+```typescript
+// lib/db/queries/tasks.ts
+import { db } from '@/lib/db';
+import { tasks } from '@/lib/db/schema';
+import { eq, and, asc, or } from 'drizzle-orm';
+
+export async function getTodayTasksByChild(childId: string) {
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+  return await db.query.tasks.findMany({
+    where: and(
+      eq(tasks.childId, childId),
+      eq(tasks.date, today)
+    ),
+    orderBy: [
+      // Tasks with time requirement first (if exists, implement has_time column)
+      // Otherwise by creation time
+      asc(tasks.createdAt)
+    ]
+  });
+}
+
+export async function getTaskProgressByChild(childId: string) {
+  const today = new Date().toISOString().split('T')[0];
+
+  const tasks = await db.query.tasks.findMany({
+    where: and(
+      eq(tasks.childId, childId),
+      eq(tasks.date, today)
+    )
+  });
+
+  const completed = tasks.filter(t => t.status === 'completed').length;
+  const total = tasks.length;
+
+  return { completed, total, progress: total > 0 ? (completed / total) * 100 : 0 };
+}
+```
+
+**State Management (Zustand):**
+```typescript
+// lib/store/task-store.ts
+import { create } from 'zustand';
+
+interface TaskState {
+  tasks: Task[];
+  isLoading: boolean;
+  refreshing: boolean;
+  error: string | null;
+  fetchTasks: (childId: string) => Promise<void>;
+  refreshTasks: () => Promise<void>;
+}
+
+export const useTaskStore = create<TaskState>((set) => ({
+  tasks: [],
+  isLoading: false,
+  refreshing: false,
+  error: null,
+
+  fetchTasks: async (childId: string) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const tasks = await getTodayTasksByChild(childId);
+      set({ tasks, isLoading: false });
+    } catch (error) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  refreshTasks: async () => {
+    const childId = getCurrentChildId(); // TODO: Get from auth context
+    set({ refreshing: true });
+
+    try {
+      const tasks = await getTodayTasksByChild(childId);
+      set({ tasks, refreshing: false });
+    } catch (error) {
+      set({ error: error.message, refreshing: false });
+    }
+  }
+}));
+```
+
+### Architecture Compliance
+
+**Component Location:**
+- Child dashboard: `app/(child)/dashboard/page.tsx`
+- Child layout: `app/(child)/layout.tsx` (gamified theme)
+- Task grid list: `components/features/task-grid-list.tsx`
+- Task card: `components/features/task-card.tsx` (reuse from Story 2.1, extend for child)
+- Progress header: `components/features/progress-header.tsx`
+- Task detail dialog: `components/dialogs/task-detail-dialog.tsx`
+- State store: `lib/store/task-store.ts` (Zustand)
+
+**Design System:**
+- Use Shadcn UI components: Grid, Card, Badge, Button, Skeleton, Dialog, Toast
+- Color system:
+  - Primary: Blue (#3B82F6) - main actions
+  - Success: Green (#10B981) - completed tasks
+  - Warning: Orange (#F59E0B) - pending approval
+  - Neutral: Gray (#6B7280) - pending tasks
+- Touch targets: ≥80x80pt (child-friendly)
+- Font sizes: Larger text for readability (14-18pt)
+- Responsive: Tablet landscape layout (≥768px)
+
+**Performance Requirements:**
+- Page load time: <2 seconds (NFR1)
+- Task list rendering: <100ms
+- State updates: Instant (Zustand)
+- Auto-refresh: 2-3 second polling interval
+
+### Testing Requirements
+
+**BDD Format (GIVEN-WHEN-THEN):**
+```typescript
+// tests/integration/child-task-list.spec.ts
+it('given 儿童已登录，when 打开应用首页，then 显示今日任务列表', async () => {
+  // Given: 儿童已登录（PIN码）
+  const family = await createFamily();
+  const parent = await createParent({ familyId: family.id });
+  const child = await createChild({ familyId: family.id });
+
+  // Create tasks for today
+  const today = new Date().toISOString().split('T')[0];
+  const task1 = await createTask({
+    childId: child.id,
+    title: '每日刷牙',
+    points: 5,
+    status: 'pending',
+    date: today
+  });
+
+  const task2 = await createTask({
+    childId: child.id,
+    title: '完成作业',
+    points: 20,
+    status: 'completed',
+    date: today
+  });
+
+  // When: 儿童打开应用首页
+  const response = await request(app)
+    .get('/child/dashboard')
+    .set('Cookie', await createSession(child));
+
+  // Then: 显示今日任务列表
+  expect(response.status).toBe(200);
+  expect(response.body.tasks).toHaveLength(2);
+
+  // And: 任务卡片网格布局
+  const tasks = response.body.tasks;
+  expect(tasks[0].title).toBe('每日刷牙');
+  expect(tasks[1].title).toBe('完成作业');
+
+  // And: 任务状态正确显示
+  expect(tasks[0].status).toBe('pending');
+  expect(tasks[1].status).toBe('completed');
+});
+
+it('given 儿童有3个任务（2个完成），when 查看今日任务，then 显示任务进度(X/Y)', async () => {
+  // Given: 儿童已登录，有3个任务
+  const family = await createFamily();
+  const parent = await createParent({ familyId: family.id });
+  const child = await createChild({ familyId: family.id });
+
+  const today = new Date().toISOString().split('T')[0];
+
+  await createTask({
+    childId: child.id,
+    title: '每日刷牙',
+    status: 'completed',
+    date: today
+  });
+
+  await createTask({
+    childId: child.id,
+    title: '完成作业',
+    status: 'completed',
+    date: today
+  });
+
+  await createTask({
+    childId: child.id,
+    title: '整理房间',
+    status: 'pending',
+    date: today
+  });
+
+  // When: 查看今日任务
+  const response = await request(app)
+    .get('/child/dashboard')
+    .set('Cookie', await createSession(child));
+
+  // Then: 显示任务进度(X/Y)
+  expect(response.status).toBe(200);
+  expect(response.body.progress).toBeDefined();
+  expect(response.body.progress.completed).toBe(2);
+  expect(response.body.progress.total).toBe(3);
+});
+
+it('given 儿童有已完成和待审批任务，when 查看今日任务，then 正确显示所有状态', async () => {
+  // Given: 儿童已登录，有已完成和待审批任务
+  const family = await createFamily();
+  const parent = await createParent({ familyId: family.id });
+  const child = await createChild({ familyId: family.id });
+
+  const today = new Date().toISOString().split('T')[0];
+
+  await createTask({
+    childId: child.id,
+    title: '每日刷牙',
+    status: 'completed',
+    date: today
+  });
+
+  await createTask({
+    childId: child.id,
+    title: '完成作业',
+    status: 'pending_approval',
+    date: today
+  });
+
+  await createTask({
+    childId: child.id,
+    title: '整理房间',
+    status: 'pending',
+    date: today
+  });
+
+  // When: 查看今日任务
+  const response = await request(app)
+    .get('/child/dashboard')
+    .set('Cookie', await createSession(child));
+
+  // Then: 正确显示所有状态
+  expect(response.status).toBe(200);
+  expect(response.body.tasks).toHaveLength(3);
+
+  const tasks = response.body.tasks;
+  expect(tasks[0].status).toBe('completed');
+  expect(tasks[1].status).toBe('pending_approval');
+  expect(tasks[2].status).toBe('pending');
+});
+
+it('given 儿童下拉刷新，when 触发刷新手势，then 重新加载任务列表', async () => {
+  // Given: 儿童已登录
+  const family = await createFamily();
+  const parent = await createParent({ familyId: family.id });
+  const child = await createChild({ familyId: family.id });
+
+  const today = new Date().toISOString().split('T')[0];
+  await createTask({
+    childId: child.id,
+    title: '每日刷牙',
+    status: 'pending',
+    date: today
+  });
+
+  // When: 下拉刷新
+  const response = await request(app)
+    .post('/child/dashboard/refresh')
+    .set('Cookie', await createSession(child));
+
+  // Then: 重新加载任务列表
+  expect(response.status).toBe(200);
+  expect(response.body.tasks).toHaveLength(1);
+  expect(response.body.tasks[0].title).toBe('每日刷牙');
+});
+```
+
+**Test Coverage:**
+- Unit tests for TaskGridList component
+- Unit tests for ProgressHeader component
+- Integration tests for API endpoints
+- Integration tests for state management (Zustand)
+- E2E tests for complete user journey (Playwright)
+- Performance tests (page load <2s)
+- Gamification tests (sounds, animations, celebrations)
+
+### Security & Compliance
+
+**COPPA/GDPR Compliance:**
+- Child PIN code used for authentication (secure entry)
+- No sensitive data in client state
+- Child cannot access other children's tasks
+
+**RBAC:**
+- Only Child role can access child dashboard
+- Child can only view their own tasks
+- Parent cannot access child's dashboard (use parent dashboard instead)
+
+**Data Integrity:**
+- Child identity validated via Better-Auth
+- Task access scoped to logged-in child
+- No data leakage between siblings
+
+### File Length Constraint
+
+**MAX 800 lines per file** - If component exceeds limit, split into:
+- task-grid-list.tsx (main grid list)
+- task-card-child.tsx (child-specific card)
+- progress-header.tsx (progress display)
+- child-dashboard.tsx (dashboard page)
+
+### Project Structure Notes
+
+**Alignment:**
+- Follows unified project structure (paths, modules, naming)
+- Database queries in lib/db/queries/tasks.ts (per-table file)
+- State management in lib/store/ (Zustand store)
+- Function-based queries (NOT Repository pattern)
+- BDD development (Given-When-Then, tests BEFORE implementation)
+
+**Dependencies:**
+- Depends on Story 2.1: Parent Creates Task Plan Template (task_plans table)
+- Depends on Story 2.4: System Auto-Generates Task Instances (tasks table)
+- Prerequisite: Users table, Families table exist (Epic 1)
+- Next story: Story 2.9 (Child Marks Task Complete) - adds completion interaction
+
+**Cross-Story Impact:**
+- Story 2.9 (Child Marks Task Complete) - updates task status in this list
+- Story 2.10 (Parent Approves Task Completion) - task status changes to approved
+- Story 2.14 (Real-Time Approval Notification) - auto-refresh updates list
+
+### Previous Story Intelligence
+
+**From Story 2.1 (Parent Creates Task Plan Template):**
+- TaskCard component created
+- Task creation logic established
+- Learnings: Use Drizzle ORM queries, avoid native SQL; follow per-table query file pattern
+
+**From Story 2.4 (System Auto-Generates Task Instances):**
+- tasks table created with schema
+- Task status field established
+- Learnings: Task generation is background service, status management is critical
+
+### References
+
+- Source: docs/TECH_SPEC.md - Technical specifications
+- Source: docs/TECH_SPEC_DATABASE.md - Database schema
+- Source: docs/TECH_SPEC_BUN.md - Bun runtime requirements
+- Source: docs/TECH_SPEC_BDD.md - BDD development guidelines
+- Source: _bmad-output/planning-artifacts/epics.md#Story-2.8 - Story requirements
+- Source: _bmad-output/planning-artifacts/architecture.md#ADR-5 - Database query layer architecture
+- Source: _bmad-output/planning-artifacts/ux-design-specification.md - UI/UX specifications (child-end design, tablet optimization)
+- Source: _bmad-output/implementation-artifacts/2-1-parent-creates-task-plan-template.md - Story 2.1 context
+- Source: _bmad-output/implementation-artifacts/2-4-system-auto-generates-task-instances.md - Story 2.4 context
+
+### Dev Agent Record
+
+### Agent Model Used
+
+glm-4.7
+
+### Debug Log References
+
+### Completion Notes List
+
+### File List
+
+- `app/(child)/dashboard/page.tsx` - Child dashboard page
+- `app/(child)/layout.tsx` - Child layout (gamified theme)
+- `components/features/task-grid-list.tsx` - Task grid list component
+- `components/features/task-card.tsx` - Extend for child-specific features
+- `components/features/progress-header.tsx` - Progress display component
+- `components/dialogs/task-detail-dialog.tsx` - Task detail dialog
+- `lib/store/task-store.ts` - Zustand store for task state
+- `lib/db/queries/tasks.ts` - Extend with child queries
+- `tests/integration/child-task-list.spec.ts` - Integration tests
+- `tests/unit/task-grid-list.spec.ts` - Unit tests for grid list
+- `tests/e2e/child-task-list.spec.ts` - E2E tests
