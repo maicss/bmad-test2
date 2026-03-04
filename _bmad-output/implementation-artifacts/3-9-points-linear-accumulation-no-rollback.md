@@ -62,10 +62,67 @@ So that 积分系统简单透明，家长和儿童都能理解。
 ### Architecture Patterns and Constraints
 
 **Database Schema Design:**
+
 - **MUST** create `points_history` table to track every points transaction permanently
 - **MUST** create `point_balances` table to store current balance per user
 - **MUST** use Drizzle ORM for all database operations (NO raw SQL)
 - **MUST** follow lib/db/queries/ directory structure (create `lib/db/queries/points.ts`)
+
+**Database Schema Definitions:**
+
+```typescript
+// database/schema/points-history.ts
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+import { children } from './children';
+
+export const pointsHistory = sqliteTable('points_history', {
+  id: text('id').primaryKey(),
+  childId: text('child_id').notNull().references(() => children.id, { onDelete: 'cascade' }),
+  taskId: text('task_id'), // Optional: NULL for manual adjustments or redemptions
+  type: text('type').notNull(), // 'task_reward', 'manual_adjust', 'wish_redemption'
+  amount: integer('amount').notNull(), // Can be positive or negative
+  balance: integer('balance').notNull(), // Balance after this transaction
+  reason: text('reason'), // Optional: Task name or adjustment reason
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  // Index for querying child's history
+  index('idx_points_history_child_id').on(table.childId),
+  // Index for querying by type
+  index('idx_points_history_type').on(table.type),
+  // Index for time-range queries
+  index('idx_points_history_created_at').on(table.createdAt),
+  // Composite index for child + time queries (common pattern)
+  index('idx_points_history_child_created').on(table.childId, table.createdAt),
+]);
+
+// database/schema/point-balances.ts
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { children } from './children';
+
+export const pointBalances = sqliteTable('point_balances', {
+  id: text('id').primaryKey(),
+  childId: text('child_id').notNull().references(() => children.id, { onDelete: 'cascade' }),
+  balance: integer('balance').notNull().default(0), // Current balance (can be negative)
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  // Unique index: one balance record per child
+  index('idx_point_balances_child_id_unique').on(table.childId),
+  // Index for balance queries
+  index('idx_point_balances_child_id').on(table.childId),
+]);
+
+// Table Relationships:
+// - pointsHistory.childId → children.id (Foreign Key, cascade delete)
+// - pointBalances.childId → children.id (Foreign Key, cascade delete)
+// - pointBalances is denormalized cache: balance = SUM(pointsHistory.amount) for each child
+// - pointBalances updated via triggers or application logic for performance
+
+// Query Patterns:
+// - Get current balance: SELECT * FROM point_balances WHERE child_id = ?
+// - Get history with pagination: SELECT * FROM points_history WHERE child_id = ? ORDER BY created_at DESC LIMIT 20
+// - Time range query: SELECT * FROM points_history WHERE child_id = ? AND created_at >= ? AND created_at <= ?
+```
 
 **Points Calculation Rules:**
 - Linear accumulation: `new_balance = old_balance + delta` where delta can be positive or negative
@@ -121,6 +178,67 @@ So that 积分系统简单透明，家长和儿童都能理解。
 
 **Detected Conflicts or Variances:**
 - None - this is a new feature, no conflicts with existing code
+
+**Story Responsibility - Base Infrastructure:**
+- **This story (3.9) provides**:
+  - Database table schemas: `points_history` and `point_balances`
+  - Core transaction utility functions: `addPoints()`, `deductPoints()`, `getBalance()`
+  - Atomic transaction implementation using Drizzle's `db.transaction()`
+  - These functions do NOT check task approval status (business logic)
+
+- **Other stories extend this base**:
+  - **Story 3.4**: Adds parent approval check before calling `addPoints()`
+  - **Story 3.5**: Calls `addPoints()` / `deductPoints()` for manual adjustments
+  - **Epic 4**: Calls `deductPoints()` for wish redemptions
+  - Each story adds its own business logic (approval check, validation, etc.) before calling base functions
+
+**Example Integration Pattern:**
+```typescript
+// This story (3.9) provides - lib/services/points-calculator.ts:
+export async function addPointsToChild(
+  childId: string,
+  amount: number,
+  reason: string,
+  taskId?: string
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    // Update balance
+    const currentBalance = await getBalance(tx, childId);
+    const newBalance = currentBalance + amount;
+
+    await tx.update(pointBalances)
+      .set({ balance: newBalance, updatedAt: new Date() })
+      .where(eq(pointBalances.childId, childId));
+
+    // Insert history record
+    await tx.insert(pointsHistory).values({
+      id: uuid(),
+      childId,
+      taskId,
+      type: 'task_reward',
+      amount,
+      balance: newBalance,
+      reason,
+      createdAt: new Date(),
+    });
+  });
+}
+
+// Story 3.4 extends - app/api/tasks/[id]/approve/route.ts:
+export async function POST(req: NextRequest, { params }) {
+  // Parent approval check (business logic)
+  const task = await getTask(params.id);
+  if (task.status !== 'pending_approval') {
+    throw new Error('Task not ready for approval');
+  }
+
+  // Call Story 3.9's base function
+  await addPointsToChild(childId, task.points, `任务奖励：${task.title}`, task.id);
+
+  // Update task status
+  await updateTaskStatus(task.id, 'completed');
+}
+```
 
 ### References
 

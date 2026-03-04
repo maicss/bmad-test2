@@ -92,6 +92,63 @@ So that 激励儿童持续努力，增强成就感。
 - `lib/db/schema.ts` - MODIFY: Add notified_milestones JSON field to users table
 - `database/migrations/` - ADD: Migration script for notified_milestones field
 
+**Milestone Tracking Logic:**
+
+```typescript
+// notified_milestones field format (JSON array in users table)
+// Example: [100, 500, 1000]
+export type NotifiedMilestones = number[];
+
+// Milestone thresholds definition
+export const MILESTONE_THRESHOLDS = [100, 500, 1000, 2000, 5000] as const;
+export const MILESTONE_TITLES = {
+  100: "小小起步",
+  500: "初露头角",
+  1000: "积分达人",
+  2000: "超级明星",
+  5000: "传奇人物",
+} as const;
+
+// Milestone check logic
+function checkMilestoneAchievement(
+  previousBalance: number,
+  newBalance: number,
+  notifiedMilestones: NotifiedMilestones
+): number[] {
+  const newMilestones: number[] = [];
+
+  // Check all milestone thresholds
+  for (const threshold of MILESTONE_THRESHOLDS) {
+    // Skip if already notified
+    if (notifiedMilestones.includes(threshold)) {
+      continue;
+    }
+
+    // Check if balance crossed threshold (in either direction)
+    // Example: balance went from 95 to 150 → crossed 100
+    // Example: balance went from 95 to 150 → also crossed 500
+    const wasBelowThreshold = previousBalance < threshold;
+    const isNowAtOrAboveThreshold = newBalance >= threshold;
+
+    if (wasBelowThreshold && isNowAtOrAboveThreshold) {
+      newMilestones.push(threshold);
+    }
+  }
+
+  return newMilestones;
+}
+
+// Boundary Cases Handling:
+// 1. Crossing multiple milestones: Notify all crossed milestones
+//    Example: 95 → 150 → Notify [100, 500]
+// 2. Going down and up again: No re-notification
+//    Example: 550 → 480 → 520 → No notification for 500 (already notified)
+// 3. Direct jump to high milestone: Notify all crossed milestones
+//    Example: 50 → 1200 → Notify [100, 500, 1000]
+// 4. Exact milestone match: Notify once
+//    Example: 99 → 100 → Notify [100]
+```
+
 **Database Queries (EXTEND - lib/db/queries/users.ts):**
 - `getNotifiedMilestones(userId)` - Fetch user's notified milestones array
 - `updateNotifiedMilestones(userId, milestones)` - Update notified milestones

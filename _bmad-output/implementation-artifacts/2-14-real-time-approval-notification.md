@@ -129,6 +129,44 @@ export const notifications = sqliteTable('notifications', {
 - TypeScript strict mode (NO `any` type, NO @ts-ignore)
 - Event-driven architecture for real-time notifications
 
+**Offline Queue Architecture:**
+```typescript
+// Offline queue configuration
+export const OFFLINE_QUEUE_CONFIG = {
+  MAX_CAPACITY: 100, // Maximum notifications in queue
+  RETENTION_DAYS: 7, // Queue retention period (7 days)
+  DEDUP_WINDOW_MS: 5000, // Deduplication window (5 seconds)
+  MAX_RETRY_ATTEMPTS: 3, // Retry attempts for failed sends
+  RETRY_DELAY_MS: [1000, 5000, 15000], // Exponential backoff
+} as const;
+
+// Queue capacity limit
+- When queue reaches MAX_CAPACITY (100 notifications):
+  - Remove oldest notification (FIFO)
+  - Log warning: "Offline queue at capacity, removing oldest notification"
+  - Preserve high-priority notifications (task_approval_pending)
+
+// Queue retention period
+- Notifications older than 7 days are automatically removed:
+  - Cleanup job runs daily at 02:00 UTC
+  - Deletes notifications where `createdAt < NOW() - 7 days`
+  - Log removed notifications for audit trail
+
+// Deduplication logic
+- Prevent duplicate notifications within 5 seconds:
+  - Key: `{userId} + {type} + {taskId}`
+  - Check queue for existing notification with same key
+  - If duplicate found, skip new notification
+  - Example: If child marks same task complete twice in 3 seconds, only send one notification
+
+// Notification delivery status
+- Each notification has delivery status:
+  - 'queued' - Waiting for device online
+  - 'delivered' - Successfully sent
+  - 'failed' - Failed after MAX_RETRY_ATTEMPTS
+- Failed notifications are logged for admin review
+```
+
 ### Project Structure Notes
 
 **Alignment with unified project structure:**
@@ -169,6 +207,137 @@ export const notifications = sqliteTable('notifications', {
 - BDD tests for notification flow (Given-When-Then format)
 - Cross-browser compatibility testing (Chrome, Firefox, iOS Safari)
 - Permission flow testing with different user states
+
+### Testing Requirements
+
+**BDD Format (GIVEN-WHEN-THEN):**
+```typescript
+// tests/integration/real-time-approval-notification.spec.ts
+
+it('given 孩子标记任务完成，when 状态变为待审批，then 3秒内推送通知给家长', async () => {
+  // Given: 孩子标记任务完成
+  const family = await createFamily();
+  const parent = await createParent({ familyId: family.id });
+  const child = await createChild({ familyId: family.id });
+  const task = await createTask({
+    childId: child.id,
+    status: 'pending'
+  });
+
+  // Mock家长设备推送订阅
+  const parentSubscription = await createPushSubscription(parent.id);
+
+  // When: 孩子标记任务完成
+  const startTime = Date.now();
+  await completeTask(task.id, child.id);
+
+  // Then: 3秒内家长收到推送通知
+  await waitFor(() => {
+    const notifications = await getPushNotifications(parentSubscription.endpoint);
+    expect(notifications.length).toBeGreaterThan(0);
+  }, 3000); // 3秒SLA
+
+  const elapsedTime = Date.now() - startTime;
+  expect(elapsedTime).toBeLessThan(3000); // 确保在3秒内
+
+  // And: 通知内容正确
+  const notification = notifications[0];
+  expect(notification.title).toBe('任务待审批');
+  expect(notification.body).toContain(child.name);
+  expect(notification.body).toContain(task.title);
+});
+
+it('given 家长设备离线，when 孩子标记任务完成，then 通知存储在服务器，上线后同步', async () => {
+  // Given: 家长设备离线
+  const family = await createFamily();
+  const parent = await createParent({ familyId: family.id });
+  const child = await createChild({ familyId: family.id });
+  const task = await createTask({ childId: child.id, status: 'pending' });
+  const offlineSubscription = await createPushSubscription(parent.id, offline: true);
+
+  // When: 孩子标记任务完成
+  await completeTask(task.id, child.id);
+
+  // Then: 通知存储在服务器（队列中）
+  const queuedNotifications = await getQueuedNotifications(parent.id);
+  expect(queuedNotifications).toHaveLength(1);
+  expect(queuedNotifications[0].delivered).toBe(false);
+
+  // And: 离线设备不收到通知
+  const offlineNotifications = await getPushNotifications(offlineSubscription.endpoint);
+  expect(offlineNotifications).toHaveLength(0);
+
+  // When: 家长设备重新上线
+  await simulateOnline(parent.id);
+  await syncOfflineQueue();
+
+  // Then: 通知推送到设备
+  const onlineNotifications = await getPushNotifications(offlineSubscription.endpoint);
+  expect(onlineNotifications).toHaveLength(1);
+  expect(onlineNotifications[0].delivered).toBe(true);
+});
+
+it('given 家长收到审批通知，when 点击通知，then 导航到审批页面', async () => {
+  // Given: 家长收到审批通知
+  const family = await createFamily();
+  const parent = await createParent({ familyId: family.id });
+  const child = await createChild({ familyId: family.id });
+  const task = await createTask({ childId: child.id, status: 'pending_approval' });
+
+  const notification = await sendApprovalNotification({
+    taskId: task.id,
+    childId: child.id,
+    parentId: parent.id
+  });
+
+  // When: 家长点击通知
+  await simulateNotificationClick(notification, parent.id);
+
+  // Then: 导航到审批页面
+  expect(currentPath(parent.id)).toBe(`/approvals/${task.id}`);
+  expect(taskApprovalVisible()).toBe(true);
+});
+
+it('given 站内消息通知，when 孩子标记任务完成，then 2-3秒内站内消息更新', async () => {
+  // Given: 家长已登录应用
+  const family = await createFamily();
+  const parent = await createParent({ familyId: family.id });
+  const child = await createChild({ familyId: family.id });
+  const task = await createTask({ childId: child.id, status: 'pending' });
+  await login(parent);
+
+  // When: 孩子标记任务完成
+  const startTime = Date.now();
+  await completeTask(task.id, child.id);
+
+  // Then: 2-3秒内站内消息更新
+  await waitFor(() => {
+    const notifications = await getInAppNotifications(parent.id);
+    expect(notifications).toHaveLength(1);
+  }, 3000); // 2-3秒轮询
+
+  const elapsedTime = Date.now() - startTime;
+  expect(elapsedTime).toBeLessThan(3000);
+
+  // And: 未读计数增加
+  const unreadCount = await getUnreadNotificationCount(parent.id);
+  expect(unreadCount).toBe(1);
+});
+```
+
+**Test Coverage:**
+- Real-time notification delivery (3-second SLA with timing assertions)
+- PWA push notification sending and handling
+- In-app notification polling (2-3 second intervals)
+- Offline queue and sync behavior
+- Notification click navigation to approval page
+- Notification deduplication (same event multiple triggers)
+- Notification delivery status tracking
+- Service Worker push handler extension
+- Notification payload builder
+- Parent device subscription lookup
+- Task status change event listener
+```
 
 ### References
 

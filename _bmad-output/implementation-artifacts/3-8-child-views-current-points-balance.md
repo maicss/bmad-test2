@@ -54,6 +54,116 @@ so that 我知道自己有多少积分可以用于兑换愿望。
 - UI System: Tailwind CSS 4 + Shadcn UI 3.7.0+
 - Real-time: Polling mechanism (2-3 second interval, per ADR-1)
 
+**Polling Implementation Details:**
+
+```typescript
+// lib/hooks/use-points-balance.ts
+import { useEffect, useRef, useState } from 'react';
+import { getPointsBalance } from '@/lib/db/queries/points';
+
+export function usePointsBalance(childId: string, pollInterval: number = 3000) {
+  const [balance, setBalance] = useState<number>(0);
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Network status detection
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Polling mechanism with network awareness
+  useEffect(() => {
+    // Don't poll if offline
+    if (!isOnline) {
+      setError(new Error('网络连接已断开'));
+      setIsLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    let pollTimeoutId: NodeJS.Timeout;
+
+    const fetchBalance = async () => {
+      try {
+        setIsLoading(true);
+        const result = await getPointsBalance(childId);
+        if (mounted) {
+          setBalance(result);
+          setError(null);
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(err as Error);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Initial fetch
+    fetchBalance();
+
+    // Polling with adaptive interval
+    const startPolling = () => {
+      pollTimeoutId = setTimeout(async () => {
+        if (navigator.onLine) {
+          await fetchBalance();
+        }
+        startPolling(); // Continue polling
+      }, pollInterval);
+    };
+
+    startPolling();
+
+    // Cleanup
+    return () => {
+      mounted = false;
+      clearTimeout(pollTimeoutId);
+    };
+  }, [childId, isOnline, pollInterval]);
+
+  return { balance, isOnline, isLoading, error };
+}
+```
+
+**Performance Optimization Strategies:**
+
+```typescript
+// Performance optimizations for multiple children online simultaneously
+export const POLLING_CONFIG = {
+  // Adaptive polling interval based on network conditions
+  interval: 3000, // Default: 3 seconds (NFR4)
+
+  // Backoff strategy for failed requests
+  backoff: {
+    base: 3000,
+    max: 10000,
+    multiplier: 2,
+  },
+
+  // Debounce for rapid balance changes
+  debounceMs: 500,
+
+  // Request deduplication (prevent duplicate in-flight requests)
+  requestCache: new Map<string, Promise<number>>(),
+} as const;
+
+// Server-side rate limiting (API endpoint)
+// - Implement request throttling per user
+// - Cache recent balance queries for 1 second
+// - Return 429 Too Many Requests if > 5 req/sec
+```
+
 **Database Schema References:**
 - `point-balances` table: stores child's current points balance
 - `points` table: points history/ledger for tracking changes
