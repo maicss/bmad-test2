@@ -21,7 +21,9 @@ if (!PORT) {
 
 const port = parseInt(PORT, 10);
 if (isNaN(port) || port < 1024 || port > 65535) {
-  console.error(`❌ Error: PORT must be a valid port number (1024-65535), got: ${PORT}`);
+  console.error(
+    `❌ Error: PORT must be a valid port number (1024-65535), got: ${PORT}`,
+  );
   process.exit(1);
 }
 
@@ -30,14 +32,17 @@ console.log(`🚀 Starting Next.js dev server on port ${port}...`);
 console.log("");
 
 // Start Next.js dev server using Bun subprocess
-const nextProcess = Bun.spawn(['bun', 'next', 'dev', '-p', port.toString()], {
-  stdout: 'inherit',
-  stderr: 'inherit',
-  env: {
-    ...process.env,
-    PORT: port.toString(),
+const nextProcess = Bun.spawn(
+  ["bun", "--bun", "next", "dev", "-p", port.toString()],
+  {
+    stdout: "inherit",
+    stderr: "inherit",
+    env: {
+      ...process.env,
+      PORT: port.toString(),
+    },
   },
-});
+);
 
 // Wait for process to exit
 await nextProcess.exited;

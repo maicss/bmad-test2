@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# Configuration (OS is determined by script type - this is Bash for Unix/Linux/macOS)
+PORT=${PORT}
+EXPECTED_TITLE="${PAGE_TITLE}"
+FORCE_OCCUPY=${FORCE_OCCUPY}
+PACKAGE_MANAGER="${PACKAGE_MANAGER}"
+PROJECT_TYPE="${PROJECT_TYPE}"
+RUNTIME="${RUNTIME}"
+
+# Function to get PID using port
+get_pid_by_port() {
+    local port=$1
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -ti:$port 2>/dev/null
+    else
+        netstat -tulnp 2>/dev/null | grep ":$port " | awk '{print $7}' | cut -d'/' -f1
+    fi
+}
+
+# Function to get page title via curl
+get_page_title() {
+    local port=$1
+    local html=$(curl -s "http://localhost:$port" 2>/dev/null)
+    if echo "$html" | grep -q "<title>"; then
+        echo "$html" | sed -n 's/.*<title>\([^<]*\)<\/title>.*/\1/p' | head -1 | xargs
+    fi
+}
+
+# Check if port is in use
+EXISTING_PID=$(get_pid_by_port $PORT)
+
+if [ -n "$EXISTING_PID" ]; then
+    echo "⚠ Port $PORT is in use by process $EXISTING_PID"
+
+    # Get the actual page title
+    ACTUAL_TITLE=$(get_page_title $PORT)
+
+    if [ -n "$ACTUAL_TITLE" ]; then
+        echo "✓ Checking page title..."
+        echo "  Actual: '$ACTUAL_TITLE'"
+        echo "  Expected: '$EXPECTED_TITLE'"
+
+        # Check if titles match (mutual inclusion)
+        if [[ "$ACTUAL_TITLE" == *"$EXPECTED_TITLE"* ]] || [[ "$EXPECTED_TITLE" == *"$ACTUAL_TITLE"* ]]; then
+            echo "✓ Title matches: '$ACTUAL_TITLE' (expected)"
+            echo "✓ Correct server already running"
+            exit 0
+        else
+            echo "✗ Title mismatch: '$ACTUAL_TITLE' != '$EXPECTED_TITLE'"
+            echo "⚠ Another process is using this port"
+        fi
+    fi
+
+    # Handle conflict
+    if [ "$FORCE_OCCUPY" = "true" ]; then
+        echo "✓ Force occupy enabled, killing process $EXISTING_PID..."
+        kill -9 $EXISTING_PID 2>/dev/null
+        sleep 1
+    else
+        echo "✗ Port $PORT is occupied by another process"
+        echo "  Enable forceOccupy or manually free the port"
+        exit 1
+    fi
+else
+    echo "✓ Port $PORT is free"
+fi
+
+# Determine dev command (same for all types)
+DEV_COMMAND="dev"
+
+# Determine runner
+RUNNER=""
+case $PACKAGE_MANAGER in
+    npm)
+        RUNNER="npm run"
+        ;;
+    yarn)
+        RUNNER="yarn"
+        ;;
+    pnpm)
+        RUNNER="pnpm"
+        ;;
+    *)
+        RUNNER="npm run"
+        ;;
+esac
+
+# Determine runtime prefix
+RUNTIME_PREFIX=""
+case $RUNTIME in
+    bun)
+        RUNTIME_PREFIX="bun"
+        ;;
+    deno)
+        RUNTIME_PREFIX="deno run"
+        ;;
+esac
+
+# Start dev server
+echo "✓ Starting dev server..."
+
+if [ -n "$RUNTIME_PREFIX" ]; then
+    COMMAND="$RUNTIME_PREFIX $RUNNER $DEV_COMMAND"
+else
+    COMMAND="$RUNNER $DEV_COMMAND"
+fi
+
+echo "  Running: $COMMAND"
+
+# Start in background
+nohup $COMMAND > /dev/null 2>&1 &
+echo "✓ Dev server started (PID: $!)"

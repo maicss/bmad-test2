@@ -1,0 +1,114 @@
+# Configuration (OS is determined by script type - this is PowerShell for Windows)
+$Port = ${PORT}
+$ExpectedTitle = "${PAGE_TITLE}"
+$ForceOccupy = $${FORCE_OCCUPY}
+$PackageManager = "${PACKAGE_MANAGER}"
+$ProjectType = "${PROJECT_TYPE}"
+$Runtime = "${RUNTIME}"
+
+# Function to get process using port
+function Get-ProcessByPort {
+    param([int]$Port)
+    $netstat = netstat -ano | Select-String ":$Port\s.*LISTENING"
+    if ($netstat) {
+        $pid = ($netstat -split '\s+')[-1]
+        return [int]$pid
+    }
+    return $null
+}
+
+# Function to get page title via curl
+function Get-PageTitle {
+    param([int]$Port)
+    try {
+        $response = curl -s "http://localhost:$Port" -UseBasicParsing
+        if ($response -match '<title>(.*?)</title>') {
+            return $matches[1].Trim()
+        }
+    } catch {
+        return $null
+    }
+    return $null
+}
+
+# Check if port is in use
+$existingPid = Get-ProcessByPort -Port $Port
+
+if ($existingPid) {
+    Write-Host "⚠ Port $Port is in use by process $existingPid"
+
+    # Get the actual page title
+    $actualTitle = Get-PageTitle -Port $Port
+
+    if ($actualTitle) {
+        Write-Host "✓ Checking page title..."
+        Write-Host "  Actual: '$actualTitle'"
+        Write-Host "  Expected: '$ExpectedTitle'"
+
+        # Check if titles match (mutual inclusion)
+        $titleMatches = ($actualTitle -like "*$ExpectedTitle*") -or ($ExpectedTitle -like "*$actualTitle*")
+
+        if ($titleMatches) {
+            Write-Host "✓ Title matches: '$actualTitle' (expected)"
+            Write-Host "✓ Correct server already running"
+            exit 0
+        } else {
+            Write-Host "✗ Title mismatch: '$actualTitle' != '$ExpectedTitle'"
+            Write-Host "⚠ Another process is using this port"
+        }
+    }
+
+    # Handle conflict
+    if ($ForceOccupy) {
+        Write-Host "✓ Force occupy enabled, killing process $existingPid..."
+        Stop-Process -Id $existingPid -Force
+        Start-Sleep -Seconds 1
+    } else {
+        Write-Host "✗ Port $Port is occupied by another process"
+        Write-Host "  Enable forceOccupy or manually free the port"
+        exit 1
+    }
+} else {
+    Write-Host "✓ Port $Port is free"
+}
+
+# Determine dev command
+$DevCommand = switch ($ProjectType) {
+    "nextjs" { "dev" }
+    "nuxtjs" { "dev" }
+    "vite" { "dev" }
+    default { "dev" }
+}
+
+# Determine runner
+$Runner = switch ($PackageManager) {
+    "npm" { "npm run" }
+    "yarn" { "yarn" }
+    "pnpm" { "pnpm" }
+    default { "npm run" }
+}
+
+# Determine runtime prefix
+$RuntimePrefix = switch ($Runtime) {
+    "bun" { "bun" }
+    "deno" { "deno run" }
+    default { "" }
+}
+
+# Start dev server
+Write-Host "✓ Starting dev server..."
+$Command = if ($RuntimePrefix) {
+    "$RuntimePrefix $Runner $DevCommand"
+} else {
+    "$Runner $DevCommand"
+}
+
+Write-Host "  Running: $Command"
+
+# Start in background
+$job = Start-Job -ScriptBlock {
+    param($Cmd)
+    Invoke-Expression $Cmd
+} -ArgumentList $Command
+
+Write-Host "✓ Dev server started (Job ID: $($job.Id))"
