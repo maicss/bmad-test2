@@ -197,11 +197,16 @@ it('given 家长已登录，when 查询任务列表，then 返回该家庭的任
 
 ### 测试数据
 
-| 角色 | 姓名 | 手机号 | PIN | 密码 |
-|------|------|--------|-----|------|
-| Admin | admin | 13800000001 | - | 1111 |
-| Parent | Zhang 1 | 13800000100 | - | 1111 |
-| Child | Zhang 3 | - | 1111 | - |
+> 测试用户初始化: `bun run database/seed-test-users.ts`
+
+| 角色 | 姓名 | 手机号 | PIN | 密码 | 家庭 |
+|------|------|--------|-----|------|------|
+| Admin | admin | 13800000001 | - | 1111 | - |
+| Parent | Zhang 1 (Primary) | 13800000100 | - | 1111 | family-001 |
+| Parent | Zhang 2 (Secondary) | 12800000200 | - | 1111 | family-001 |
+| Child | Zhang 3 | - | 1111 | - | family-001 |
+| Parent | Li 1 (Primary) | 13800000300 | - | 1111 | family-002 |
+| Parent | Li 2 (Secondary) | 13800000400 | - | 1111 | family-002 |
 
 ---
 

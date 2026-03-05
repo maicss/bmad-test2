@@ -1,8 +1,3 @@
-技术栈
-
-使用 better-auth + bun.sqlite + drizzle 初始化必要的数据库。
-
-之后开始插入测试用的数：
 初始化账户
 
 | Role       | Last Name | First Name | Gender | Phone       | PIN  | Password | Family ID  | Description          |

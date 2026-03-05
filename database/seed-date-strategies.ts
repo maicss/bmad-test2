@@ -12,32 +12,55 @@
  * - 国庆节: 10月1日-7日放假, 9月20日、10月10日(周六)上班
  */
 
-// @ts-ignore - bun:sqlite is Bun native module
 import type { Database } from "bun:sqlite";
 
 // ============================================================
 // 2026年国假数据
 // ============================================================
 
-const HOLIDAYS_2026 = {
+const HOLIDAYS_2026: { holidays: string[]; workdays: string[] } = {
   // 放假日期 (YYYY-MM-DD 格式)
   holidays: [
     // 元旦 (1月1日-3日)
-    "2026-01-01", "2026-01-02", "2026-01-03",
+    "2026-01-01",
+    "2026-01-02",
+    "2026-01-03",
     // 春节 (2月15日-23日)
-    "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19",
-    "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23",
+    "2026-02-15",
+    "2026-02-16",
+    "2026-02-17",
+    "2026-02-18",
+    "2026-02-19",
+    "2026-02-20",
+    "2026-02-21",
+    "2026-02-22",
+    "2026-02-23",
     // 清明节 (4月4日-6日)
-    "2026-04-04", "2026-04-05", "2026-04-06",
+    "2026-04-04",
+    "2026-04-05",
+    "2026-04-06",
     // 劳动节 (5月1日-5日)
-    "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05",
+    "2026-05-01",
+    "2026-05-02",
+    "2026-05-03",
+    "2026-05-04",
+    "2026-05-05",
     // 端午节 (6月19日-21日)
-    "2026-06-19", "2026-06-20", "2026-06-21",
+    "2026-06-19",
+    "2026-06-20",
+    "2026-06-21",
     // 中秋节 (9月25日-27日)
-    "2026-09-25", "2026-09-26", "2026-09-27",
+    "2026-09-25",
+    "2026-09-26",
+    "2026-09-27",
     // 国庆节 (10月1日-7日)
-    "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05",
-    "2026-10-06", "2026-10-07",
+    "2026-10-01",
+    "2026-10-02",
+    "2026-10-03",
+    "2026-10-04",
+    "2026-10-05",
+    "2026-10-06",
+    "2026-10-07",
   ],
   // 调休上班日 (通常是周末)
   workdays: [
@@ -106,12 +129,12 @@ function generateDefaultDateStrategies(year: number): DateStrategyData[] {
   const dailyDates = allDates;
 
   // 2. 周末（不含国假）- 是周末但不在国假中，也不是调休上班日
-  const weekendDates = allDates.filter(d =>
-    isWeekend(d) && !holidaySet.has(d) && !workdaySet.has(d)
+  const weekendDates = allDates.filter(
+    (d) => isWeekend(d) && !holidaySet.has(d) && !workdaySet.has(d),
   );
 
   // 3. 工作日（不含国假）- 周一到周五，排除国假，包含调休上班日
-  const workdayNoHolidayDates = allDates.filter(d => {
+  const workdayNoHolidayDates = allDates.filter((d) => {
     if (holidaySet.has(d)) return false;
     if (workdaySet.has(d)) return true; // 调休上班日
     return !isWeekend(d); // 非周末的工作日
@@ -121,7 +144,7 @@ function generateDefaultDateStrategies(year: number): DateStrategyData[] {
   const workdayWithHolidayDates = workdayNoHolidayDates;
 
   // 5. 休息日（含国假）- 周末 + 国假
-  const restDayWithHolidayDates = allDates.filter(d => {
+  const restDayWithHolidayDates = allDates.filter((d) => {
     if (holidaySet.has(d)) return true;
     if (workdaySet.has(d)) return false; // 排除调休上班日
     return isWeekend(d);
@@ -203,9 +226,11 @@ export function seedDefaultDateStrategies(db: Database): void {
     const year = 2026;
 
     // 检查是否已存在默认策略
-    const existingStrategies = db.query(
-      `SELECT id FROM date_strategy WHERE id LIKE 'default-%' AND year = ?`
-    ).all(year) as { id: string }[];
+    const existingStrategies = db
+      .query(
+        `SELECT id FROM date_strategy WHERE id LIKE 'default-%' AND year = ?`,
+      )
+      .all(year) as { id: string }[];
 
     if (existingStrategies.length > 0) {
       console.log(`✅ 默认日期策略已存在，跳过初始化 (year: ${year})`);
@@ -232,13 +257,15 @@ export function seedDefaultDateStrategies(db: Database): void {
         strategy.copyCount,
         strategy.createdBy,
         Date.now(),
-        Date.now()
+        Date.now(),
       );
       const daysCount = strategy.dates.split(",").length;
       console.log(`  ✓ 已创建策略: ${strategy.name} (${daysCount} 天)`);
     }
 
-    console.log(`✅ 默认日期策略初始化完成，共创建 ${strategies.length} 条记录`);
+    console.log(
+      `✅ 默认日期策略初始化完成，共创建 ${strategies.length} 条记录`,
+    );
   } catch (error) {
     console.error("❌ 默认日期策略初始化失败:", error);
     // 不抛出异常，允许应用继续启动
