@@ -1,0 +1,8 @@
+{
+  "port": 3344,
+  "pageTitle": "Family Reward - 家庭行为管理游戏平台",
+  "forceOccupy": true,
+  "packageManager": "bun",
+  "projectType": "nextjs",
+  "runtime": "bun"
+}
