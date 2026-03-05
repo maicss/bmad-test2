@@ -158,3 +158,71 @@ export type NewDeviceLock = typeof deviceLocks.$inferInsert;
 
 // Alias for Better-Auth compatibility
 export const verifications = verification;
+
+// Task Plans table (Story 2.1)
+// Stores task plan templates created by parents
+export const taskPlans = sqliteTable('task_plans', {
+  id: text('id').primaryKey(),
+  family_id: text('family_id').notNull().references(() => families.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(), // Template name, max 50 chars
+  task_type: text('task_type', { enum: ['刷牙', '学习', '运动', '家务', '自定义'] }).notNull(),
+  points: integer('points').notNull(), // 1-100
+  rule: text('rule').notNull(), // JSON: stores date strategy (daily/weekly/weekdays/weekends/custom)
+  excluded_dates: text('excluded_dates'), // JSON array: optional date strings
+  reminder_time: text('reminder_time'), // Optional: time string (HH:mm format)
+  status: text('status', { enum: ['draft', 'published'] }).notNull().default('draft'),
+  created_by: text('created_by').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  created_at: integer('created_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
+  updated_at: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
+}, (table) => [
+  index('idx_task_plans_family_id').on(table.family_id),
+  index('idx_task_plans_status').on(table.status),
+  index('idx_task_plans_created_by').on(table.created_by),
+]);
+
+// Tasks table (Story 2.1, 2.4)
+// Stores concrete task instances generated from task plans
+export const tasks = sqliteTable('tasks', {
+  id: text('id').primaryKey(),
+  family_id: text('family_id').notNull().references(() => families.id, { onDelete: 'cascade' }),
+  task_plan_id: text('task_plan_id').references(() => taskPlans.id, { onDelete: 'cascade' }),
+  assigned_child_id: text('assigned_child_id').references(() => users.id, { onDelete: 'restrict' }),
+  title: text('title').notNull(),
+  task_type: text('task_type', { enum: ['刷牙', '学习', '运动', '家务', '自定义'] }).notNull(),
+  points: integer('points').notNull(),
+  scheduled_date: text('scheduled_date').notNull(), // YYYY-MM-DD format
+  status: text('status', { enum: ['pending', 'in_progress', 'completed', 'approved', 'rejected', 'skipped'] }).notNull().default('pending'),
+  completed_at: integer('completed_at', { mode: 'timestamp' }),
+  approved_by: text('approved_by').references(() => users.id, { onDelete: 'restrict' }),
+  approved_at: integer('approved_at', { mode: 'timestamp' }),
+  rejection_reason: text('rejection_reason'),
+  created_at: integer('created_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
+  updated_at: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
+}, (table) => [
+  index('idx_tasks_family_id').on(table.family_id),
+  index('idx_tasks_task_plan_id').on(table.task_plan_id),
+  index('idx_tasks_assigned_child_id').on(table.assigned_child_id),
+  index('idx_tasks_scheduled_date').on(table.scheduled_date),
+  index('idx_tasks_status').on(table.status),
+  index('idx_tasks_family_scheduled').on(table.family_id, table.scheduled_date),
+]);
+
+// Task Plan Children junction table (Story 2.1)
+// Stores many-to-many relationship between task plans and children
+export const taskPlanChildren = sqliteTable('task_plan_children', {
+  id: text('id').primaryKey(),
+  task_plan_id: text('task_plan_id').notNull().references(() => taskPlans.id, { onDelete: 'cascade' }),
+  child_id: text('child_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  created_at: integer('created_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
+}, (table) => [
+  index('idx_task_plan_children_plan_id').on(table.task_plan_id),
+  index('idx_task_plan_children_child_id').on(table.child_id),
+]);
+
+// Type exports for task-related tables
+export type TaskPlan = typeof taskPlans.$inferSelect;
+export type NewTaskPlan = typeof taskPlans.$inferInsert;
+export type Task = typeof tasks.$inferSelect;
+export type NewTask = typeof tasks.$inferInsert;
+export type TaskPlanChild = typeof taskPlanChildren.$inferSelect;
+export type NewTaskPlanChild = typeof taskPlanChildren.$inferInsert;
