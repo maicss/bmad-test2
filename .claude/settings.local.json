@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun test:*)",
+      "Bash(sed:*)",
+      "Bash(bun drizzle-kit:*)",
+      "Bash(bun)",
+      "Bash(find:*)",
+      "Bash(bun tsc:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(bunx shadcn@latest:*)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(bun add:*)",
+      "Bash(cat:*)",
+      "Bash(netstat:*)",
+      "Bash(wc:*)",
+      "Bash(stat:*)",
+      "Bash(head:*)",
+      "Bash(bunx tsc:*)",
+      "Bash(bun run:*)",
+      "Bash(bunx playwright:*)",
+      "Bash(NEXT_PUBLIC_APP_URL=http://localhost:3344 bunx playwright:*)",
+      "Bash(taskkill:*)",
+      "Bash(xargs -I {} taskkill //PID {} //F)",
+      "Bash(pkill:*)"
+    ]
+  }
+}
