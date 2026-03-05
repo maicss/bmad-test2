@@ -12,7 +12,7 @@
 
 import db from '@/lib/db';
 import { users, families, auditLogs } from '@/lib/db/schema';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { logUserAction } from './audit-logs';
 
@@ -242,11 +242,22 @@ export async function transferPrimaryParentRole(
     .where(eq(families.id, familyId))
     .returning();
 
+  // Get current transfer count
+  const currentParentData = await db
+    .select({
+      transfer_count: users.primary_parent_transfer_count,
+    })
+    .from(users)
+    .where(eq(users.id, currentPrimaryId))
+    .limit(1);
+
+  const currentCount = currentParentData[0]?.transfer_count || 0;
+
   // Update old primary parent's transfer count and timestamp
   await db
     .update(users)
     .set({
-      primary_parent_transfer_count: sql\`${users.primary_parent_transfer_count} + 1\`,
+      primary_parent_transfer_count: currentCount + 1,
       last_primary_transfer_at: new Date(),
     })
     .where(eq(users.id, currentPrimaryId));
