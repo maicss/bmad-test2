@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
-export default function RegisterPage() {
-  const [authMethod, setAuthMethod] = useState<'otp' | 'password'>('otp');
+function RegisterForm() {
+  const searchParams = useSearchParams();
+  const modeParam = searchParams.get('mode');
+
+  const [authMethod, setAuthMethod] = useState<'otp' | 'password'>(modeParam === 'password' ? 'password' : 'otp');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
@@ -11,6 +15,13 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+
+  // Expose function for testing
+  useEffect(() => {
+    (window as any).testHandleRegister = () => {
+      handleRegister();
+    };
+  }, [phone, otp, password, confirmPassword, authMethod]);
 
   // Handle OTP send
   const handleSendOTP = async () => {
@@ -45,8 +56,7 @@ export default function RegisterPage() {
   };
 
   // Handle registration
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRegister = async () => {
     setError('');
 
     // Validate phone
@@ -122,7 +132,7 @@ export default function RegisterPage() {
             <p className="text-gray-600 mt-2">创建家庭账户，开始管理孩子行为</p>
           </div>
 
-          <form onSubmit={handleRegister} className="space-y-6">
+          <div className="space-y-6">
             {/* Phone Input */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
@@ -150,7 +160,6 @@ export default function RegisterPage() {
                 <label className="flex items-center">
                   <input
                     type="radio"
-                    name="authMethod"
                     value="otp"
                     checked={authMethod === 'otp'}
                     onChange={(e) => setAuthMethod(e.target.value as 'otp' | 'password')}
@@ -162,7 +171,6 @@ export default function RegisterPage() {
                 <label className="flex items-center">
                   <input
                     type="radio"
-                    name="authMethod"
                     value="password"
                     checked={authMethod === 'password'}
                     onChange={(e) => setAuthMethod(e.target.value as 'otp' | 'password')}
@@ -266,13 +274,14 @@ export default function RegisterPage() {
 
             {/* Submit Button */}
             <button
-              type="submit"
+              type="button"
+              onClick={handleRegister}
               disabled={loading}
               className="w-full py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 disabled:bg-gray-400 transition-colors"
             >
               {loading ? '注册中...' : '注册'}
             </button>
-          </form>
+          </div>
 
           {/* Login Link */}
           <div className="mt-6 text-center text-sm text-gray-600">
@@ -284,5 +293,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }
