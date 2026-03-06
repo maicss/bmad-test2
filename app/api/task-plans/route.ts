@@ -7,7 +7,7 @@
  * POST /api/task-plans - Create a new task plan
  * GET /api/task-plans - List task plans for the authenticated user's family
  * PUT /api/task-plans/:id - Update a task plan
- * DELETE /api/task-plans/:id - Delete a task plan
+ * DELETE /api/task-plans?id=xxx - Delete a task plan
  *
  * Source: Story 2.1 AC #1-#3
  * Source: _bmad-output/project-context.md - RED LIST rules
@@ -319,13 +319,105 @@ export async function PUT(request: NextRequest) {
 }
 
 /**
- * DELETE /api/task-plans - Delete a task plan (not implemented in this story)
+ * DELETE /api/task-plans - Delete a task plan
  *
- * This will be implemented in Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
+ * Deletes a task plan and its associated tasks
+ *
+ * This endpoint is used for:
+ * - E2E test cleanup (deleting only test-created data, NOT entire tables)
+ * - Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
+ *
+ * Query parameters:
+ * - id: Task plan ID to delete
+ *
+ * Response:
+ * - 200: Task plan deleted successfully
+ * - 400: Missing task plan ID
+ * - 401: Unauthorized
+ * - 403: Forbidden (not a parent or not the creator)
+ * - 404: Task plan not found
+ * - 500: Server error
  */
 export async function DELETE(request: NextRequest) {
-  return NextResponse.json(
-    { error: '此功能尚未实现' },
-    { status: 501 }
-  );
+  try {
+    // Get session token from cookie
+    const sessionToken = request.cookies.get('better-auth.session_token')?.value;
+
+    if (!sessionToken) {
+      return NextResponse.json(
+        { error: '未登录' },
+        { status: 401 }
+      );
+    }
+
+    // Verify session
+    const session = await getSessionByToken(sessionToken);
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return NextResponse.json(
+        { error: '会话已过期，请重新登录' },
+        { status: 401 }
+      );
+    }
+
+    // Get user
+    const user = await getUserById(session.user_id);
+    if (!user) {
+      return NextResponse.json(
+        { error: '用户不存在' },
+        { status: 404 }
+      );
+    }
+
+    // Check if user is a parent
+    if (user.role !== 'parent') {
+      return NextResponse.json(
+        { error: '只有家长可以删除任务模板' },
+        { status: 403 }
+      );
+    }
+
+    // Get task plan ID from query parameter
+    const { searchParams } = new URL(request.url);
+    const taskPlanId = searchParams.get('id');
+
+    if (!taskPlanId) {
+      return NextResponse.json(
+        { error: '缺少任务模板ID' },
+        { status: 400 }
+      );
+    }
+
+    // Check if task plan exists and user can modify it
+    const canModify = await canUserModifyTaskPlan(taskPlanId, user.id, user.family_id!);
+    if (!canModify) {
+      return NextResponse.json(
+        { error: '无权删除此任务模板' },
+        { status: 403 }
+      );
+    }
+
+    // Delete associated tasks first (maintain referential integrity)
+    await deleteTasksByTaskPlan(taskPlanId);
+
+    // Delete the task plan
+    const deleted = await deleteTaskPlan(taskPlanId);
+
+    if (!deleted) {
+      return NextResponse.json(
+        { error: '任务模板不存在' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: '任务模板已删除',
+    });
+  } catch (error) {
+    console.error('Delete task plan error:', error);
+    return NextResponse.json(
+      { error: '删除任务模板失败，请稍后重试' },
+      { status: 500 }
+    );
+  }
 }

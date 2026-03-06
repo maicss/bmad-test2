@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || \`http://localhost:${process.env.PORT}\`;
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3344';
 
 
 
@@ -7,7 +7,7 @@ test.describe('Debug PIN Login Page', () => {
 
   test('检查页面是否加载', async ({ page }) => {
 
-    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
+    await page.goto(`${BASE_URL}/pin`);
 
     await page.waitForLoadState('networkidle');
 
@@ -29,7 +29,7 @@ test.describe('Debug PIN Login Page', () => {
 
   test('检查页面元素', async ({ page }) => {
 
-    await page.goto(`${process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`}/pin');
+    await page.goto(`${BASE_URL}/pin`);
 
     await page.waitForLoadState('networkidle');
 
@@ -74,4 +74,3 @@ test.describe('Debug PIN Login Page', () => {
   });
 
 });
-
