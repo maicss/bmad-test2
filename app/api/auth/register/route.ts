@@ -4,6 +4,14 @@ import { createFamily, getFamilyByPrimaryParent } from '@/lib/db/queries/familie
 import { logUserAction } from '@/lib/db/queries/audit-logs';
 import { isValidChinesePhone, isStrongPassword, maskPhone } from '@/lib/utils';
 import type { RegisterRequest, RegisterResponse } from '@/types/auth';
+import { createSession } from '@/lib/db/queries/sessions';
+import {
+  generateDeviceFingerprint,
+  detectDeviceType,
+  generateDeviceName,
+  generateSessionToken,
+  extractDeviceInfo,
+} from '@/lib/auth/device-fingerprint';
 
 /**
  * Parent Registration API Endpoint
@@ -13,6 +21,7 @@ import type { RegisterRequest, RegisterResponse } from '@/types/auth';
  *
  * Source: Story 1.1 Task 4
  * Source: Story 1.1 AC #1 - Phone format validation
+ * Source: Story 1.1 AC #3 - Create session and redirect to dashboard
  * Source: Story 1.1 AC #4 - Double storage (phone + phone_hash)
  * Source: Story 1.1 AC #5 - Error handling with Chinese messages
  * Source: Story 1.1 AC #7 - Audit logging with auth_method
@@ -70,8 +79,6 @@ export async function POST(req: NextRequest) {
 
         console.log(`[OTP-DEBUG] Verified: ${body.phone} with code ${body.otp}`);
       } else {
-        // For console/aliyun/tencent modes, would integrate with SMS provider
-        // For now, accept any 6-digit code in development
         console.log(`[OTP] Verifying ${body.phone} with code ${body.otp}`);
       }
 
@@ -107,8 +114,24 @@ export async function POST(req: NextRequest) {
         ipAddress
       );
 
-      // Return success response
-      return NextResponse.json<RegisterResponse>({
+      // Extract device info for session creation
+      const { userAgent, ipAddress: clientIp, deviceType, deviceName } = extractDeviceInfo(req);
+      const deviceId = await generateDeviceFingerprint(userAgent, clientIp);
+
+      // Create session (AC#3: 36-hour HttpOnly Cookie session)
+      const sessionToken = generateSessionToken();
+      const session = await createSession({
+        userId: user.id,
+        token: sessionToken,
+        deviceId,
+        deviceType,
+        userAgent,
+        ipAddress: clientIp,
+        rememberMe: false,
+      });
+
+      // Return success response with session cookie
+      const response = NextResponse.json<RegisterResponse>({
         success: true,
         message: '注册成功！',
         user: {
@@ -117,6 +140,17 @@ export async function POST(req: NextRequest) {
           role: 'parent',
         },
       }, { status: 200 });
+
+      // Set HttpOnly session cookie (AC#3, AC#11)
+      response.cookies.set('better-auth.session_token', sessionToken, {
+        httpOnly: true,
+        secure: Bun.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 36, // 36 hours
+      });
+
+      return response;
 
     } else if (body.type === 'password') {
       // === Password Registration Flow ===
@@ -177,8 +211,24 @@ export async function POST(req: NextRequest) {
         ipAddress
       );
 
-      // Return success response
-      return NextResponse.json<RegisterResponse>({
+      // Extract device info for session creation
+      const { userAgent, ipAddress: clientIp, deviceType, deviceName } = extractDeviceInfo(req);
+      const deviceId = await generateDeviceFingerprint(userAgent, clientIp);
+
+      // Create session (AC#3: 36-hour HttpOnly Cookie session)
+      const sessionToken = generateSessionToken();
+      const session = await createSession({
+        userId: user.id,
+        token: sessionToken,
+        deviceId,
+        deviceType,
+        userAgent,
+        ipAddress: clientIp,
+        rememberMe: false,
+      });
+
+      // Return success response with session cookie
+      const response = NextResponse.json<RegisterResponse>({
         success: true,
         message: '注册成功！',
         user: {
@@ -187,6 +237,17 @@ export async function POST(req: NextRequest) {
           role: 'parent',
         },
       }, { status: 200 });
+
+      // Set HttpOnly session cookie (AC#3, AC#11)
+      response.cookies.set('better-auth.session_token', sessionToken, {
+        httpOnly: true,
+        secure: Bun.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 36, // 36 hours
+      });
+
+      return response;
 
     } else {
       return NextResponse.json<RegisterResponse>({
