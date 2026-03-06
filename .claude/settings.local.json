@@ -24,7 +24,8 @@
       "Bash(NEXT_PUBLIC_APP_URL=http://localhost:3344 bunx playwright:*)",
       "Bash(taskkill:*)",
       "Bash(xargs -I {} taskkill //PID {} //F)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(git add:*)"
     ]
   }
 }
