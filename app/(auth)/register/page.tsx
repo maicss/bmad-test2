@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
       if (data.success) {
         setOtpSent(true);
-        alert('验证码已发送');
+        // alert已移除，使用页面内提示
       } else {
         setError(data.message || '发送验证码失败');
       }
