@@ -6,25 +6,36 @@ import { useSearchParams } from 'next/navigation';
 function RegisterForm() {
   const searchParams = useSearchParams();
   const modeParam = searchParams.get('mode');
+  const errorParam = searchParams.get('error');
+  const successParam = searchParams.get('success');
 
-  const [authMethod, setAuthMethod] = useState<'otp' | 'password'>(modeParam === 'password' ? 'password' : 'otp');
+  // Initialize authMethod directly from URL param, with useEffect as fallback
+  const getInitialAuthMethod = (): 'otp' | 'password' => {
+    if (modeParam === 'password' || modeParam === 'otp') {
+      return modeParam;
+    }
+    return 'otp';
+  };
+
+  const [authMethod, setAuthMethod] = useState<'otp' | 'password'>(getInitialAuthMethod);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(errorParam || '');
   const [otpSent, setOtpSent] = useState(false);
 
-  // Expose function for testing
+  // Update authMethod when modeParam changes (for runtime changes)
   useEffect(() => {
-    (window as any).testHandleRegister = () => {
-      handleRegister();
-    };
-  }, [phone, otp, password, confirmPassword, authMethod]);
+    if (modeParam === 'password' || modeParam === 'otp') {
+      setAuthMethod(modeParam);
+    }
+  }, [modeParam]);
 
   // Handle OTP send
-  const handleSendOTP = async () => {
+  const handleSendOTP = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!phone || phone.length !== 11) {
       setError('请输入有效的手机号');
       return;
@@ -44,7 +55,6 @@ function RegisterForm() {
 
       if (data.success) {
         setOtpSent(true);
-        // alert已移除，使用页面内提示
       } else {
         setError(data.message || '发送验证码失败');
       }
@@ -56,7 +66,8 @@ function RegisterForm() {
   };
 
   // Handle registration
-  const handleRegister = async () => {
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
 
     // Validate phone
@@ -111,7 +122,6 @@ function RegisterForm() {
       const data = await response.json();
 
       if (data.success) {
-        // Redirect to parent dashboard on success
         window.location.href = '/parent/dashboard';
       } else {
         setError(data.message || '注册失败，请重试');
@@ -132,7 +142,7 @@ function RegisterForm() {
             <p className="text-gray-600 mt-2">创建家庭账户，开始管理孩子行为</p>
           </div>
 
-          <div className="space-y-6">
+          <form onSubmit={handleRegister} className="space-y-6">
             {/* Phone Input */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
@@ -140,6 +150,7 @@ function RegisterForm() {
               </label>
               <input
                 id="phone"
+                name="phone"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -148,6 +159,7 @@ function RegisterForm() {
                 pattern="[0-9]*"
                 className="w-full px-4 py-3 border border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 disabled={loading}
+                required
               />
             </div>
 
@@ -160,6 +172,7 @@ function RegisterForm() {
                 <label className="flex items-center">
                   <input
                     type="radio"
+                    name="authMethod"
                     value="otp"
                     checked={authMethod === 'otp'}
                     onChange={(e) => setAuthMethod(e.target.value as 'otp' | 'password')}
@@ -171,6 +184,7 @@ function RegisterForm() {
                 <label className="flex items-center">
                   <input
                     type="radio"
+                    name="authMethod"
                     value="password"
                     checked={authMethod === 'password'}
                     onChange={(e) => setAuthMethod(e.target.value as 'otp' | 'password')}
@@ -192,6 +206,7 @@ function RegisterForm() {
                   <div className="flex gap-2">
                     <input
                       id="otp"
+                      name="otp"
                       type="text"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
@@ -200,6 +215,7 @@ function RegisterForm() {
                       pattern="[0-9]*"
                       className="flex-1 px-4 py-3 border border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                       disabled={loading}
+                      required
                     />
                     <button
                       type="button"
@@ -228,13 +244,15 @@ function RegisterForm() {
                   </label>
                   <input
                     id="password"
+                    name="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="请输入8-20位密码"
                     maxLength={20}
-                    className="w-full px-4 py-3 border border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="w-full px-4 py-3 border border border gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                     disabled={loading}
+                    required
                   />
                   {/* Password Strength Indicator */}
                   {password && (
@@ -253,13 +271,15 @@ function RegisterForm() {
                   </label>
                   <input
                     id="confirmPassword"
+                    name="confirmPassword"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="请再次输入密码"
                     maxLength={20}
-                    className="w-full px-4 py-3 border border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="w-full px-4 py-3 border border border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                     disabled={loading}
+                    required
                   />
                 </div>
               </>
@@ -274,14 +294,13 @@ function RegisterForm() {
 
             {/* Submit Button */}
             <button
-              type="button"
-              onClick={handleRegister}
+              type="submit"
               disabled={loading}
               className="w-full py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 disabled:bg-gray-400 transition-colors"
             >
               {loading ? '注册中...' : '注册'}
             </button>
-          </div>
+          </form>
 
           {/* Login Link */}
           <div className="mt-6 text-center text-sm text-gray-600">

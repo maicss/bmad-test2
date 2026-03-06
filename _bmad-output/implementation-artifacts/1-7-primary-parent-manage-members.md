@@ -1,6 +1,6 @@
 # Story 1.7: Primary Parent Manage Members
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

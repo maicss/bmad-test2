@@ -11,7 +11,7 @@
  */
 
 import db from '@/lib/db';
-import { users, families, auditLogs } from '@/lib/db/schema';
+import { users, families, auditLogs, sessions } from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { logUserAction } from './audit-logs';
@@ -278,8 +278,6 @@ export async function transferPrimaryParentRole(
  * @param userId - User ID
  */
 export async function invalidateUserSessions(userId: string) {
-  const { sessions } = await import('./schema');
-  
   await db
     .update(sessions)
     .set({ is_active: false })
