@@ -13,7 +13,7 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3344';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!;
 
 test.describe('Story 2.1: Parent Creates Task Plan Template', () => {
   test('Happy Path: Login, Navigate to Tasks, Navigate to Create Page, Verify Form Elements', async ({ page }) => {

@@ -75,7 +75,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3344',
+    baseURL: process.env.NEXT_PUBLIC_APP_URL!,
     trace: 'on-first-retry',
   },
   projects: [
@@ -90,7 +90,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'bun run dev',
-    url: 'http://localhost:3344',
+    url: process.env.NEXT_PUBLIC_APP_URL!,
     reuseExistingServer: !process.env.CI,
   },
 });
@@ -250,7 +250,7 @@ describe('Tasks API', () => {
       
       // 发送请求
       const response = await fetch(
-        `http://localhost:3344/api/tasks?familyId=${family.id}`,
+        `/api/tasks?familyId=${family.id}`,
         {
           headers: {
             Cookie: 'session=test-session-id',
@@ -267,7 +267,7 @@ describe('Tasks API', () => {
     });
     
     it('should return 400 for missing familyId', async () => {
-      const response = await fetch('http://localhost:3344/api/tasks');
+      const response = await fetch('/api/tasks');
       
       expect(response.status).toBe(400);
       
@@ -292,7 +292,7 @@ describe('Tasks API', () => {
         familyId: family.id,
       }).returning();
       
-      const response = await fetch('http://localhost:3344/api/tasks', {
+      const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -314,7 +314,7 @@ describe('Tasks API', () => {
     });
     
     it('should return 400 for invalid data', async () => {
-      const response = await fetch('http://localhost:3344/api/tasks', {
+      const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -12,7 +12,7 @@ import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { rateLimitLoginAttempts } from '@/lib/auth/rate-limit';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3344';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!;
 
 describe('Story 1.2: Parent Phone Login - OTP Flow', () => {
   let testPhone: string;

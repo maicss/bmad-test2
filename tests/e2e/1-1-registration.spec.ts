@@ -9,7 +9,7 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3344';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!;
 
 // Generate unique phone number (11 digits)
 function generateTestPhone(): string {

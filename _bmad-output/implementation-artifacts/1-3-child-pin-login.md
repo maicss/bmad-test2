@@ -1,6 +1,6 @@
 # Story 1.3: Child PIN Login
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
