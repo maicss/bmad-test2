@@ -1,6 +1,6 @@
 # Git 工作流规范
 
-> **版本：** 1.0
+> **版本：** 1.1
 > **最后更新：** 2026-03-06
 > **目的：** 规范 Git 分支管理和开发流程
 
@@ -40,13 +40,12 @@ git commit -m "feat: implement points input component"
 # 4. 推送到远程
 git push -u origin feature/story-2-2-points-setting
 
-# 5. 开发完成后，合并到 main
-git checkout main
-git merge feature/story-2-2-points-setting
+# 5. 代码审查
+# 创建 Pull Request
+# 等待代码审查通过
 
-# 6. 删除功能分支
-git branch -d feature/story-2-2-points-setting
-git push origin --delete feature/story-2-2-points-setting
+# 6. 推送到服务器
+git push
 ```
 
 ---
@@ -79,6 +78,7 @@ fix/{bug描述或issue编号}
 
 > **错误：** 在 `fix-e2e` 分支上开发 Story 2.2
 > **正确：** 从 `main` 创建 `feature/story-2-2-points-setting` 分支
+> **注意：** 功能分支保留用于代码审查，不立即合并到 main
 
 ---
 
@@ -91,8 +91,8 @@ graph LR
     A[main] -->|创建分支| B[feature/story-X-...]
     B -->|开发| C[提交代码]
     C -->|测试| D[验证通过]
-    D -->|合并| E[main]
-    E -->|删除| B
+    D -->|代码审查| E[审查通过]
+    E -->|推送| B
 ```
 
 ### 步骤详解
@@ -138,17 +138,14 @@ git status
 #### 4. 完成开发
 
 ```bash
-# 推送到远程
+# 推送到远程功能分支
 git push
 
-# 创建 PR（如使用 GitHub/GitLab）
-# 或直接合并到 main
-git checkout main
-git merge feature/story-{Epic}-{Story}-{name}
-
-# 删除功能分支
-git branch -d feature/story-{Epic}-{Story}-{name}
-git push origin --delete feature/story-{Epic}-{Story}-{name}
+# 代码审查阶段
+# 创建 Pull Request
+# 等待代码审查通过
+# 审查通过后，推送到服务器
+git push
 ```
 
 ---
@@ -206,11 +203,11 @@ Refs: #123"
 **后果：** 难以识别分支对应的 Story
 **解决：** 使用 `feature/story-X-Y-{name}` 格式
 
-### 错误 3：忘记删除已合并分支
+### 错误 3：功能分支过早删除
 
-**症状：** 大量僵尸分支堆积
-**后果：** 分支列表混乱，难以管理
-**解决：** 合并后立即删除本地和远程分支
+**症状：** 代码审查未通过就删除功能分支
+**后果：** 丢失审查历史，难以追踪审查意见
+**解决：** 功能分支保留到审查通过后再处理
 
 ---
 
@@ -235,12 +232,11 @@ Refs: #123"
 - [ ] 无未跟踪的意外文件（`git status`）
 - [ ] 代码审查已完成
 
-### 合并后
+### 审查完成后
 
-- [ ] 已合并到 `main` 分支
-- [ ] 已删除本地功能分支
-- [ ] 已删除远程功能分支
-- [ ] `main` 分支已推送到远程
+- [ ] 代码审查通过
+- [ ] 所有测试通过
+- [ ] 功能分支已推送到远程
 
 ---
 
@@ -256,4 +252,5 @@ Refs: #123"
 
 | 日期 | 版本 | 变更 |
 |------|------|------|
+| 2026-03-06 | 1.1 | 修复：添加代码审查环节，功能分支保留不合并到 main |
 | 2026-03-06 | 1.0 | 初始版本，响应 fix-e2e 分支错误事件 |
