@@ -1,28 +1,35 @@
-import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 
-interface Toast {
+interface ToastOptions {
   title: string;
   description?: string;
   variant?: 'default' | 'destructive';
 }
 
+/**
+ * Toast hook for showing notifications
+ *
+ * Uses sonner for toast notifications instead of alert()
+ * Follows RED LIST rule: NO alert() - use Shadcn Dialog/Toast
+ */
 export function useToast() {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const toast = useCallback(({ title, description, variant = 'default' }: Toast) => {
-    // Using browser alert as fallback
-    const message = description ? `${title}: ${description}` : title;
-    const alertType = variant === 'destructive' ? '❌' : '✅';
-    
+  const showToast = ({ title, description, variant = 'default' }: ToastOptions) => {
     // Log to console for debugging
-    console.log(`${alertType} ${message}`);
-    
-    // Show alert
-    alert(message);
-    
-    // Add to state (for future UI integration)
-    setToasts((prev) => [...prev, { title, description, variant }]);
-  }, []);
+    console.log(`[${variant === 'destructive' ? '❌' : '✅'}] ${title}${description ? ': ' + description : ''}`);
 
-  return { toast, toasts };
+    // Use sonner toast
+    if (variant === 'destructive') {
+      toast.error(title, {
+        description,
+      });
+    } else {
+      toast.success(title, {
+        description,
+      });
+    }
+  };
+
+  return {
+    toast: showToast,
+  };
 }

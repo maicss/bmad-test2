@@ -2,6 +2,7 @@
  * Database queries for Task Plans
  *
  * Story 2.1: Parent Creates Task Plan Template
+ * Story 2.3: Parent Sets Task Date Rules
  *
  * All task plan database operations MUST use these functions.
  * NEVER write raw SQL - use Drizzle ORM query builder.
@@ -13,6 +14,7 @@
 import db from '../index';
 import { taskPlans, tasks, taskPlanChildren, users } from '../schema';
 import { eq, and, desc, inArray, sql } from 'drizzle-orm';
+import { type TaskDateRule } from '@/types/task-rule';
 
 // Type definitions for DTOs
 export interface CreateTaskPlanDTO {
@@ -20,7 +22,7 @@ export interface CreateTaskPlanDTO {
   title: string;
   task_type: '刷牙' | '学习' | '运动' | '家务' | '自定义';
   points: number;
-  rule: string; // JSON string
+  rule: string; // JSON string of TaskDateRule
   excluded_dates?: string | null; // JSON array string
   reminder_time?: string | null;
   status: 'draft' | 'published';
@@ -279,4 +281,94 @@ export async function canUserModifyTaskPlan(taskPlanId: string, userId: string, 
   // For additional permission checks (e.g., primary parent),
   // the calling function should check user role
   return false;
+}
+
+/**
+ * Parse task plan rule from JSON string to typed object
+ *
+ * Story 2.3: Parent Sets Task Date Rules
+ *
+ * @param ruleString - JSON string from database
+ * @returns Parsed TaskDateRule or null if invalid
+ */
+export function parseTaskPlanRule(ruleString: string | null): TaskDateRule | null {
+  if (!ruleString) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(ruleString);
+    return parsed as TaskDateRule;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Serialize task plan rule from typed object to JSON string
+ *
+ * Story 2.3: Parent Sets Task Date Rules
+ *
+ * @param rule - TaskDateRule object
+ * @returns JSON string for database storage
+ */
+export function serializeTaskPlanRule(rule: TaskDateRule): string {
+  return JSON.stringify(rule);
+}
+
+/**
+ * Get task plan with parsed rule as typed object
+ *
+ * Story 2.3: Parent Sets Task Date Rules
+ *
+ * @param taskPlanId - Task plan ID
+ * @returns Task plan with parsed rule or null
+ */
+export async function getTaskPlanWithParsedRule(taskPlanId: string) {
+  const taskPlan = await getTaskPlanById(taskPlanId);
+
+  if (!taskPlan) {
+    return null;
+  }
+
+  return {
+    ...taskPlan,
+    rule: parseTaskPlanRule(taskPlan.rule),
+  };
+}
+
+/**
+ * Get task plans by family with parsed rules
+ *
+ * Story 2.3: Parent Sets Task Date Rules
+ *
+ * @param familyId - Family ID
+ * @param status - Optional status filter
+ * @returns Array of task plans with parsed rules
+ */
+export async function getTaskPlansByFamilyWithParsedRules(
+  familyId: string,
+  status?: 'draft' | 'published'
+) {
+  const taskPlans = await getTaskPlansByFamily(familyId, status);
+
+  return taskPlans.map(plan => ({
+    ...plan,
+    rule: parseTaskPlanRule(plan.rule),
+  }));
+}
+
+/**
+ * Update task plan rule with typed object
+ *
+ * Story 2.3: Parent Sets Task Date Rules
+ *
+ * @param taskPlanId - Task plan ID
+ * @param rule - TaskDateRule object
+ * @returns The updated task plan or null
+ */
+export async function updateTaskPlanRule(taskPlanId: string, rule: TaskDateRule) {
+  return updateTaskPlan(taskPlanId, {
+    rule: serializeTaskPlanRule(rule),
+  });
 }
