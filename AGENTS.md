@@ -104,6 +104,27 @@ const env = process.env;                     // 禁止
 
 ### Git
 - ❌ **提交 `.env` 文件** - 敏感配置禁止入库
+- ✅ **使用 GitHub CLI 自动创建 PR** - 如果 `gh` 命令可用，Story 完成后自动 push 并使用 `gh pr create` 发起 PR 到 main 分支
+
+**Git 工作流自动化（当 gh 可用时）：**
+
+Story 开发完成后，自动执行以下操作：
+```bash
+# 1. Push feature branch to remote
+git push -u origin feature/story-X-Y-name
+
+# 2. Create PR to main using gh CLI
+gh pr create --base main --title "feat(story-X-Y): [story title]" --body "[PR description]"
+```
+
+**检查 gh 可用性：**
+```bash
+# 检查 gh 是否安装并已认证
+gh auth status
+
+# 如果已认证，gh 可用，则自动执行 PR 创建
+# 如果未认证或不可用，则手动创建 PR（提供链接）
+```
 
 ### BDD（行为驱动开发）
 - ❌ **先写实现后写测试** - 必须先写测试/规范，后写实现（红-绿-重构）
