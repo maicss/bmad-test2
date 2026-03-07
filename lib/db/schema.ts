@@ -219,6 +219,36 @@ export const taskPlanChildren = sqliteTable('task_plan_children', {
   index('idx_task_plan_children_child_id').on(table.child_id),
 ]);
 
+// Points Balances table (Story 2.2)
+// Stores current points balance for each child
+export const pointBalances = sqliteTable('point_balances', {
+  id: text('id').primaryKey(),
+  child_id: text('child_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  balance: integer('balance').notNull().default(0),
+  created_at: integer('created_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
+  updated_at: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
+}, (table) => [
+  index('idx_point_balances_child_id').on(table.child_id),
+]);
+
+// Points History table (Story 2.2)
+// Stores all points changes for auditing and COPPA/GDPR compliance
+export const pointsHistory = sqliteTable('points_history', {
+  id: text('id').primaryKey(),
+  child_id: text('child_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  task_id: text('task_id').references(() => tasks.id, { onDelete: 'set null' }),
+  points: integer('points').notNull(),
+  type: text('type', { enum: ['task_completion', 'task_rejection', 'adjustment', 'reward', 'penalty'] }).notNull(),
+  description: text('description'),
+  previous_balance: integer('previous_balance').notNull().default(0),
+  new_balance: integer('new_balance').notNull().default(0),
+  created_at: integer('created_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
+}, (table) => [
+  index('idx_points_history_child_id').on(table.child_id),
+  index('idx_points_history_task_id').on(table.task_id),
+  index('idx_points_history_created_at').on(table.created_at),
+]);
+
 // Type exports for task-related tables
 export type TaskPlan = typeof taskPlans.$inferSelect;
 export type NewTaskPlan = typeof taskPlans.$inferInsert;
@@ -226,3 +256,7 @@ export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
 export type TaskPlanChild = typeof taskPlanChildren.$inferSelect;
 export type NewTaskPlanChild = typeof taskPlanChildren.$inferInsert;
+export type PointsBalance = typeof pointBalances.$inferSelect;
+export type NewPointsBalance = typeof pointBalances.$inferInsert;
+export type PointsHistory = typeof pointsHistory.$inferSelect;
+export type NewPointsHistory = typeof pointsHistory.$inferInsert;

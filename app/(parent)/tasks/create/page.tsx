@@ -13,11 +13,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { TaskPlanForm, TaskPlanFormData } from '@/components/forms/task-plan-form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 // Mock child data - this should come from an API call
 const MOCK_CHILDREN = [
@@ -33,16 +33,12 @@ const MOCK_CHILDREN = [
 export default function CreateTaskPlanPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   /**
    * Handle form submission
    */
   const handleSubmit = async (formData: TaskPlanFormData, status: 'draft' | 'published') => {
     setIsLoading(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       // Prepare data for API
@@ -70,12 +66,13 @@ export default function CreateTaskPlanPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.error || '创建任务模板失败，请稍后重试');
+        // Show error toast
+        toast.error(result.error || '创建任务模板失败，请稍后重试');
         return;
       }
 
-      // Success
-      setSuccess(result.message || '任务模板创建成功！');
+      // Show success toast
+      toast.success(result.message || '任务模板创建成功！');
 
       // Redirect after a short delay
       setTimeout(() => {
@@ -85,7 +82,7 @@ export default function CreateTaskPlanPage() {
 
     } catch (err) {
       console.error('Create task plan error:', err);
-      setError('网络错误，请检查您的连接后重试');
+      toast.error('网络错误，请检查您的连接后重试');
     } finally {
       setIsLoading(false);
     }
@@ -97,20 +94,6 @@ export default function CreateTaskPlanPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800">{error}</p>
-        </div>
-      )}
-
-      {/* Success Message */}
-      {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800">{success}</p>
-        </div>
-      )}
-
       {/* Task Plan Form */}
       <TaskPlanForm
         onSubmit={handleSubmit}
@@ -128,7 +111,7 @@ export default function CreateTaskPlanPage() {
           <p>• <strong>草稿</strong>：保存为草稿的模板不会生成任务实例，您可以稍后编辑并发布</p>
           <p>• <strong>立即发布</strong>：发布后，系统会根据循环规则自动生成未来7天的任务实例</p>
           <p>• <strong>循环规则</strong>：系统会根据您选择的规则自动生成重复性任务</p>
-          <p>• <strong>积分值</strong>：任务完成后，儿童可获得相应积分</p>
+          <p>• <strong>积分值</strong>：任务完成后，儿童可获得相应积分（1-100分）</p>
         </CardContent>
       </Card>
     </div>

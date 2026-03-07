@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config({ path: '.env' });
 
 /**
  * Playwright Configuration
@@ -27,9 +31,9 @@ export default defineConfig({
 
   /* 共享设置 */
   use: {
-    /* 基础 URL */
+    /* 基础 URL - 从环境变量读取，必须设置 */
     headless: true,
-    baseURL: process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT}`,
+    baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3344',
 
     /* 收集追踪 */
     trace: "on-first-retry",

@@ -7,7 +7,7 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!;
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!
 
 test.describe('Story 1.2: Parent Phone Login - E2E Happy Path', () => {
   test.describe.configure({ mode: 'serial' });

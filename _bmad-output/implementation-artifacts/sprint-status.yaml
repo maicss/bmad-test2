@@ -20,13 +20,13 @@ development_status:
   1-4-invite-other-parent: done
    1-5-add-child-to-family: done
   1-6-multi-device-login: done
-  1-7-primary-parent-manage-members: ready-for-dev
+  1-7-primary-parent-manage-members: done
   epic-1-retrospective: optional
 
   MX|  # Epic 2: Task Planning & Management (With Notifications)
 MX|  epic-2: in-progress
 MX|  2-1-parent-creates-task-plan-template: done
-MX|  2-2-parent-sets-task-points-value: ready-for-dev
+MX|  2-2-parent-sets-task-points-value: review
 MX|  2-3-parent-sets-task-date-rules: ready-for-dev
 MX|  2-4-system-auto-generates-task-instances: review
 MX|  2-5-parent-pauses-resumes-deletes-task-plan: ready-for-dev
@@ -58,7 +58,7 @@ VJ|
   XW|  # Epic 2: Task Planning & Management (With Notifications)
 XW|  epic-2: in-progress
 YS|XW|  2-1-parent-creates-task-plan-template: done
-BB|XW|  2-2-parent-sets-task-points-value: ready-for-dev
+BB|XW|  2-2-parent-sets-task-points-value: review
 NW|XW|  2-3-parent-sets-task-date-rules: ready-for-dev
 YZ|XW|  2-4-system-auto-generates-task-instances: review
 WQ|XW|  2-5-parent-pauses-resumes-deletes-task-plan: ready-for-dev

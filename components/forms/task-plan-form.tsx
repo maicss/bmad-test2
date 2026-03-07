@@ -25,6 +25,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { PointsPresets } from '@/components/forms/points-suggestions';
+import { getDefaultPoints } from '@/lib/constants/points-suggestions';
 
 // Types for the form
 export interface TaskPlanFormData {
@@ -147,6 +149,20 @@ export function TaskPlanForm({
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
+
+    // Auto-fill points based on task type (only if points is still default)
+    if (field === 'task_type' && formData.points === 5) {
+      const taskTypeToDifficulty: Record<TaskPlanFormData['task_type'], 'simple' | 'medium' | 'hard' | 'special'> = {
+        '刷牙': 'simple',
+        '学习': 'hard',
+        '运动': 'medium',
+        '家务': 'medium',
+        '自定义': 'medium',
+      };
+      const difficulty = taskTypeToDifficulty[value];
+      const suggestedPoints = getDefaultPoints(difficulty);
+      setFormData(prev => ({ ...prev, points: suggestedPoints }));
+    }
   };
 
   // Handle child selection toggle
@@ -248,10 +264,18 @@ export function TaskPlanForm({
         </div>
 
         {/* Points Value */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Label htmlFor="points">
             积分值 <span className="text-red-500">*</span>
           </Label>
+
+          {/* Points Presets - Quick selection buttons */}
+          <PointsPresets
+            onSelectPoints={(points) => handleFieldChange('points', points)}
+            currentPoints={formData.points}
+          />
+
+          {/* Points Input */}
           <Input
             id="points"
             type="number"
