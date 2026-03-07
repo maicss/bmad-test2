@@ -7,7 +7,7 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!;
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!
 
 test.describe('Story 1.6: Multi-device Login - E2E Happy Path', () => {
   // Use seeded test user (13800000100, password: 1111)

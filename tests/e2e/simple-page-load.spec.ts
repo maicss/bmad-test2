@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!;
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!
 
 test.describe('Page Load Test', () => {
   test('login page loads correctly', async ({ page }) => {

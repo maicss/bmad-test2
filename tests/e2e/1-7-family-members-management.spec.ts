@@ -7,7 +7,7 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!;
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!
 
 // Use seeded test parent user (Zhang 1 - Primary Parent)
 const testPhone = '13800000100';
