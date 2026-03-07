@@ -2,19 +2,21 @@
  * Task Plan Form Component
  *
  * Story 2.1: Parent Creates Task Plan Template
+ * Story 2.3: Parent Sets Task Date Rules
  * Task 2.1: Create TaskPlanForm component (using Shadcn UI)
+ * Task 4.1-4.4: Integrate DateRuleSelector and ExclusionDatePicker
  *
  * This component allows parents to create task plan templates with:
  * - Template name (required, max 50 chars)
  * - Task type selection
  * - Assigned children selection
  * - Points value (1-100)
- * - Frequency rule selection
- * - Excluded dates (optional)
+ * - Date rule selection (using DateRuleSelector)
+ * - Excluded dates (using ExclusionDatePicker)
  * - Reminder time (optional)
  * - Save as draft / Publish buttons
  *
- * Source: Story 2.1 AC #1
+ * Source: Story 2.1 AC #1, Story 2.3 AC #1
  */
 
 'use client';
@@ -25,6 +27,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { DateRuleSelector } from '@/components/forms/date-rule-selector';
+import { ExclusionDatePicker } from '@/components/forms/exclusion-date-picker';
+import type { TaskDateRule } from '@/types/task-rule';
+import { validateTaskDateRule } from '@/lib/utils/validators/task-rule-validator';
 import { PointsPresets } from '@/components/forms/points-suggestions';
 import { getDefaultPoints } from '@/lib/constants/points-suggestions';
 
@@ -34,9 +40,7 @@ export interface TaskPlanFormData {
   task_type: '刷牙' | '学习' | '运动' | '家务' | '自定义';
   assigned_children: string[];
   points: number;
-  frequency: 'daily' | 'weekly' | 'weekdays' | 'weekends' | 'custom';
-  custom_days?: number[];
-  excluded_dates?: string[];
+  dateRule: TaskDateRule;
   reminder_time?: string;
 }
 
@@ -61,32 +65,15 @@ const TASK_TYPES = [
   { value: '自定义', label: '自定义' },
 ] as const;
 
-const FREQUENCY_OPTIONS = [
-  { value: 'daily', label: '每天' },
-  { value: 'weekly', label: '每周' },
-  { value: 'weekdays', label: '工作日（周一至周五）' },
-  { value: 'weekends', label: '周末（周六、周日）' },
-  { value: 'custom', label: '自定义' },
-] as const;
-
-const WEEK_DAYS = [
-  { value: 0, label: '周日' },
-  { value: 1, label: '周一' },
-  { value: 2, label: '周二' },
-  { value: 3, label: '周三' },
-  { value: 4, label: '周四' },
-  { value: 5, label: '周五' },
-  { value: 6, label: '周六' },
-] as const;
-
 const DEFAULT_FORM_DATA: TaskPlanFormData = {
   title: '',
   task_type: '刷牙',
   assigned_children: [],
   points: 5,
-  frequency: 'daily',
-  custom_days: [],
-  excluded_dates: [],
+  dateRule: {
+    frequency: 'daily',
+    excludedDates: { dates: [], scope: 'permanent' }
+  },
   reminder_time: '',
 };
 
@@ -128,9 +115,10 @@ export function TaskPlanForm({
       newErrors.points = '积分最多100分';
     }
 
-    // Custom days validation for custom frequency
-    if (formData.frequency === 'custom' && (!formData.custom_days || formData.custom_days.length === 0)) {
-      newErrors.custom_days = '请至少选择一天';
+    // Date rule validation
+    const ruleValidation = validateTaskDateRule(formData.dateRule);
+    if (!ruleValidation.valid) {
+      newErrors.dateRule = ruleValidation.errors[0] || '日期规则无效';
     }
 
     setErrors(newErrors);
@@ -170,23 +158,18 @@ export function TaskPlanForm({
     setFormData(prev => ({
       ...prev,
       assigned_children: prev.assigned_children.includes(childId)
-        ? prev.assigned_children.filter(id => id !== childId)
+        ? prev.assigned_children.filter((id: string) => id !== childId)
         : [...prev.assigned_children, childId],
     }));
   };
 
-  // Handle custom day selection toggle
-  const toggleCustomDay = (dayValue: number) => {
-    const currentDays = formData.custom_days || [];
-    const newDays = currentDays.includes(dayValue)
-      ? currentDays.filter(d => d !== dayValue)
-      : [...currentDays, dayValue];
+  // Handle date rule change
+  const handleDateRuleChange = (newRule: TaskDateRule) => {
+    setFormData(prev => ({ ...prev, dateRule: newRule }));
 
-    setFormData(prev => ({ ...prev, custom_days: newDays }));
-
-    // Clear error for custom_days
-    if (errors.custom_days && newDays.length > 0) {
-      setErrors(prev => ({ ...prev, custom_days: undefined }));
+    // Clear date rule error
+    if (errors.dateRule) {
+      setErrors(prev => ({ ...prev, dateRule: undefined }));
     }
   };
 
@@ -197,7 +180,7 @@ export function TaskPlanForm({
       title: true,
       task_type: true,
       points: true,
-      frequency: true,
+      dateRule: true,
     });
 
     // Validate form
@@ -325,57 +308,40 @@ export function TaskPlanForm({
           </div>
         )}
 
-        {/* Frequency Rule */}
-        <div className="space-y-2">
-          <Label htmlFor="frequency">
-            循环规则 <span className="text-red-500">*</span>
+        {/* Date Rule Selection */}
+        <div className="space-y-4">
+          <Label>
+            日期规则 <span className="text-red-500">*</span>
           </Label>
-          <Select
-            value={formData.frequency}
-            onValueChange={(value) => handleFieldChange('frequency', value as TaskPlanFormData['frequency'])}
-          >
-            <SelectTrigger id="frequency">
-              <SelectValue placeholder="选择循环规则" />
-            </SelectTrigger>
-            <SelectContent>
-              {FREQUENCY_OPTIONS.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DateRuleSelector
+            value={formData.dateRule}
+            onChange={handleDateRuleChange}
+            disabled={isLoading}
+            showExcludedDates={false}
+          />
+          {touched.dateRule && errors.dateRule && (
+            <p className="text-sm text-red-500">{errors.dateRule}</p>
+          )}
         </div>
 
-        {/* Custom Days Selection (shown only when frequency is 'custom') */}
-        {formData.frequency === 'custom' && (
-          <div className="space-y-2">
-            <Label>
-              选择星期 <span className="text-red-500">*</span>
-            </Label>
-            <div className="flex flex-wrap gap-2">
-              {WEEK_DAYS.map(day => (
-                <button
-                  key={day.value}
-                  type="button"
-                  onClick={() => toggleCustomDay(day.value)}
-                  className={`
-                    px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                    ${(formData.custom_days || []).includes(day.value)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                    }
-                  `}
-                >
-                  {day.label}
-                </button>
-              ))}
-            </div>
-            {errors.custom_days && (
-              <p className="text-sm text-red-500">{errors.custom_days}</p>
-            )}
-          </div>
-        )}
+        {/* Exclusion Dates - Now part of DateRuleSelector but can be separately configured */}
+        <div className="space-y-4">
+          <Label>排除日期（可选）</Label>
+          <ExclusionDatePicker
+            value={formData.dateRule.excludedDates}
+            onChange={(newExclusion) => {
+              handleDateRuleChange({
+                ...formData.dateRule,
+                excludedDates: newExclusion
+              });
+            }}
+            disabled={isLoading}
+            showScope={true}
+          />
+          <p className="text-xs text-muted-foreground">
+            选择不需要生成任务的日期（如节假日、特殊日期）
+          </p>
+        </div>
 
         {/* Reminder Time (Optional) */}
         <div className="space-y-2">
@@ -388,21 +354,6 @@ export function TaskPlanForm({
           />
           <p className="text-xs text-muted-foreground">
             设置后，系统会在指定时间提醒儿童完成任务
-          </p>
-        </div>
-
-        {/* Excluded Dates (Optional) */}
-        <div className="space-y-2">
-          <Label htmlFor="excluded_dates">排除日期（可选）</Label>
-          <Input
-            id="excluded_dates"
-            type="text"
-            placeholder="例如: 2026-03-10,2026-03-15"
-            value={formData.excluded_dates && formData.excluded_dates.length > 0 ? formData.excluded_dates.join(',') : ''}
-            onChange={e => handleFieldChange('excluded_dates', e.target.value.split(',').filter(d => d.trim()))}
-          />
-          <p className="text-xs text-muted-foreground">
-            输入要排除的日期，用逗号分隔（格式：YYYY-MM-DD）
           </p>
         </div>
       </CardContent>
