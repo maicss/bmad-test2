@@ -161,6 +161,7 @@ export const verifications = verification;
 
 // Task Plans table (Story 2.1)
 // Stores task plan templates created by parents
+// Story 2.5: Added paused/deleted status support
 export const taskPlans = sqliteTable('task_plans', {
   id: text('id').primaryKey(),
   family_id: text('family_id').notNull().references(() => families.id, { onDelete: 'cascade' }),
@@ -170,7 +171,9 @@ export const taskPlans = sqliteTable('task_plans', {
   rule: text('rule').notNull(), // JSON: stores date strategy (daily/weekly/weekdays/weekends/custom)
   excluded_dates: text('excluded_dates'), // JSON array: optional date strings
   reminder_time: text('reminder_time'), // Optional: time string (HH:mm format)
-  status: text('status', { enum: ['draft', 'published'] }).notNull().default('draft'),
+  status: text('status', { enum: ['draft', 'published', 'paused'] }).notNull().default('draft'), // Story 2.5: Added 'paused'
+  paused_until: integer('paused_until', { mode: 'timestamp' }), // Story 2.5: Pause expiry timestamp (null = permanent)
+  deleted_at: integer('deleted_at', { mode: 'timestamp' }), // Story 2.5: Soft delete timestamp (null = not deleted)
   created_by: text('created_by').notNull().references(() => users.id, { onDelete: 'restrict' }),
   created_at: integer('created_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
   updated_at: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
@@ -178,6 +181,7 @@ export const taskPlans = sqliteTable('task_plans', {
   index('idx_task_plans_family_id').on(table.family_id),
   index('idx_task_plans_status').on(table.status),
   index('idx_task_plans_created_by').on(table.created_by),
+  index('idx_task_plans_deleted_at').on(table.deleted_at), // Story 2.5: Index for soft delete queries
 ]);
 
 // Tasks table (Story 2.1, 2.4)

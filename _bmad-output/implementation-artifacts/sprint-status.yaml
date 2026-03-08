@@ -29,7 +29,7 @@ MX|  2-1-parent-creates-task-plan-template: done
 MX|  2-2-parent-sets-task-points-value: review
 MX|  2-3-parent-sets-task-date-rules: review
 MX|  2-4-system-auto-generates-task-instances: review
-MX|  2-5-parent-pauses-resumes-deletes-task-plan: ready-for-dev
+MX|  2-5-parent-pauses-resumes-deletes-task-plan: review
 MX|  2-6-parent-uses-template-to-quickly-create-task: ready-for-dev
 MX|  2-7-parent-batch-approves-tasks: ready-for-dev
 MX|  2-8-child-views-todays-task-list: ready-for-dev

@@ -17,8 +17,9 @@
 
 import db from '@/lib/db';
 import { taskPlans, tasks, taskPlanChildren, users } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { batchCreateTasks } from '@/lib/db/queries/tasks';
+import { getPublishedTaskPlansForGeneration } from '@/lib/db/queries/task-plans';
 
 /**
  * Date rule types matching Story 2.3 TaskDateRule
@@ -52,6 +53,9 @@ export class TaskGenerator {
   /**
    * Generate task instances for a specific date
    *
+   * Story 2.5: Updated to use getPublishedTaskPlansForGeneration()
+   * This filters out paused and deleted plans automatically.
+   *
    * @param dateStr - Date in YYYY-MM-DD format
    * @returns Generation result with counts
    */
@@ -64,10 +68,8 @@ export class TaskGenerator {
     };
 
     try {
-      // Get all published task plans
-      const allPlans = await db.query.taskPlans.findMany({
-        where: eq(taskPlans.status, 'published'),
-      });
+      // Story 2.5: Get only published plans (excludes paused and deleted)
+      const allPlans = await getPublishedTaskPlansForGeneration();
 
       console.log(`[TaskGenerator] Found ${allPlans.length} published task plans for ${dateStr}`);
 

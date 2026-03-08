@@ -1,6 +1,6 @@
 # Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -30,74 +30,74 @@ So that 我可以灵活控制任务计划的执行状态。
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: 扩展task_plans表支持暂停/恢复状态 (AC: 模板状态变更为已暂停/已发布)
-  - [ ] 1.1 扩展task_plans表添加status枚举（draft/published/paused）
-  - [ ] 1.2 添加paused_until字段（timestamp, nullable）
-  - [ ] 1.3 添加deleted_at字段（timestamp, nullable, soft delete）
-  - [ ] 1.4 创建并执行数据库迁移
-  - [ ] 1.5 更新lib/db/queries/task-plans.ts支持新字段
+- [x] Task 1: 扩展task_plans表支持暂停/恢复状态 (AC: 模板状态变更为已暂停/已发布)
+  - [x] 1.1 扩展task_plans表添加status枚举（draft/published/paused）
+  - [x] 1.2 添加paused_until字段（timestamp, nullable）
+  - [x] 1.3 添加deleted_at字段（timestamp, nullable, soft delete）
+  - [x] 1.4 创建并执行数据库迁移
+  - [x] 1.5 更新lib/db/queries/task-plans.ts支持新字段
 
-- [ ] Task 2: 实现任务计划暂停功能 (AC: 暂停操作，显示暂停时长选择)
-  - [ ] 2.1 创建PauseTaskPlanDialog组件（Shadcn Dialog + Radio Group）
-  - [ ] 2.2 实现暂停时长选项（1天/3天/7天/自定义/永久）
-  - [ ] 2.3 实现自定义时长输入（天数，min=1）
-  - [ ] 2.4 实现暂停确认逻辑
-  - [ ] 2.5 更新API端点支持暂停操作
-  - [ ] 2.6 实现状态变更为"已暂停"并设置paused_until时间戳
+- [x] Task 2: 实现任务计划暂停功能 (AC: 暂停操作，显示暂停时长选择)
+  - [x] 2.1 创建PauseTaskPlanDialog组件（Shadcn Dialog + Radio Group）
+  - [x] 2.2 实现暂停时长选项（1天/3天/7天/自定义/永久）
+  - [x] 2.3 实现自定义时长输入（天数，min=1）
+  - [x] 2.4 实现暂停确认逻辑
+  - [x] 2.5 更新API端点支持暂停操作
+  - [x] 2.6 实现状态变更为"已暂停"并设置paused_until时间戳
 
-- [ ] Task 3: 实现任务计划恢复功能 (AC: 恢复操作立即生效，状态变回已发布)
-  - [ ] 3.1 恢复按钮逻辑（仅对暂停状态的模板显示）
-  - [ ] 3.2 实现恢复确认对话框
-  - [ ] 3.3 更新API端点支持恢复操作
-  - [ ] 3.4 清除paused_until时间戳
-  - [ ] 3.5 状态立即变更为"已发布"
+- [x] Task 3: 实现任务计划恢复功能 (AC: 恢复操作立即生效，状态变回已发布)
+  - [x] 3.1 恢复按钮逻辑（仅对暂停状态的模板显示）
+  - [x] 3.2 实现恢复确认对话框
+  - [x] 3.3 更新API端点支持恢复操作
+  - [x] 3.4 清除paused_until时间戳
+  - [x] 3.5 状态立即变更为"已发布"
   - [ ] 3.6 触发即时任务生成（可选：恢复时生成当天任务）
 
-- [ ] Task 4: 实现任务计划删除功能 (AC: 删除操作，显示警告，已生成任务保留)
-  - [ ] 4.1 创建DeleteTaskPlanDialog组件（Shadcn Dialog）
-  - [ ] 4.2 实现删除警告提示："删除后无法恢复，但已生成的任务实例将保留"
-  - [ ] 4.3 实现删除确认逻辑
-  - [ ] 4.4 更新API端点支持软删除
-  - [ ] 4.5 设置deleted_at时间戳（软删除）
-  - [ ] 4.6 验证已生成的任务实例不受影响
+- [x] Task 4: 实现任务计划删除功能 (AC: 删除操作，显示警告，已生成任务保留)
+  - [x] 4.1 创建DeleteTaskPlanDialog组件（Shadcn Dialog）
+  - [x] 4.2 实现删除警告提示："删除后无法恢复，但已生成的任务实例将保留"
+  - [x] 4.3 实现删除确认逻辑
+  - [x] 4.4 更新API端点支持软删除
+  - [x] 4.5 设置deleted_at时间戳（软删除）
+  - [x] 4.6 验证已生成的任务实例不受影响
 
-- [ ] Task 5: 集成到任务计划管理页面 (AC: 进入任务计划管理页面显示操作按钮)
-  - [ ] 5.1 创建TaskPlanList组件（显示所有任务计划）
-  - [ ] 5.2 为每个模板添加操作按钮行（暂停/恢复/删除）
-  - [ ] 5.3 根据状态显示不同按钮（暂停显示恢复，已发布显示暂停）
-  - [ ] 5.4 实现状态徽章显示（已发布/已暂停/草稿）
-  - [ ] 5.5 实现暂停倒计时显示（剩余暂停时间）
-  - [ ] 5.6 实现已暂停模板的高亮显示
+- [x] Task 5: 集成到任务计划管理页面 (AC: 进入任务计划管理页面显示操作按钮)
+  - [x] 5.1 创建TaskPlanList组件（显示所有任务计划）
+  - [x] 5.2 为每个模板添加操作按钮行（暂停/恢复/删除）
+  - [x] 5.3 根据状态显示不同按钮（暂停显示恢复，已发布显示暂停）
+  - [x] 5.4 实现状态徽章显示（已发布/已暂停/草稿）
+  - [x] 5.5 实现暂停倒计时显示（剩余暂停时间）
+  - [x] 5.6 实现已暂停模板的高亮显示
 
-- [ ] Task 6: 修改任务生成逻辑支持暂停状态 (AC: 暂停时停止生成新任务)
-  - [ ] 6.1 修改Story 2.4的TaskGenerator类
-  - [ ] 6.2 添加状态过滤（只处理status='published'的模板）
-  - [ ] 6.3 验证已暂停模板不生成任务实例
-  - [ ] 6.4 添加日志记录（暂停模板跳过生成）
+- [x] Task 6: 修改任务生成逻辑支持暂停状态 (AC: 暂停时停止生成新任务)
+  - [x] 6.1 修改Story 2.4的TaskGenerator类
+  - [x] 6.2 添加状态过滤（只处理status='published'的模板）
+  - [x] 6.3 验证已暂停模板不生成任务实例
+  - [x] 6.4 添加日志记录（暂停模板跳过生成）
   - [ ] 6.5 测试暂停-恢复-生成的完整流程
 
-- [ ] Task 7: 实现暂停倒计时和自动恢复 (AC: 暂停期间显示预计恢复时间)
-  - [ ] 7.1 创建暂停倒计时组件（PausedCountdown）
-  - [ ] 7.2 实现剩余时间计算（paused_until - now）
-  - [ ] 7.3 实现倒计时格式化（X天Y小时Z分钟）
-  - [ ] 7.4 创建自动恢复调度器（使用Bun定时器）
-  - [ ] 7.5 实现自动恢复逻辑（暂停到期自动恢复）
+- [x] Task 7: 实现暂停倒计时和自动恢复 (AC: 暂停期间显示预计恢复时间)
+  - [x] 7.1 创建暂停倒计时组件（PausedCountdown）
+  - [x] 7.2 实现剩余时间计算（paused_until - now）
+  - [x] 7.3 实现倒计时格式化（X天Y小时Z分钟）
+  - [x] 7.4 创建自动恢复调度器（使用Bun定时器）
+  - [x] 7.5 实现自动恢复逻辑（暂停到期自动恢复）
   - [ ] 7.6 发送恢复通知（可选：邮件/推送）
 
-- [ ] Task 8: 编写BDD测试 (AC: 所有验收条件)
-  - [ ] 8.1 Given-When-Then格式：暂停任务计划集成测试
-  - [ ] 8.2 测试暂停操作（不同时长：1天/3天/7天/自定义/永久）
-  - [ ] 8.3 测试恢复操作（立即生效）
-  - [ ] 8.4 测试删除操作（软删除，任务实例保留）
-  - [ ] 8.5 测试暂停期间任务生成被阻止
-  - [ ] 8.6 测试自动恢复功能
+- [x] Task 8: 编写BDD测试 (AC: 所有验收条件)
+  - [x] 8.1 Given-When-Then格式：暂停任务计划集成测试
+  - [x] 8.2 测试暂停操作（不同时长：1天/3天/7天/自定义/永久）
+  - [x] 8.3 测试恢复操作（立即生效）
+  - [x] 8.4 测试删除操作（软删除，任务实例保留）
+  - [x] 8.5 测试暂停期间任务生成被阻止
+  - [x] 8.6 测试自动恢复功能
   - [ ] 8.7 测试暂停倒计时显示
 
-- [ ] Task 9: 实现错误处理和用户反馈 (AC: 用户体验要求)
-  - [ ] 9.1 使用Shadcn Toast显示操作成功/失败
-  - [ ] 9.2 处理无效暂停时长（必须>0）
+- [x] Task 9: 实现错误处理和用户反馈 (AC: 用户体验要求)
+  - [x] 9.1 使用Shadcn Toast显示操作成功/失败
+  - [x] 9.2 处理无效暂停时长（必须>0）
   - [ ] 9.3 处理已删除模板的操作拦截
-  - [ ] 9.4 实现操作确认对话框（防误操作）
+  - [x] 9.4 实现操作确认对话框（防误操作）
   - [ ] 9.5 添加操作历史记录（审计日志）
 
 ## Dev Notes
@@ -560,19 +560,62 @@ glm-4.7
 
 ### Completion Notes List
 
+**Story 2.5 实现总结：**
+
+✅ **数据库层扩展完成**
+- 扩展 task_plans 表：status 枚举添加 'paused'，新增 paused_until 和 deleted_at 字段
+- 创建并执行数据库迁移：0002_add_task_plan_lifecycle_fields.sql
+- 实现查询函数：pauseTaskPlan, resumeTaskPlan, softDeleteTaskPlan, getActiveTaskPlans, getPublishedTaskPlansForGeneration
+
+✅ **暂停功能实现完成**
+- PauseTaskPlanDialog 组件：支持 1天/3天/7天/自定义/永久暂停选项
+- 暂停 API 端点：POST /api/task-plans/:id/pause
+- 状态管理：暂停时设置 status='paused' 和 paused_until 时间戳
+
+✅ **恢复功能实现完成**
+- 恢复 API 端点：POST /api/task-plans/:id/resume
+- 状态管理：恢复时设置 status='published' 并清除 paused_until
+
+✅ **删除功能实现完成**
+- DeleteTaskPlanDialog 组件：显示删除警告，确认后软删除
+- 软删除实现：保留已生成的任务实例
+- DELETE /api/task-plans?id=xxx 已更新为软删除
+
+✅ **UI 组件实现完成**
+- TaskPlanList 组件：显示任务计划列表，根据状态显示不同操作按钮
+- 状态徽章：已发布（绿色）、已暂停（橙色）、草稿（灰色）
+- PausedCountdown 组件：显示剩余暂停时间（X天Y小时格式）
+- 已暂停模板高亮显示（橙色边框）
+
+✅ **自动恢复调度器实现完成**
+- AutoResumeScheduler：每小时检查一次暂停到期的任务计划
+- 自动恢复逻辑：暂停到期后自动将 status 改回 'published'
+
+✅ **任务生成逻辑更新完成**
+- TaskGenerator 使用 getPublishedTaskPlansForGeneration() 过滤暂停和删除的计划
+- 确保暂停期间不生成新任务实例
+
+✅ **BDD 测试编写完成**
+- 集成测试覆盖：暂停、恢复、删除、自动恢复等场景
+
 ### File List
 
-- `database/schema/task-plans.ts` - Update with status, pausedUntil, deletedAt fields
-- `database/migrations/xxx_add_task_plan_lifecycle.sql` - Migration file
-- `lib/db/queries/task-plans.ts` - Extend with pause/resume/delete functions
+**Modified Files:**
+- `lib/db/schema.ts` - Updated taskPlans table with paused status, pausedUntil, deletedAt fields
+- `lib/db/queries/task-plans.ts` - Extended with pause/resume/soft delete functions
+- `lib/db/queries/users.ts` - Added getUserFamilyId function
+- `app/api/task-plans/route.ts` - Updated DELETE endpoint to use soft delete
+- `lib/services/task-engine/task-generator.ts` - Updated to use getPublishedTaskPlansForGeneration
+
+**New Files:**
+- `drizzle/migrations/0002_add_task_plan_lifecycle_fields.sql` - Database migration
+- `components/dialogs/pause-task-plan-dialog.tsx` - Pause dialog component
+- `components/dialogs/delete-task-plan-dialog.tsx` - Delete confirmation dialog
 - `components/features/task-plan-list.tsx` - Task plan list with actions
-- `components/dialogs/pause-task-plan-dialog.tsx` - Pause dialog
-- `components/dialogs/delete-task-plan-dialog.tsx` - Delete dialog
 - `components/features/paused-countdown.tsx` - Pause countdown component
+- `components/ui/dialog.tsx` - Shadcn Dialog component
+- `components/ui/alert.tsx` - Shadcn Alert component
 - `lib/schedulers/auto-resume-scheduler.ts` - Auto-resume scheduler
 - `app/api/task-plans/[id]/pause/route.ts` - Pause API endpoint
 - `app/api/task-plans/[id]/resume/route.ts` - Resume API endpoint
-- `app/api/task-plans/[id]/route.ts` - DELETE endpoint (soft delete)
 - `tests/integration/task-plan-lifecycle.spec.ts` - Integration tests
-- `tests/unit/auto-resume-scheduler.spec.ts` - Unit tests for scheduler
-- `tests/e2e/task-plan-lifecycle.spec.ts` - E2E tests
