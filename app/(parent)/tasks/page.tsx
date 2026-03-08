@@ -2,26 +2,28 @@
  * Task Plans List Page
  *
  * Story 2.1: Parent Creates Task Plan Template
+ * Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
  *
  * This page displays all task plans for the parent's family
- *
- * Source: Story 2.1
+ * with pause/resume/delete actions
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { TaskPlanList } from '@/components/features/task-plan-list';
+import { toast } from 'sonner';
+import type { TaskPlanStatus } from '@/lib/db/queries/task-plans';
 
 interface TaskPlan {
   id: string;
   title: string;
   task_type: string;
   points: number;
-  status: 'draft' | 'published';
+  status: TaskPlanStatus;
+  paused_until?: Date | string | null;
   created_at: string;
   rule: string;
 }
@@ -29,7 +31,7 @@ interface TaskPlan {
 /**
  * Task Plans List Page
  *
- * Displays all task plans with actions to create, edit, delete
+ * Displays all task plans with pause/resume/delete actions
  */
 export default function TaskPlansPage() {
   const [taskPlans, setTaskPlans] = useState<TaskPlan[]>([]);
@@ -72,20 +74,64 @@ export default function TaskPlansPage() {
     }
   };
 
-  const getFrequencyLabel = (ruleJson: string): string => {
+  const handlePause = async (planId: string, durationDays: number | null) => {
     try {
-      const rule = JSON.parse(ruleJson);
-      const frequencyMap: Record<string, string> = {
-        daily: '每天',
-        weekly: '每周',
-        weekdays: '工作日',
-        weekends: '周末',
-        custom: '自定义',
-      };
-      return frequencyMap[rule.frequency] || rule.frequency;
-    } catch {
-      return '未知';
+      const response = await fetch(`/api/task-plans/${planId}/pause`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ durationDays }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '暂停失败');
+      }
+
+      await fetchTaskPlans();
+    } catch (err) {
+      throw err;
     }
+  };
+
+  const handleResume = async (planId: string) => {
+    try {
+      const response = await fetch(`/api/task-plans/${planId}/resume`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '恢复失败');
+      }
+
+      await fetchTaskPlans();
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const handleDelete = async (planId: string) => {
+    try {
+      const response = await fetch(`/api/task-plans?id=${planId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '删除失败');
+      }
+
+      await fetchTaskPlans();
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const handleEdit = (planId: string) => {
+    window.location.href = `/tasks/edit/${planId}`;
   };
 
   return (
@@ -115,52 +161,24 @@ export default function TaskPlansPage() {
         </div>
       ) : taskPlans.length === 0 ? (
         /* Empty State */
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground mb-4">
-              还没有创建任何任务模板
-            </p>
-            <Link href="/tasks/create">
-              <Button>创建第一个模板</Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="text-center py-12 border rounded-lg bg-muted/20">
+          <p className="text-muted-foreground mb-4">
+            还没有创建任何任务模板
+          </p>
+          <Link href="/tasks/create">
+            <Button>创建第一个模板</Button>
+          </Link>
+        </div>
       ) : (
-        /* Task Plans List */
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {taskPlans.map(plan => (
-            <Card key={plan.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{plan.title}</CardTitle>
-                  <Badge variant={plan.status === 'published' ? 'default' : 'secondary'}>
-                    {plan.status === 'published' ? '已发布' : '草稿'}
-                  </Badge>
-                </div>
-                <CardDescription>
-                  {plan.task_type} · {plan.points} 积分
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <p className="text-muted-foreground">
-                    循环规则：{getFrequencyLabel(plan.rule)}
-                  </p>
-                  <p className="text-muted-foreground">
-                    创建时间：{new Date(plan.created_at).toLocaleDateString('zh-CN')}
-                  </p>
-                </div>
-                <div className="mt-4 flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    编辑
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    删除
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        /* Task Plans List with Actions */
+        <div className="max-w-4xl mx-auto">
+          <TaskPlanList
+            taskPlans={taskPlans}
+            onPause={handlePause}
+            onResume={handleResume}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+          />
         </div>
       )}
     </div>
