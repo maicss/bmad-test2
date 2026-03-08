@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getSessionByToken } from '@/lib/db/queries/sessions';
 import { resumeTaskPlan, canUserModifyTaskPlan } from '@/lib/db/queries/task-plans';
 import { getUserFamilyId } from '@/lib/db/queries/users';
 
@@ -19,19 +19,35 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get authenticated session
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    // Get session token from cookie
+    const sessionToken = request.cookies.get('better-auth.session_token')?.value;
 
-    if (!session) {
+    if (!sessionToken) {
       return NextResponse.json(
-        { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+        { error: 'Unauthorized: No session token', code: 'UNAUTHORIZED' },
         { status: 401 }
       );
     }
 
-    const userId = session.user.id;
+    // Validate session
+    const session = await getSessionByToken(sessionToken);
+
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Invalid session', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    // Check if session is expired
+    if (new Date(session.expires_at) < new Date()) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Session expired', code: 'SESSION_EXPIRED' },
+        { status: 401 }
+      );
+    }
+
+    const userId = session.user_id;
     const taskPlanId = (await params).id;
 
     // Get user's family ID

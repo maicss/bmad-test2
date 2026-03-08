@@ -96,11 +96,11 @@ export function TaskPlanList({
   const getStatusBadge = (status: TaskPlanStatus) => {
     switch (status) {
       case 'published':
-        return <Badge variant="default" className="bg-green-500">已发布</Badge>;
+        return <Badge variant="default" className="bg-green-500" data-testid="status-badge">已发布</Badge>;
       case 'paused':
-        return <Badge variant="secondary" className="bg-orange-500 text-white">已暂停</Badge>;
+        return <Badge variant="secondary" className="bg-orange-500 text-white" data-testid="status-badge">已暂停</Badge>;
       case 'draft':
-        return <Badge variant="outline">草稿</Badge>;
+        return <Badge variant="outline" data-testid="status-badge">草稿</Badge>;
     }
   };
 
@@ -126,6 +126,7 @@ export function TaskPlanList({
           taskPlans.map((plan) => (
             <div
               key={plan.id}
+              data-testid="task-plan-item"
               className={`flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent ${
                 plan.status === 'paused' ? 'border-orange-200 bg-orange-50/50 dark:border-orange-900 dark:bg-orange-950/20' : ''
               }`}
@@ -139,7 +140,9 @@ export function TaskPlanList({
                   <span>{getTaskTypeLabel(plan.task_type)}</span>
                   <span>{plan.points} 积分</span>
                   {plan.status === 'paused' && plan.paused_until && (
-                    <PausedCountdown pausedUntil={plan.paused_until} />
+                    <div data-testid="paused-countdown">
+                      <PausedCountdown pausedUntil={plan.paused_until} />
+                    </div>
                   )}
                 </div>
               </div>
@@ -184,6 +187,7 @@ export function TaskPlanList({
                     size="sm"
                     onClick={() => handleDeleteClick(plan)}
                     className="text-destructive hover:text-destructive"
+                    aria-label="删除任务计划"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
