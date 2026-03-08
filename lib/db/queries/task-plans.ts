@@ -3,6 +3,7 @@
  *
  * Story 2.1: Parent Creates Task Plan Template
  * Story 2.3: Parent Sets Task Date Rules
+ * Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
  *
  * All task plan database operations MUST use these functions.
  * NEVER write raw SQL - use Drizzle ORM query builder.
@@ -13,8 +14,11 @@
 
 import db from '../index';
 import { taskPlans, tasks, taskPlanChildren, users } from '../schema';
-import { eq, and, desc, inArray, sql } from 'drizzle-orm';
+import { eq, and, desc, inArray, sql, isNull, lt } from 'drizzle-orm';
 import { type TaskDateRule } from '@/types/task-rule';
+
+// Story 2.5: Task plan status type
+export type TaskPlanStatus = 'draft' | 'published' | 'paused';
 
 // Type definitions for DTOs
 export interface CreateTaskPlanDTO {
@@ -25,7 +29,7 @@ export interface CreateTaskPlanDTO {
   rule: string; // JSON string of TaskDateRule
   excluded_dates?: string | null; // JSON array string
   reminder_time?: string | null;
-  status: 'draft' | 'published';
+  status: TaskPlanStatus; // Story 2.5: Now includes 'paused'
   created_by: string;
   assigned_children?: string[]; // Array of child user IDs
 }
@@ -37,7 +41,7 @@ export interface UpdateTaskPlanDTO {
   rule?: string;
   excluded_dates?: string | null;
   reminder_time?: string | null;
-  status?: 'draft' | 'published';
+  status?: TaskPlanStatus; // Story 2.5: Now includes 'paused'
   assigned_children?: string[];
 }
 
@@ -130,16 +134,26 @@ export async function getTaskPlanWithChildren(taskPlanId: string) {
 }
 
 /**
- * Get all task plans for a family
+ * Get all task plans for a family (non-deleted only)
  *
  * @param familyId - Family ID
  * @param status - Optional status filter
  * @returns Array of task plans
  */
-export async function getTaskPlansByFamily(familyId: string, status?: 'draft' | 'published') {
+export async function getTaskPlansByFamily(
+  familyId: string,
+  status?: TaskPlanStatus
+) {
   const conditions = status
-    ? and(eq(taskPlans.family_id, familyId), eq(taskPlans.status, status))
-    : eq(taskPlans.family_id, familyId);
+    ? and(
+        eq(taskPlans.family_id, familyId),
+        eq(taskPlans.status, status),
+        isNull(taskPlans.deleted_at)
+      )
+    : and(
+        eq(taskPlans.family_id, familyId),
+        isNull(taskPlans.deleted_at)
+      );
 
   const result = await db.query.taskPlans.findMany({
     where: conditions,
@@ -371,4 +385,176 @@ export async function updateTaskPlanRule(taskPlanId: string, rule: TaskDateRule)
   return updateTaskPlan(taskPlanId, {
     rule: serializeTaskPlanRule(rule),
   });
+}
+
+// ============================================================================
+// Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
+// ============================================================================
+
+/**
+ * Pause a task plan
+ *
+ * @param planId - Task plan ID
+ * @param durationDays - Pause duration in days (null = permanent pause)
+ * @returns The updated task plan or null
+ */
+export async function pauseTaskPlan(
+  planId: string,
+  durationDays: number | null = null
+) {
+  const pausedUntil = durationDays
+    ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
+    : null; // Permanent pause
+
+  const result = await db.update(taskPlans)
+    .set({
+      status: 'paused',
+      paused_until: pausedUntil,
+      updated_at: new Date(),
+    })
+    .where(eq(taskPlans.id, planId))
+    .returning();
+
+  return result[0] ?? null;
+}
+
+/**
+ * Resume a paused task plan
+ *
+ * @param planId - Task plan ID
+ * @returns The updated task plan or null
+ */
+export async function resumeTaskPlan(planId: string) {
+  const result = await db.update(taskPlans)
+    .set({
+      status: 'published',
+      paused_until: null,
+      updated_at: new Date(),
+    })
+    .where(eq(taskPlans.id, planId))
+    .returning();
+
+  return result[0] ?? null;
+}
+
+/**
+ * Soft delete a task plan (Story 2.5)
+ * The plan is marked as deleted but remains in database for audit trail
+ *
+ * @param planId - Task plan ID
+ * @returns The updated task plan or null
+ */
+export async function softDeleteTaskPlan(planId: string) {
+  const result = await db.update(taskPlans)
+    .set({
+      deleted_at: new Date(),
+      updated_at: new Date(),
+    })
+    .where(eq(taskPlans.id, planId))
+    .returning();
+
+  return result[0] ?? null;
+}
+
+/**
+ * Get active (non-deleted) task plans for a family
+ *
+ * @param familyId - Family ID
+ * @returns Array of active task plans
+ */
+export async function getActiveTaskPlans(familyId: string) {
+  const result = await db.query.taskPlans.findMany({
+    where: and(
+      eq(taskPlans.family_id, familyId),
+      isNull(taskPlans.deleted_at)
+    ),
+    orderBy: desc(taskPlans.created_at),
+  });
+
+  return result;
+}
+
+/**
+ * Get published task plans for task generation (Story 2.4, 2.5)
+ * Only returns published plans that are not paused or deleted
+ *
+ * @returns Array of published task plans ready for task generation
+ */
+export async function getPublishedTaskPlansForGeneration() {
+  const result = await db.query.taskPlans.findMany({
+    where: and(
+      eq(taskPlans.status, 'published'),
+      isNull(taskPlans.deleted_at)
+    ),
+    with: {
+      // Include related data if needed
+    },
+  });
+
+  return result;
+}
+
+/**
+ * Get paused task plans that should be auto-resumed
+ * Finds paused plans where paused_until has passed
+ *
+ * @returns Array of expired paused task plans
+ */
+export async function getExpiredPausedTaskPlans() {
+  const now = new Date();
+
+  const result = await db.query.taskPlans.findMany({
+    where: and(
+      eq(taskPlans.status, 'paused'),
+      lt(taskPlans.paused_until, now)
+    ),
+  });
+
+  return result;
+}
+
+/**
+ * Auto-resume expired paused task plans
+ *
+ * @returns Number of plans resumed
+ */
+export async function autoResumeExpiredPlans(): Promise<number> {
+  const expiredPlans = await getExpiredPausedTaskPlans();
+
+  let resumedCount = 0;
+  for (const plan of expiredPlans) {
+    try {
+      await db.update(taskPlans)
+        .set({
+          status: 'published',
+          paused_until: null,
+          updated_at: new Date(),
+        })
+        .where(eq(taskPlans.id, plan.id));
+
+      resumedCount++;
+    } catch (error) {
+      console.error(`Failed to auto-resume task plan ${plan.id}:`, error);
+    }
+  }
+
+  return resumedCount;
+}
+
+/**
+ * Get task plan by ID (only if not deleted)
+ * Story 2.5: Updated to exclude soft-deleted plans
+ *
+ * @param taskPlanId - Task plan ID
+ * @returns The task plan or null
+ */
+export async function getTaskPlanByIdSafe(taskPlanId: string) {
+  const result = await db.query.taskPlans.findFirst({
+    where: and(
+      eq(taskPlans.id, taskPlanId),
+      isNull(taskPlans.deleted_at)
+    ),
+  });
+
+  return result ?? null;
 }

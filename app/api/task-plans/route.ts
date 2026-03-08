@@ -21,6 +21,7 @@ import {
   getTaskPlansByFamily,
   updateTaskPlan,
   deleteTaskPlan,
+  softDeleteTaskPlan,
   canUserModifyTaskPlan,
   type CreateTaskPlanDTO,
   type UpdateTaskPlanDTO,
@@ -319,13 +320,12 @@ export async function PUT(request: NextRequest) {
 }
 
 /**
- * DELETE /api/task-plans - Delete a task plan
+ * DELETE /api/task-plans - Soft delete a task plan
  *
- * Deletes a task plan and its associated tasks
+ * Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
  *
- * This endpoint is used for:
- * - E2E test cleanup (deleting only test-created data, NOT entire tables)
- * - Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
+ * Soft deletes a task plan (sets deleted_at timestamp).
+ * Already generated task instances are preserved.
  *
  * Query parameters:
  * - id: Task plan ID to delete
@@ -396,13 +396,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete associated tasks first (maintain referential integrity)
-    await deleteTasksByTaskPlan(taskPlanId);
+    // Story 2.5: Soft delete the task plan (preserves existing tasks)
+    const deletedPlan = await softDeleteTaskPlan(taskPlanId);
 
-    // Delete the task plan
-    const deleted = await deleteTaskPlan(taskPlanId);
-
-    if (!deleted) {
+    if (!deletedPlan) {
       return NextResponse.json(
         { error: '任务模板不存在' },
         { status: 404 }
@@ -411,7 +408,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '任务模板已删除',
+      message: '任务模板已删除（已生成的任务实例保留）',
     });
   } catch (error) {
     console.error('Delete task plan error:', error);

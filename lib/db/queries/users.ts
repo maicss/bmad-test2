@@ -208,3 +208,16 @@ export async function getChildByPIN(pin: string): Promise<User | null> {
 export function generatePin(): string {
   return Math.floor(Math.random() * 9000 + 1000).toString().padStart(4, '0');
 }
+
+/**
+ * Get user's family ID
+ *
+ * Story 2.5: Used for task plan permission checks
+ *
+ * @param userId - User ID
+ * @returns Family ID or null if user has no family
+ */
+export async function getUserFamilyId(userId: string): Promise<string | null> {
+  const user = await getUserById(userId);
+  return user?.family_id || null;
+}
