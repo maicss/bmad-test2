@@ -184,8 +184,9 @@ export const taskPlans = sqliteTable('task_plans', {
   index('idx_task_plans_deleted_at').on(table.deleted_at), // Story 2.5: Index for soft delete queries
 ]);
 
-// Tasks table (Story 2.1, 2.4)
+// Tasks table (Story 2.1, 2.4, 2.6)
 // Stores concrete task instances generated from task plans
+// Story 2.6: Added is_manual field for manual task creation
 export const tasks = sqliteTable('tasks', {
   id: text('id').primaryKey(),
   family_id: text('family_id').notNull().references(() => families.id, { onDelete: 'cascade' }),
@@ -200,6 +201,8 @@ export const tasks = sqliteTable('tasks', {
   approved_by: text('approved_by').references(() => users.id, { onDelete: 'restrict' }),
   approved_at: integer('approved_at', { mode: 'timestamp' }),
   rejection_reason: text('rejection_reason'),
+  is_manual: integer('is_manual', { mode: 'boolean' }).notNull().default(false), // Story 2.6: Manual task marker
+  notes: text('notes'), // Story 2.6: Optional notes for manual tasks
   created_at: integer('created_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
   updated_at: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
 }, (table) => [
@@ -209,6 +212,7 @@ export const tasks = sqliteTable('tasks', {
   index('idx_tasks_scheduled_date').on(table.scheduled_date),
   index('idx_tasks_status').on(table.status),
   index('idx_tasks_family_scheduled').on(table.family_id, table.scheduled_date),
+  index('idx_tasks_is_manual').on(table.is_manual), // Story 2.6: Index for manual task queries
 ]);
 
 // Task Plan Children junction table (Story 2.1)

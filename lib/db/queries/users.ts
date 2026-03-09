@@ -1,6 +1,6 @@
 import db from '../index';
 import { users } from '../schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import type { User, NewUser } from '../schema';
 
 /**
@@ -220,4 +220,26 @@ export function generatePin(): string {
 export async function getUserFamilyId(userId: string): Promise<string | null> {
   const user = await getUserById(userId);
   return user?.family_id || null;
+}
+
+/**
+ * Get all children in a family
+ *
+ * Story 2.6: Used for manual task creation validation
+ *
+ * @param familyId - Family ID
+ * @returns Array of child users in the family
+ */
+export async function getFamilyChildren(familyId: string): Promise<User[]> {
+  const result = await db
+    .select()
+    .from(users)
+    .where(
+      and(
+        eq(users.family_id, familyId),
+        eq(users.role, 'child')
+      )
+    ) as any;
+
+  return Array.isArray(result) ? result as User[] : [];
 }
