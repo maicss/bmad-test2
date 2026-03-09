@@ -601,3 +601,85 @@ export async function countPendingApprovalTasks(familyId: string): Promise<numbe
 
   return result[0]?.count ?? 0;
 }
+
+// Story 2.8: Child Views Today's Task List
+
+/**
+ * Get today's tasks for a child
+ *
+ * Story 2.8 Task 2.4: 实现任务数据加载
+ *
+ * @param childId - Child user ID
+ * @returns Array of today's tasks for the child
+ */
+export async function getTodayTasksByChild(childId: string) {
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+  const result = await db.query.tasks.findMany({
+    where: and(
+      eq(tasks.assigned_child_id, childId),
+      eq(tasks.scheduled_date, today)
+    ),
+    orderBy: [desc(tasks.created_at)],
+  });
+
+  return result;
+}
+
+/**
+ * Get task progress for a child
+ *
+ * Story 2.8 Task 5.1: 实现任务统计计算（已完成数/总数）
+ *
+ * @param childId - Child user ID
+ * @returns Progress object with completed, total, and percentage
+ */
+export async function getTaskProgressByChild(childId: string) {
+  const today = new Date().toISOString().split('T')[0];
+
+  const allTasks = await db.query.tasks.findMany({
+    where: and(
+      eq(tasks.assigned_child_id, childId),
+      eq(tasks.scheduled_date, today)
+    ),
+  });
+
+  const total = allTasks.length;
+  const completed = allTasks.filter(t => t.status === 'completed' || t.status === 'approved').length;
+  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return {
+    completed,
+    total,
+    progress,
+  };
+}
+
+/**
+ * Get task status for display
+ *
+ * Story 2.8 Task 3: 任务状态显示
+ * Maps internal status to display status for child UI
+ *
+ * @param status - Internal task status
+ * @returns Display status: 'pending' | 'completed' | 'pending_approval'
+ */
+export function getTaskStatusDisplay(status: string): 'pending' | 'completed' | 'pending_approval' {
+  // Map internal statuses to child-friendly display statuses
+  // pending → pending (待完成)
+  // in_progress → pending (待完成)
+  // completed → pending_approval (待审批 - child marked complete, waiting parent approval)
+  // approved → completed (已完成)
+  // rejected → pending (待完成 - rejected, need to redo)
+  // skipped → pending (待完成)
+
+  if (status === 'approved') {
+    return 'completed';
+  }
+
+  if (status === 'completed') {
+    return 'pending_approval';
+  }
+
+  return 'pending';
+}
