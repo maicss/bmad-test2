@@ -2,6 +2,7 @@
  * Auto-Resume Scheduler
  *
  * Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
+ * Story 2.5 Task 7.6: Send notifications when auto-resuming
  *
  * Automatically resumes task plans when their pause duration expires.
  * Runs as a background interval job checking every hour.
@@ -14,12 +15,15 @@
 import db from '@/lib/db';
 import { taskPlans } from '@/lib/db/schema';
 import { eq, and, lt, isNull } from 'drizzle-orm';
+import { sendTaskPlanResumedNotification } from '@/lib/db/queries/notifications';
 
 export class AutoResumeScheduler {
   private intervalId: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Check and auto-resume paused task plans
+   *
+   * Story 2.5 Task 7.6: Sends notifications to parents when resuming
    *
    * Finds all paused plans where paused_until has passed
    * and resumes them by setting status to 'published'
@@ -36,6 +40,7 @@ export class AutoResumeScheduler {
           id: taskPlans.id,
           title: taskPlans.title,
           pausedUntil: taskPlans.paused_until,
+          family_id: taskPlans.family_id,
         })
         .from(taskPlans)
         .where(
@@ -63,6 +68,13 @@ export class AutoResumeScheduler {
               updated_at: now,
             })
             .where(eq(taskPlans.id, plan.id));
+
+          // Story 2.5 Task 7.6: Send notification to parents
+          await sendTaskPlanResumedNotification(
+            plan.family_id,
+            plan.id,
+            plan.title
+          );
 
           resumedCount++;
           console.log(`[AutoResume] Resumed task plan: ${plan.title} (${plan.id})`);

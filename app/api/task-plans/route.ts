@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionByToken } from '@/lib/db/queries/sessions';
 import { getUserById } from '@/lib/db/queries/users';
+import { logUserAction } from '@/lib/db/queries/audit-logs';
 import {
   createTaskPlan,
   getTaskPlansByFamily,
@@ -23,6 +24,7 @@ import {
   deleteTaskPlan,
   softDeleteTaskPlan,
   canUserModifyTaskPlan,
+  getTaskPlanById,
   type CreateTaskPlanDTO,
   type UpdateTaskPlanDTO,
 } from '@/lib/db/queries/task-plans';
@@ -323,6 +325,7 @@ export async function PUT(request: NextRequest) {
  * DELETE /api/task-plans - Soft delete a task plan
  *
  * Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
+ * Story 2.5 Task 9.5: Added audit logging
  *
  * Soft deletes a task plan (sets deleted_at timestamp).
  * Already generated task instances are preserved.
@@ -387,6 +390,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Get task plan before deletion for audit log
+    const taskPlan = await getTaskPlanById(taskPlanId);
+    if (!taskPlan) {
+      return NextResponse.json(
+        { error: '任务模板不存在' },
+        { status: 404 }
+      );
+    }
+
     // Check if task plan exists and user can modify it
     const canModify = await canUserModifyTaskPlan(taskPlanId, user.id, user.family_id!);
     if (!canModify) {
@@ -405,6 +417,20 @@ export async function DELETE(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Story 2.5 Task 9.5: Log audit action
+    await logUserAction(
+      user.id,
+      'task_plan_delete',
+      {
+        taskPlanId,
+        taskPlanTitle: taskPlan.title,
+        taskType: taskPlan.task_type,
+        points: taskPlan.points,
+        status: taskPlan.status,
+      },
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null
+    );
 
     return NextResponse.json({
       success: true,
