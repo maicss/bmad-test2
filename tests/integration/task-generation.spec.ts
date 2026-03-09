@@ -423,4 +423,5 @@ describe('Story 2.4: System Auto-Generates Task Instances', () => {
     const day3Tasks = await getTasksForChild(familyId, childId, day3Str);
     expect(day3Tasks).toHaveLength(1);
   });
+
 });
