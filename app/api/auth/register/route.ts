@@ -66,10 +66,10 @@ export async function POST(req: NextRequest) {
       }
 
       // Development mode: Verify fixed OTP code
-      const otpProvider = Bun.env.OTP_PROVIDER || 'console-debug';
+      const otpProvider = Bun.env.OTP_PROVIDER || 'console';
       const fixedCode = Bun.env.OTP_DEBUG_CODE || '111111';
 
-      if (otpProvider === 'console-debug') {
+      if (otpProvider === 'console' || otpProvider === 'console-debug') {
         if (body.otp !== fixedCode) {
           return NextResponse.json<RegisterResponse>({
             success: false,

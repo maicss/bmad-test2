@@ -8,8 +8,12 @@ import { randomUUID } from 'node:crypto';
 /**
  * Generate device fingerprint from request
  *
- * Combines user-agent + IP + timestamp to create unique device identifier
+ * Combines user-agent + IP to create stable device identifier
  * Hashed for security (NFR10: device_id encryption)
+ *
+ * Note: Excluding timestamp ensures same device has consistent fingerprint
+ * across requests, enabling proper rate limiting and session tracking
+ * Uses SHA-256 (not bcrypt) to ensure same input produces same output
  *
  * @param userAgent - User-Agent header
  * @param ipAddress - IP address
@@ -19,16 +23,16 @@ export async function generateDeviceFingerprint(
   userAgent: string,
   ipAddress: string
 ): Promise<string> {
-  // Combine user-agent, IP, and current time for uniqueness
-  const fingerprintData = `${userAgent}|${ipAddress}|${Date.now()}`;
+  // Combine user-agent and IP for stable device identification
+  const fingerprintData = `${userAgent}|${ipAddress}`;
 
-  // Hash using Bun.password.hash for security (NFR10)
-  const hashed = await Bun.password.hash(fingerprintData, {
-    algorithm: 'argon2id',
-  });
+  // Use crypto.subtle.digest for stable hashing (same input = same output)
+  const encoder = new TextEncoder();
+  const data = encoder.encode(fingerprintData);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
 
   // Return base64 encoded hash for compact storage
-  return Buffer.from(hashed).toString('base64').slice(0, 64);
+  return Buffer.from(hashBuffer).toString('base64').slice(0, 64);
 }
 
 /**

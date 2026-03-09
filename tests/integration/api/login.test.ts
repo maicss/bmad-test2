@@ -170,8 +170,8 @@ describe('Story 1.2: Parent Phone Login - Password Flow Integration', () => {
 
 describe('Story 1.2: Parent Phone Login - Error Handling Integration', () => {
   it('given 未注册手机号，when 尝试登录，then 显示手机号未注册错误', async () => {
-    // Given: 未注册的手机号
-    const phone = '13800009999';
+    // Given: 未注册的手机号 (使用随机手机号确保不存在)
+    const phone = `1380000${Math.floor(Math.random() * 90000 + 10000)}`;
 
     // When: 尝试登录（密码方式）
     const response = await fetch(`${BASE_URL}/api/auth/login`, {
@@ -192,8 +192,8 @@ describe('Story 1.2: Parent Phone Login - Error Handling Integration', () => {
   });
 
   it('given 未注册手机号，when 尝试使用OTP登录，then 显示手机号未注册错误', async () => {
-    // Given: 未注册的手机号
-    const phone = '13800009999';
+    // Given: 未注册的手机号 (使用随机手机号确保不存在)
+    const phone = `1380000${Math.floor(Math.random() * 90000 + 10000)}`;
 
     // When: 尝试登录（OTP方式）
     const response = await fetch(`${BASE_URL}/api/auth/login`, {

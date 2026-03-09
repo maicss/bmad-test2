@@ -75,9 +75,9 @@ export class DateRuleParser {
       return false;
     }
 
-    // For 'once' scope, only exclude exact date matches within the current week
+    // For 'once' scope, only exclude exact date matches
     if (rule.excludedDates.scope === 'once') {
-      return this.isSameWeek(targetDate, new Date()) && rule.excludedDates.dates.includes(targetDateStr);
+      return rule.excludedDates.dates.includes(targetDateStr);
     }
 
     // For 'permanent' scope, check both exact date and month-day matches

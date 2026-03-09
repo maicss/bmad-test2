@@ -243,3 +243,107 @@ export async function getFamilyChildren(familyId: string): Promise<User[]> {
 
   return Array.isArray(result) ? result as User[] : [];
 }
+
+/**
+ * Generate unique 4-digit PIN code for a family
+ *
+ * Ensures PIN is unique among all children in the family
+ *
+ * @param familyId - Family ID
+ * @returns Unique 4-digit PIN string
+ */
+async function generateUniquePIN(familyId: string): Promise<string> {
+  const maxAttempts = 100;
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    const pin = generatePin();
+
+    // Check if any child in this family already has this PIN
+    const familyChildren = await getFamilyChildren(familyId);
+    const pinTaken = await Promise.all(
+      familyChildren.map(async (child) => {
+        if (!child.password_hash) return false;
+        try {
+          return await Bun.password.verify(pin, child.password_hash);
+        } catch {
+          return false;
+        }
+      })
+    );
+
+    if (!pinTaken.some(taken => taken)) {
+      return pin; // Found unique PIN
+    }
+
+    attempts++;
+  }
+
+  throw new Error('Failed to generate unique PIN after maximum attempts');
+}
+
+/**
+ * Create child account with auto-generated PIN
+ *
+ * Creates a child user account with:
+ * - Unique 4-digit PIN (0000-9999)
+ * - Role set to 'child'
+ * - Linked to parent's family
+ * - PIN encrypted using Bun.password.hash()
+ *
+ * @param name - Child name
+ * @param age - Child age (6-12 years)
+ * @param familyId - Family ID to link child to
+ * @returns Created child user with generatedPin property
+ * @throws Error if validation fails
+ */
+export async function createChildAccount(
+  name: string,
+  age: number,
+  familyId: string
+): Promise<User & { generatedPin: string }> {
+  // Validate child name
+  if (!name || name.trim().length === 0) {
+    throw new Error('Child name is required');
+  }
+
+  if (name.trim().length > 50) {
+    throw new Error('Child name cannot exceed 50 characters');
+  }
+
+  // Validate child age (6-12 years)
+  if (isNaN(age) || age < 6 || age > 12) {
+    throw new Error('Child age must be between 6 and 12 years');
+  }
+
+  // Generate unique PIN for this family
+  const pin = await generateUniquePIN(familyId);
+
+  // Hash PIN using Bun.password.hash()
+  const pinHash = await Bun.password.hash(pin, 'bcrypt');
+
+  // Create child user account
+  // Note: Using phone field to store name temporarily (as per Story 1.5 implementation)
+  const result = await db
+    .insert(users)
+    .values({
+      id: Bun.randomUUIDv7(),
+      phone: name.trim(), // Store name in phone field temporarily
+      phone_hash: '', // Empty hash since we're using phone for name
+      password_hash: pinHash, // Store hashed PIN in password_hash
+      role: 'child',
+      family_id: familyId,
+    })
+    .returning() as any;
+
+  const child = Array.isArray(result) && result.length > 0 ? result[0] as User : null;
+  if (!child) {
+    throw new Error('Failed to create child account');
+  }
+
+  // Return child with generated PIN for display
+  return {
+    ...child,
+    generatedPin: pin,
+  };
+}

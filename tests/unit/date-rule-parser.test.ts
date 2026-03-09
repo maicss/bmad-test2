@@ -324,6 +324,185 @@ describe('[日期规则解析引擎]', () => {
       expect(parser.shouldGenerateTask(rule, nextWeekDate, planStartDate)).toBe(true);
     });
   });
+
+  describe('getGenerationDatesInRange - 预览功能', () => {
+    it('given 每日规则，when 获取日期范围内的生成日期，then 返回所有日期', () => {
+      // Given: 每日规则
+      const rule: TaskDateRule = { frequency: 'daily' };
+      const startDate = new Date('2026-03-01');
+      const endDate = new Date('2026-03-05');
+      const planStartDate = new Date('2026-03-01');
+
+      // When: 获取生成日期
+      const dates = parser.getGenerationDatesInRange(rule, startDate, endDate, planStartDate);
+
+      // Then: 返回5天
+      expect(dates.length).toBe(5);
+      expect(dates.every(d => d >= startDate && d <= endDate)).toBe(true);
+    });
+
+    it('given 每周规则，when 获取日期范围内的生成日期，then 只返回匹配的星期', () => {
+      // Given: 每周规则（周一、三、五）
+      const rule: TaskDateRule = {
+        frequency: 'weekly',
+        daysOfWeek: [1, 3, 5], // Mon, Wed, Fri
+      };
+      const startDate = new Date('2026-03-01'); // Sunday
+      const endDate = new Date('2026-03-07'); // Saturday
+      const planStartDate = new Date('2026-03-01');
+
+      // When: 获取生成日期
+      const dates = parser.getGenerationDatesInRange(rule, startDate, endDate, planStartDate);
+
+      // Then: 只返回周一、三、五
+      expect(dates.length).toBe(3);
+      const days = dates.map(d => d.getDay());
+      expect(days.sort()).toEqual([1, 3, 5]);
+    });
+
+    it('given 工作日规则，when 获取日期范围内的生成日期，then 只返回工作日', () => {
+      // Given: 工作日规则
+      const rule: TaskDateRule = { frequency: 'weekdays' };
+      const startDate = new Date('2026-03-01'); // Sunday
+      const endDate = new Date('2026-03-07'); // Saturday
+      const planStartDate = new Date('2026-03-01');
+
+      // When: 获取生成日期
+      const dates = parser.getGenerationDatesInRange(rule, startDate, endDate, planStartDate);
+
+      // Then: 只返回周一到周五（5天）
+      expect(dates.length).toBe(5);
+      dates.forEach(d => {
+        const day = d.getDay();
+        expect(day).toBeGreaterThanOrEqual(1);
+        expect(day).toBeLessThanOrEqual(5);
+      });
+    });
+
+    it('given 周末规则，when 获取日期范围内的生成日期，then 只返回周末', () => {
+      // Given: 周末规则
+      const rule: TaskDateRule = { frequency: 'weekends' };
+      const startDate = new Date('2026-03-01'); // Sunday
+      const endDate = new Date('2026-03-07'); // Saturday
+      const planStartDate = new Date('2026-03-01');
+
+      // When: 获取生成日期
+      const dates = parser.getGenerationDatesInRange(rule, startDate, endDate, planStartDate);
+
+      // Then: 只返回周六和周日（2天）
+      expect(dates.length).toBe(2);
+      dates.forEach(d => {
+        const day = d.getDay();
+        expect(day === 0 || day === 6).toBe(true);
+      });
+    });
+
+    it('given 间隔规则，when 获取日期范围内的生成日期，then 按间隔返回日期', () => {
+      // Given: 每3天间隔
+      const rule: TaskDateRule = {
+        frequency: 'interval',
+        intervalDays: 3,
+      };
+      const startDate = new Date('2026-03-01');
+      const endDate = new Date('2026-03-10');
+      const planStartDate = new Date('2026-03-01');
+
+      // When: 获取生成日期
+      const dates = parser.getGenerationDatesInRange(rule, startDate, endDate, planStartDate);
+
+      // Then: 每3天返回一次（第1、4、7、10天）
+      expect(dates.length).toBe(4);
+      expect(dates[0].getDate()).toBe(1);
+      expect(dates[1].getDate()).toBe(4);
+      expect(dates[2].getDate()).toBe(7);
+      expect(dates[3].getDate()).toBe(10);
+    });
+
+    it('given 指定日期规则，when 获取日期范围内的生成日期，then 只返回指定日期', () => {
+      // Given: 指定日期规则
+      const rule: TaskDateRule = {
+        frequency: 'specific',
+        specificDates: ['2026-03-02', '2026-03-05', '2026-03-08'],
+      };
+      const startDate = new Date('2026-03-01');
+      const endDate = new Date('2026-03-10');
+      const planStartDate = new Date('2026-03-01');
+
+      // When: 获取生成日期
+      const dates = parser.getGenerationDatesInRange(rule, startDate, endDate, planStartDate);
+
+      // Then: 只返回指定日期
+      expect(dates.length).toBe(3);
+      const dateStrs = dates.map(d => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      });
+      expect(dateStrs).toContain('2026-03-02');
+      expect(dateStrs).toContain('2026-03-05');
+      expect(dateStrs).toContain('2026-03-08');
+    });
+  });
+
+  describe('getGenerationStats - 统计功能', () => {
+    it('given 每日规则，when 获取统计信息，then 返回计数和日期列表', () => {
+      // Given: 每日规则
+      const rule: TaskDateRule = { frequency: 'daily' };
+      const startDate = new Date('2026-03-01');
+      const endDate = new Date('2026-03-07');
+      const planStartDate = new Date('2026-03-01');
+
+      // When: 获取统计信息
+      const stats = parser.getGenerationStats(rule, startDate, endDate, planStartDate);
+
+      // Then: 返回正确的计数
+      expect(stats.count).toBe(7);
+      expect(stats.dates.length).toBe(7);
+      expect(stats.excludedCount).toBe(0);
+    });
+
+    it('given 带排除日期的规则，when 获取统计信息，then 包含排除计数', () => {
+      // Given: 带排除日期的规则
+      const rule: TaskDateRule = {
+        frequency: 'daily',
+        excludedDates: {
+          dates: ['2026-03-03', '2026-03-05'],
+          scope: 'once',
+        },
+      };
+      const startDate = new Date('2026-03-01');
+      const endDate = new Date('2026-03-07');
+      const planStartDate = new Date('2026-03-01');
+
+      // When: 获取统计信息
+      const stats = parser.getGenerationStats(rule, startDate, endDate, planStartDate);
+
+      // Then: 排除2天后返回5天
+      expect(stats.count).toBe(5);
+      expect(stats.excludedCount).toBe(2);
+    });
+
+    it('given 带范围外排除日期的规则，when 获取统计信息，then 不计数范围外的排除日期', () => {
+      // Given: 带排除日期的规则（排除日期在范围外）
+      const rule: TaskDateRule = {
+        frequency: 'daily',
+        excludedDates: {
+          dates: ['2026-02-28', '2026-03-10'], // 范围外
+          scope: 'once',
+        },
+      };
+      const startDate = new Date('2026-03-01');
+      const endDate = new Date('2026-03-07');
+      const planStartDate = new Date('2026-03-01');
+
+      // When: 获取统计信息
+      const stats = parser.getGenerationStats(rule, startDate, endDate, planStartDate);
+
+      // Then: 排除计数为0
+      expect(stats.excludedCount).toBe(0);
+    });
+  });
 });
 
 // Helper function for beforeEach
