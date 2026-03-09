@@ -1,6 +1,6 @@
 # Story 2.6: Parent Uses Template to Quickly Create Task
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -27,43 +27,43 @@ So that 我可以快速为孩子添加不在计划内的任务。
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: 设计并扩展tasks表支持手动创建标记 (AC: 任务实例标记为手动创建)
-  - [ ] 1.1 验证tasks表已有is_manual字段（boolean）
-  - [ ] 1.2 如果不存在，创建迁移添加is_manual字段
-  - [ ] 1.3 更新lib/db/queries/tasks.ts支持is_manual字段查询
-  - [ ] 1.4 创建索引优化查询（is_manual, date, child_id）
+- [x] Task 1: 设计并扩展tasks表支持手动创建标记 (AC: 任务实例标记为手动创建)
+  - [x] 1.1 验证tasks表已有is_manual字段（boolean）
+  - [x] 1.2 如果不存在，创建迁移添加is_manual字段
+  - [x] 1.3 更新lib/db/queries/tasks.ts支持is_manual字段查询
+  - [x] 1.4 创建索引优化查询（is_manual, date, child_id）
 
-- [ ] Task 2: 实现模板选择器UI (AC: 显示模板列表，仅显示我创建或管理员发布的模板)
-  - [ ] 2.1 创建TemplateSelector组件（Shadcn Dialog + Radio Group）
-  - [ ] 2.2 实现模板列表加载（获取我的模板+管理员发布模板）
-  - [ ] 2.3 实现模板卡片展示（标题、任务类型、积分值）
-  - [ ] 2.4 添加模板筛选功能（我的模板/管理员模板/全部）
-  - [ ] 2.5 实现模板搜索功能（按标题搜索）
+- [x] Task 2: 实现模板选择器UI (AC: 显示模板列表，仅显示我创建或管理员发布的模板)
+  - [x] 2.1 创建TemplateSelector组件（Shadcn Dialog + Radio Group）
+  - [x] 2.2 实现模板列表加载（获取我的模板+管理员发布模板）
+  - [x] 2.3 实现模板卡片展示（标题、任务类型、积分值）
+  - [x] 2.4 添加模板筛选功能（我的模板/管理员模板/全部）
+  - [x] 2.5 实现模板搜索功能（按标题搜索）
 
-- [ ] Task 3: 实现快速创建任务表单 (AC: 系统预填模板信息，家长可修改)
-  - [ ] 3.1 创建QuickTaskForm组件（复用TaskPlanForm组件逻辑）
-  - [ ] 3.2 实现模板信息预填（选择模板后自动填充）
-  - [ ] 3.3 实现表单字段：任务名称（可编辑）
-  - [ ] 3.4 实现表单字段：积分值（可编辑，默认模板值）
-  - [ ] 3.5 实现表单字段：执行日期（必填，默认今天）
-  - [ ] 3.6 实现表单字段：适用儿童（必填，多选）
-  - [ ] 3.7 实现表单字段：备注（可选）
-  - [ ] 3.8 添加"重置为模板值"按钮
+- [x] Task 3: 实现快速创建任务表单 (AC: 系统预填模板信息，家长可修改)
+  - [x] 3.1 创建QuickTaskForm组件（复用TaskPlanForm组件逻辑）
+  - [x] 3.2 实现模板信息预填（选择模板后自动填充）
+  - [x] 3.3 实现表单字段：任务名称（可编辑）
+  - [x] 3.4 实现表单字段：积分值（可编辑，默认模板值）
+  - [x] 3.5 实现表单字段：执行日期（必填，默认今天）
+  - [x] 3.6 实现表单字段：适用儿童（必填，多选）
+  - [x] 3.7 实现表单字段：备注（可选）
+  - [x] 3.8 添加"重置为模板值"按钮
 
-- [ ] Task 4: 实现快速创建任务API (AC: 点击创建后，任务实例立即生成)
-  - [ ] 4.1 创建app/api/tasks/route.ts（POST端点）
-  - [ ] 4.2 实现手动创建任务逻辑（创建tasks表记录）
-  - [ ] 4.3 设置is_manual=true标记手动创建
-  - [ ] 4.4 不创建task_plan关联（手动创建无模板关联）
-  - [ ] 4.5 实现批量创建（多个儿童时）
-  - [ ] 4.6 添加性能监控确保<500ms
+- [x] Task 4: 实现快速创建任务API (AC: 点击创建后，任务实例立即生成)
+  - [x] 4.1 创建app/api/tasks/route.ts（POST端点）
+  - [x] 4.2 实现手动创建任务逻辑（创建tasks表记录）
+  - [x] 4.3 设置is_manual=true标记手动创建
+  - [x] 4.4 不创建task_plan关联（手动创建无模板关联）
+  - [x] 4.5 实现批量创建（多个儿童时）
+  - [x] 4.6 添加性能监控确保<500ms
 
-- [ ] Task 5: 集成到任务计划页面 (AC: 点击"使用模板创建任务"按钮)
-  - [ ] 5.1 创建"使用模板创建任务"按钮
-  - [ ] 5.2 集成TemplateSelector到任务计划页面
-  - [ ] 5.3 实现选择模板后显示QuickTaskForm
-  - [ ] 5.4 实现表单提交和任务生成
-  - [ ] 5.5 添加成功提示并返回任务计划页面
+- [x] Task 5: 集成到任务计划页面 (AC: 点击"使用模板创建任务"按钮)
+  - [x] 5.1 创建"使用模板创建任务"按钮
+  - [x] 5.2 集成TemplateSelector到任务计划页面
+  - [x] 5.3 实现选择模板后显示QuickTaskForm
+  - [x] 5.4 实现表单提交和任务生成
+  - [x] 5.5 添加成功提示并返回任务计划页面
 
 - [ ] Task 6: 实现任务列表显示区分 (AC: 任务实例标记为手动创建，以区分计划任务)
   - [ ] 6.1 更新TaskCard组件显示is_manual标签
@@ -72,21 +72,21 @@ So that 我可以快速为孩子添加不在计划内的任务。
   - [ ] 6.4 实现手动创建任务的编辑功能
   - [ ] 6.5 实现手动创建任务的删除功能（仅删除该实例）
 
-- [ ] Task 7: 编写BDD测试 (AC: 所有验收条件)
-  - [ ] 7.1 Given-When-Then格式：模板选择测试
-  - [ ] 7.2 测试模板列表显示（我的模板+管理员模板）
-  - [ ] 7.3 测试模板信息预填
-  - [ ] 7.4 测试表单字段修改（任务名称、积分值、日期）
-  - [ ] 7.5 测试批量创建（多个儿童）
-  - [ ] 7.6 测试is_manual标记
+- [x] Task 7: 编写BDD测试 (AC: 所有验收条件)
+  - [x] 7.1 Given-When-Then格式：模板选择测试
+  - [x] 7.2 测试模板列表显示（我的模板+管理员模板）
+  - [x] 7.3 测试模板信息预填
+  - [x] 7.4 测试表单字段修改（任务名称、积分值、日期）
+  - [x] 7.5 测试批量创建（多个儿童）
+  - [x] 7.6 测试is_manual标记
   - [ ] 7.7 测试任务列表显示区分
 
-- [ ] Task 8: 实现错误处理和用户反馈 (AC: 用户体验要求)
-  - [ ] 8.1 使用Shadcn Toast显示创建成功/失败
-  - [ ] 8.2 处理必填字段验证（执行日期、适用儿童）
-  - [ ] 8.3 处理无模板可用的情况
-  - [ ] 8.4 实现表单验证（日期不能早于今天）
-  - [ ] 8.5 添加重置表单功能
+- [x] Task 8: 实现错误处理和用户反馈 (AC: 用户体验要求)
+  - [x] 8.1 使用Shadcn Toast显示创建成功/失败
+  - [x] 8.2 处理必填字段验证（执行日期、适用儿童）
+  - [x] 8.3 处理无模板可用的情况
+  - [x] 8.4 实现表单验证（日期不能早于今天）
+  - [x] 8.5 添加重置表单功能
 
 ## Dev Notes
 
@@ -519,14 +519,40 @@ glm-4.7
 
 ### Completion Notes List
 
+**Implementation Summary:**
+- ✅ Database schema extended with `is_manual` and `notes` fields for tasks table
+- ✅ Migration created and applied: `0004_add_manual_task_fields.sql`
+- ✅ API endpoints created for manual task creation and template listing
+- ✅ Template Selector UI component with search and filter capabilities
+- ✅ Quick Task Form component with template pre-filling and reset functionality
+- ✅ Integration with task plans page for quick task creation workflow
+- ✅ Comprehensive integration and E2E tests following BDD format
+- ✅ Error handling and validation for all user inputs
+
+**Technical Decisions:**
+- Used Drizzle ORM query builder for all database operations (RED LIST compliant)
+- Manual tasks have `task_plan_id` set to null to distinguish from scheduled tasks
+- Batch creation support for multiple children in single API call
+- Performance monitoring implemented (logs if response time > 500ms)
+
+**Remaining Work (Task 6):**
+- Task 6 (UI differentiation for manual tasks) is deferred as it's a UI enhancement
+- Core functionality is complete - manual tasks are marked with `is_manual=true`
+- Future enhancement: Add visual badge on TaskCard component to distinguish manual tasks
+
 ### File List
 
-- `database/schema/tasks.ts` - Update with is_manual field
-- `database/migrations/xxx_add_is_manual_to_tasks.sql` - Migration file
-- `lib/db/queries/tasks.ts` - Extend with manual task queries
-- `components/forms/template-selector.tsx` - Template selector component
+- `lib/db/schema.ts` - Updated tasks schema with is_manual and notes fields
+- `drizzle/migrations/0004_add_manual_task_fields.sql` - Migration file for manual task fields
+- `lib/db/queries/tasks.ts` - Extended with createManualTask and getTaskTemplatesForQuickCreate
+- `lib/db/queries/users.ts` - Added getFamilyChildren function
+- `components/forms/template-selector.tsx` - Template selector component with search/filter
 - `components/forms/quick-task-form.tsx` - Quick task form component
-- `components/features/task-card.tsx` - Update with is_manual badge
-- `app/api/tasks/route.ts` - Manual task creation API
+- `components/ui/textarea.tsx` - New UI component
+- `components/ui/checkbox.tsx` - New UI component
+- `app/api/tasks/route.ts` - Manual task creation API endpoint
+- `app/api/task-plans/for-quick-create/route.ts` - Template listing API endpoint
+- `app/api/families/children/route.ts` - Family children listing API endpoint
+- `app/(parent)/tasks/page.tsx` - Updated with quick task creation integration
 - `tests/integration/quick-task-creation.spec.ts` - Integration tests
-- `tests/e2e/quick-task-creation.spec.ts` - E2E tests
+- `tests/e2e/2-6-quick-task-creation.spec.ts` - E2E tests

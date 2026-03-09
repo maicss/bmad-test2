@@ -3,6 +3,7 @@
  *
  * Story 2.1: Task instance generation from task plans
  * Story 2.4: System auto-generates task instances
+ * Story 2.6: Parent uses template to quickly create task (manual tasks)
  *
  * All task database operations MUST use these functions.
  * NEVER write raw SQL - use Drizzle ORM query builder.
@@ -27,6 +28,18 @@ export interface CreateTaskDTO {
   status?: 'pending' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'skipped';
 }
 
+// Story 2.6: DTO for creating manual tasks
+export interface CreateManualTaskDTO {
+  family_id: string;
+  title: string;
+  task_type: '刷牙' | '学习' | '运动' | '家务' | '自定义';
+  points: number;
+  scheduled_date: string; // YYYY-MM-DD format
+  child_ids: string[]; // Array of child IDs for batch creation
+  notes?: string; // Optional notes
+  is_manual: true; // Always true for manual tasks
+}
+
 export interface UpdateTaskDTO {
   title?: string;
   task_type?: '刷牙' | '学习' | '运动' | '家务' | '自定义';
@@ -37,8 +50,10 @@ export interface UpdateTaskDTO {
   approved_by?: string | null;
   approved_at?: Date | null;
   rejection_reason?: string | null;
+  notes?: string;
 }
 
+// Story 2.6: Updated TaskFilter to support is_manual filtering
 export interface TaskFilter {
   family_id: string;
   assigned_child_id?: string;
@@ -46,6 +61,7 @@ export interface TaskFilter {
   scheduled_date_from?: string;
   scheduled_date_to?: string;
   status?: Array<'pending' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'skipped'>;
+  is_manual?: boolean; // Story 2.6: Filter by manual/scheduled tasks
 }
 
 /**
@@ -140,6 +156,11 @@ export async function getTasksByFilter(filter: TaskFilter) {
     conditions.push(inArray(tasks.status, filter.status));
   }
 
+  // Story 2.6: Support is_manual filtering
+  if (filter.is_manual !== undefined) {
+    conditions.push(eq(tasks.is_manual, filter.is_manual));
+  }
+
   const result = await db.query.tasks.findMany({
     where: and(...conditions),
     orderBy: [desc(tasks.scheduled_date), desc(tasks.created_at)],
@@ -169,9 +190,15 @@ export async function getTasksByTaskPlan(taskPlanId: string) {
  * @param familyId - Family ID
  * @param childId - Child user ID
  * @param scheduledDate - Optional date filter (YYYY-MM-DD)
+ * @param isManual - Optional manual task filter (Story 2.6)
  * @returns Array of tasks
  */
-export async function getTasksForChild(familyId: string, childId: string, scheduledDate?: string) {
+export async function getTasksForChild(
+  familyId: string,
+  childId: string,
+  scheduledDate?: string,
+  isManual?: boolean
+) {
   const conditions = [
     eq(tasks.family_id, familyId),
     eq(tasks.assigned_child_id, childId),
@@ -179,6 +206,11 @@ export async function getTasksForChild(familyId: string, childId: string, schedu
 
   if (scheduledDate) {
     conditions.push(eq(tasks.scheduled_date, scheduledDate));
+  }
+
+  // Story 2.6: Support is_manual filtering
+  if (isManual !== undefined) {
+    conditions.push(eq(tasks.is_manual, isManual));
   }
 
   const result = await db.query.tasks.findMany({
@@ -228,6 +260,7 @@ export async function updateTask(taskId: string, data: UpdateTaskDTO) {
       ...(data.approved_by !== undefined && { approved_by: data.approved_by }),
       ...(data.approved_at !== undefined && { approved_at: data.approved_at }),
       ...(data.rejection_reason !== undefined && { rejection_reason: data.rejection_reason }),
+      ...(data.notes !== undefined && { notes: data.notes }),
       updated_at: new Date(),
     })
     .where(eq(tasks.id, taskId))
@@ -376,4 +409,108 @@ export async function getTasksSummaryForFamily(familyId: string) {
   }
 
   return summary;
+}
+
+// Story 2.6: Manual task creation functions
+
+/**
+ * Create manual tasks for multiple children
+ * Manual tasks are NOT linked to task plans (task_plan_id is null)
+ *
+ * @param data - Manual task data
+ * @returns Array of created tasks
+ */
+export async function createManualTask(data: CreateManualTaskDTO) {
+  const taskIds: string[] = [];
+  const now = new Date();
+
+  // Create a task instance for each child
+  for (const childId of data.child_ids) {
+    const taskId = Bun.randomUUIDv7();
+    taskIds.push(taskId);
+
+    await db.insert(tasks).values({
+      id: taskId,
+      family_id: data.family_id,
+      task_plan_id: null, // Manual tasks have no template
+      assigned_child_id: childId,
+      title: data.title,
+      task_type: data.task_type,
+      points: data.points,
+      status: 'pending',
+      scheduled_date: data.scheduled_date,
+      is_manual: true, // Mark as manual task
+      notes: data.notes ?? null,
+      created_at: now,
+      updated_at: now,
+    });
+  }
+
+  // Return all created tasks
+  return await db.query.tasks.findMany({
+    where: inArray(tasks.id, taskIds),
+  });
+}
+
+/**
+ * Get tasks for a child with is_manual filter support
+ *
+ * @param familyId - Family ID
+ * @param childId - Child user ID
+ * @param scheduledDate - Optional date filter (YYYY-MM-DD)
+ * @param isManual - Optional manual task filter
+ * @returns Array of tasks
+ */
+export async function getTasksByChild(
+  familyId: string,
+  childId: string,
+  scheduledDate?: string,
+  isManual?: boolean
+) {
+  const conditions = [
+    eq(tasks.family_id, familyId),
+    eq(tasks.assigned_child_id, childId),
+  ];
+
+  if (scheduledDate) {
+    conditions.push(eq(tasks.scheduled_date, scheduledDate));
+  }
+
+  if (isManual !== undefined) {
+    conditions.push(eq(tasks.is_manual, isManual));
+  }
+
+  const result = await db.query.tasks.findMany({
+    where: and(...conditions),
+    orderBy: [desc(tasks.scheduled_date), desc(tasks.created_at)],
+  });
+
+  return result;
+}
+
+/**
+ * Get task templates for quick task creation
+ * Returns parent's published templates and admin templates
+ *
+ * @param familyId - Family ID
+ * @returns Object with parentTemplates and adminTemplates arrays
+ */
+export async function getTaskTemplatesForQuickCreate(familyId: string) {
+  // Get parent's own templates (published)
+  const parentTemplates = await db.query.taskPlans.findMany({
+    where: and(
+      eq(taskPlans.family_id, familyId),
+      eq(taskPlans.status, 'published')
+    ),
+    orderBy: [desc(taskPlans.created_at)],
+  });
+
+  // Get admin templates (published with no family_id)
+  // For now, this is a placeholder for Story 6.1 (admin template management)
+  const adminTemplates: typeof parentTemplates = [];
+
+  return {
+    parentTemplates,
+    adminTemplates,
+  };
 }

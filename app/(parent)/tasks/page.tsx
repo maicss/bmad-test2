@@ -3,9 +3,10 @@
  *
  * Story 2.1: Parent Creates Task Plan Template
  * Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
+ * Story 2.6: Parent Uses Template to Quickly Create Task
  *
  * This page displays all task plans for the parent's family
- * with pause/resume/delete actions
+ * with pause/resume/delete actions and quick task creation
  */
 
 'use client';
@@ -14,6 +15,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { TaskPlanList } from '@/components/features/task-plan-list';
+import { TemplateSelector } from '@/components/forms/template-selector';
+import { QuickTaskForm } from '@/components/forms/quick-task-form';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import type { TaskPlanStatus } from '@/lib/db/queries/task-plans';
 
@@ -28,19 +32,30 @@ interface TaskPlan {
   rule: string;
 }
 
+interface Child {
+  id: string;
+  name: string;
+}
+
 /**
  * Task Plans List Page
  *
  * Displays all task plans with pause/resume/delete actions
+ * and quick task creation from templates
  */
 export default function TaskPlansPage() {
   const [taskPlans, setTaskPlans] = useState<TaskPlan[]>([]);
+  const [children, setChildren] = useState<Child[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
+  const [quickTaskDialogOpen, setQuickTaskDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<TaskPlan | null>(null);
 
-  // Fetch task plans on mount
+  // Fetch task plans and children on mount
   useEffect(() => {
     fetchTaskPlans();
+    fetchChildren();
   }, []);
 
   const fetchTaskPlans = async () => {
@@ -71,6 +86,21 @@ export default function TaskPlansPage() {
       setError('网络错误，请检查您的连接后重试');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchChildren = async () => {
+    try {
+      const response = await fetch('/api/families/children', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setChildren(result.children || []);
+      }
+    } catch (err) {
+      console.error('Fetch children error:', err);
     }
   };
 
@@ -134,6 +164,32 @@ export default function TaskPlansPage() {
     window.location.href = `/tasks/edit/${planId}`;
   };
 
+  /**
+   * Handle template selection from TemplateSelector
+   */
+  const handleSelectTemplate = (template: TaskPlan) => {
+    setSelectedTemplate(template);
+    setTemplateSelectorOpen(false);
+    setQuickTaskDialogOpen(true);
+  };
+
+  /**
+   * Handle quick task creation success
+   */
+  const handleQuickTaskSuccess = () => {
+    setQuickTaskDialogOpen(false);
+    setSelectedTemplate(null);
+    toast.success('任务创建成功');
+  };
+
+  /**
+   * Handle quick task creation cancel
+   */
+  const handleQuickTaskCancel = () => {
+    setQuickTaskDialogOpen(false);
+    setSelectedTemplate(null);
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       {/* Task Plans List Header */}
@@ -142,9 +198,17 @@ export default function TaskPlansPage() {
           <h1 className="text-2xl font-bold">任务模板</h1>
           <p className="text-muted-foreground">管理您的任务计划模板</p>
         </div>
-        <Link href="/tasks/create">
-          <Button>创建模板</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setTemplateSelectorOpen(true)}
+          >
+            使用模板创建任务
+          </Button>
+          <Link href="/tasks/create">
+            <Button>创建模板</Button>
+          </Link>
+        </div>
       </div>
 
       {/* Error Message */}
@@ -181,6 +245,31 @@ export default function TaskPlansPage() {
           />
         </div>
       )}
+
+      {/* Template Selector Dialog */}
+      <TemplateSelector
+        open={templateSelectorOpen}
+        onOpenChange={setTemplateSelectorOpen}
+        onSelectTemplate={handleSelectTemplate}
+        familyId="" // Will be populated by API call
+      />
+
+      {/* Quick Task Form Dialog */}
+      <Dialog open={quickTaskDialogOpen} onOpenChange={setQuickTaskDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedTemplate ? '使用模板创建任务' : '创建手动任务'}
+            </DialogTitle>
+          </DialogHeader>
+          <QuickTaskForm
+            template={selectedTemplate}
+            children={children}
+            onSuccess={handleQuickTaskSuccess}
+            onCancel={handleQuickTaskCancel}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
