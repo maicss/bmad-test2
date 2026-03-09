@@ -49,12 +49,12 @@ So that 我可以灵活控制任务在哪些日期出现。
   - [x] 3.4 实现预设排除日快速选择（节假日、生日、纪念日）
   - [x] 3.5 添加已排除日期列表展示和删除功能
 
-- [ ] Task 4: 集成日期规则到任务模板表单 (AC: 在创建/编辑任务模板时设置日期规则)
-  - [ ] 4.1 扩展TaskPlanForm组件添加DateRuleSelector
-  - [ ] 4.2 扩展TaskPlanForm组件添加ExclusionDatePicker
-  - [ ] 4.3 实现规则类型切换UI（根据选择显示相应输入）
-  - [ ] 4.4 实现规则数据到rule JSON字段的序列化
-  - [ ] 4.5 更新API端点接受rule参数
+- [x] Task 4: 集成日期规则到任务模板表单 (AC: 在创建/编辑任务模板时设置日期规则)
+  - [x] 4.1 扩展TaskPlanForm组件添加DateRuleSelector
+  - [x] 4.2 扩展TaskPlanForm组件添加ExclusionDatePicker
+  - [x] 4.3 实现规则类型切换UI（根据选择显示相应输入）
+  - [x] 4.4 实现规则数据到rule JSON字段的序列化
+  - [x] 4.5 更新API端点接受rule参数
 
 - [x] Task 5: 实现日期规则解析引擎 (AC: 系统根据日期策略自动生成任务)
   - [x] 5.1 创建日期规则解析器（lib/services/task-engine.ts/date-rule-parser.ts）
@@ -523,3 +523,37 @@ glm-4.7
 - `tests/unit/date-rule-parser.test.ts` - Unit tests for parser (12 tests)
 - `tests/integration/date-rule-selector.spec.ts` - Integration tests (14 tests)
 - `tests/e2e/2-3-date-rule-setting.spec.ts` - E2E tests (15 test scenarios covering all happy paths)
+
+### Task 4 Completion (2026-03-09)
+
+**Modified Files:**
+- `app/(parent)/tasks/create/page.tsx` - Fixed dateRule serialization to use formData.dateRule
+- `app/(parent)/tasks/page.tsx` - Fixed TaskPlan interface types
+
+**Summary:**
+The TaskPlanForm already had DateRuleSelector and ExclusionDatePicker integrated. The issue was in the create page which was trying to serialize a non-existent `formData.frequency` field. Fixed to serialize the complete `formData.dateRule` object.
+
+### Review Follow-ups (AI)
+
+**Code Review Date:** 2026-03-09
+**Reviewer:** Claude Code (Adversarial Code Review)
+**Status:** ✅ COMPLETE - Task 4 completed
+
+**Resolution Summary:**
+- **Task 4 (Integration to TaskPlanForm)** - All subtasks completed
+- Components were already integrated in TaskPlanForm (DateRuleSelector and ExclusionDatePicker)
+- Fixed serialization issue in app/(parent)/tasks/create/page.tsx:
+  - Changed `rule: JSON.stringify({ frequency: formData.frequency })` to `rule: JSON.stringify(formData.dateRule)`
+  - Removed separate `excluded_dates` field (now included in dateRule)
+- Fixed TaskPlan interface type mismatch in app/(parent)/tasks/page.tsx
+
+**Completed Fixes:**
+- [x] Task 4.1: DateRuleSelector integrated in TaskPlanForm (lines 311-325)
+- [x] Task 4.2: ExclusionDatePicker integrated in TaskPlanForm (lines 327-344)
+- [x] Task 4.3: Rule type switching UI implemented in DateRuleSelector component
+- [x] Task 4.4: Rule data serialization fixed in create page (uses formData.dateRule)
+- [x] Task 4.5: API endpoint accepts rule parameter (z.string() validation)
+
+**Files Modified:**
+- app/(parent)/tasks/create/page.tsx - Fixed dateRule serialization
+- app/(parent)/tasks/page.tsx - Fixed TaskPlan interface types

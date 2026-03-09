@@ -5,7 +5,7 @@
 # tracking_system: file-system
 # story_location: {project-root}/_bmad-output/implementation-artifacts
 
-generated: 2026-03-01
+generated: 2026-03-09
 project: bmad-test2
 project_key: NOKEY
 tracking_system: file-system
@@ -23,14 +23,14 @@ development_status:
   1-7-primary-parent-manage-members: done
   epic-1-retrospective: optional
 
-  MX|  # Epic 2: Task Planning & Management (With Notifications)
-MX|  epic-2: in-progress
-MX|  2-1-parent-creates-task-plan-template: done
-MX|  2-2-parent-sets-task-points-value: review
-MX|  2-3-parent-sets-task-date-rules: review
-MX|  2-4-system-auto-generates-task-instances: review
-MX|  2-5-parent-pauses-resumes-deletes-task-plan: review
-MX|  2-6-parent-uses-template-to-quickly-create-task: review
+  # Epic 2: Task Planning & Management (With Notifications)
+  epic-2: in-progress
+  2-1-parent-creates-task-plan-template: done
+  2-2-parent-sets-task-points-value: done
+  2-3-parent-sets-task-date-rules: review
+  2-4-system-auto-generates-task-instances: done
+  2-5-parent-pauses-resumes-deletes-task-plan: done
+  2-6-parent-uses-template-to-quickly-create-task: done
 MX|  2-7-parent-batch-approves-tasks: ready-for-dev
 MX|  2-8-child-views-todays-task-list: ready-for-dev
 MX|  2-9-child-marks-task-complete: ready-for-dev

@@ -24,11 +24,11 @@ import type { TaskPlanStatus } from '@/lib/db/queries/task-plans';
 interface TaskPlan {
   id: string;
   title: string;
-  task_type: string;
+  task_type: '刷牙' | '学习' | '运动' | '家务' | '自定义';
   points: number;
   status: TaskPlanStatus;
   paused_until?: Date | string | null;
-  created_at: string;
+  created_at: Date | string;
   rule: string;
 }
 

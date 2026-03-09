@@ -1,6 +1,6 @@
 # Story 2.4: System Auto-Generates Task Instances
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -754,3 +754,17 @@ glm-4.7
 - `tests/integration/task-generation.spec.ts` - Integration tests (8 BDD tests, all passing)
 - `tests/helpers/families.ts` - Test helper functions for families
 - `tests/helpers/users.ts` - Test helper functions for users
+
+### Review Follow-ups (AI)
+
+**Code Review Date:** 2026-03-09
+**Reviewer:** Claude Code (Adversarial Code Review)
+**Status:** ✅ COMPLETE - All ACs implemented, tests passing
+
+**Notes:**
+- All 9 tasks completed with [x] marks
+- 8 BDD integration tests passing
+- TaskGenerator class handles all frequency types (daily, weekly, weekdays, weekends, interval, specific)
+- Idempotency guaranteed via unique index on (task_plan_id, child_id, date)
+- Batch insert for performance optimization
+- Story status: `done`
