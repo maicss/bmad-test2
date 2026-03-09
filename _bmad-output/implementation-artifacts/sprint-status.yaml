@@ -31,7 +31,7 @@ development_status:
   2-4-system-auto-generates-task-instances: done
   2-5-parent-pauses-resumes-deletes-task-plan: done
   2-6-parent-uses-template-to-quickly-create-task: done
-MX|  2-7-parent-batch-approves-tasks: ready-for-dev
+MX|  2-7-parent-batch-approves-tasks: review
 MX|  2-8-child-views-todays-task-list: ready-for-dev
 MX|  2-9-child-marks-task-complete: ready-for-dev
 MX|  2-10-parent-approves-task-completion: ready-for-dev

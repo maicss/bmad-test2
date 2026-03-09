@@ -184,9 +184,10 @@ export const taskPlans = sqliteTable('task_plans', {
   index('idx_task_plans_deleted_at').on(table.deleted_at), // Story 2.5: Index for soft delete queries
 ]);
 
-// Tasks table (Story 2.1, 2.4, 2.6)
+// Tasks table (Story 2.1, 2.4, 2.6, 2.7)
 // Stores concrete task instances generated from task plans
 // Story 2.6: Added is_manual field for manual task creation
+// Story 2.7: Added proof_image field for task completion proof
 export const tasks = sqliteTable('tasks', {
   id: text('id').primaryKey(),
   family_id: text('family_id').notNull().references(() => families.id, { onDelete: 'cascade' }),
@@ -203,6 +204,7 @@ export const tasks = sqliteTable('tasks', {
   rejection_reason: text('rejection_reason'),
   is_manual: integer('is_manual', { mode: 'boolean' }).notNull().default(false), // Story 2.6: Manual task marker
   notes: text('notes'), // Story 2.6: Optional notes for manual tasks
+  proof_image: text('proof_image'), // Story 2.7: Base64 or image URL for task completion proof
   created_at: integer('created_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
   updated_at: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
 }, (table) => [

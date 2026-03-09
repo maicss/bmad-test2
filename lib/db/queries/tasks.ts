@@ -14,7 +14,7 @@
 
 import db from '../index';
 import { tasks, taskPlans, users } from '../schema';
-import { eq, and, desc, inArray, or, lt, gte, sql } from 'drizzle-orm';
+import { eq, and, desc, inArray, lt, gte, sql } from 'drizzle-orm';
 
 // Type definitions for DTOs
 export interface CreateTaskDTO {
@@ -513,4 +513,91 @@ export async function getTaskTemplatesForQuickCreate(familyId: string) {
     parentTemplates,
     adminTemplates,
   };
+}
+
+// ==================== Story 2.7: Task Approval Queries ====================
+
+/**
+ * Get tasks pending approval (completed but not yet approved)
+ *
+ * Story 2.7: 家长查看待审批任务列表
+ *
+ * @param familyId - Family ID
+ * @param childId - Optional child ID to filter by
+ * @returns Array of completed tasks pending approval
+ */
+export async function getPendingApprovalTasks(
+  familyId: string,
+  childId?: string
+) {
+  const conditions = [
+    eq(tasks.family_id, familyId),
+    eq(tasks.status, 'completed'), // Tasks marked completed by child, waiting parent approval
+  ];
+
+  if (childId) {
+    conditions.push(eq(tasks.assigned_child_id, childId));
+  }
+
+  const taskList = await db.query.tasks.findMany({
+    where: and(...conditions),
+    orderBy: [desc(tasks.completed_at), desc(tasks.created_at)],
+  });
+
+  return taskList;
+}
+
+/**
+ * Get task with child information (joins users table)
+ *
+ * Story 2.7: 审批列表需要显示孩子姓名
+ *
+ * @param taskId - Task ID
+ * @returns Task with child information or null
+ */
+export async function getTaskWithChildInfo(taskId: string) {
+  const result = await db.query.tasks.findFirst({
+    where: eq(tasks.id, taskId),
+  });
+
+  return result ?? null;
+}
+
+/**
+ * Batch update tasks with approval/rejection
+ *
+ * Story 2.7: 批量更新任务状态
+ *
+ * @param taskIds - Array of task IDs
+ * @param data - Update data
+ * @returns Number of updated tasks
+ */
+export async function batchUpdateTasks(
+  taskIds: string[],
+  data: UpdateTaskDTO
+) {
+  const results = await Promise.all(
+    taskIds.map(id => updateTask(id, data))
+  );
+
+  return results.filter(r => r !== null).length;
+}
+
+/**
+ * Count pending approval tasks for a family
+ *
+ * @param familyId - Family ID
+ * @returns Number of pending approval tasks
+ */
+export async function countPendingApprovalTasks(familyId: string): Promise<number> {
+  const result = await db.select({ count: sql<number>`count(*)` })
+    .from(tasks)
+    .where(
+      and(
+        eq(tasks.family_id, familyId),
+        eq(tasks.status, 'completed')
+      )
+    );
+
+  return result[0]?.count ?? 0;
 }
