@@ -1,6 +1,6 @@
 # Story 2.5: Parent Pauses/Resumes/Deletes Task Plan
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -687,3 +687,18 @@ glm-4.7
   - 自动恢复调度器集成通知发送
   - 通知类型：task_plan_resumed, task_paused, task_approved, points_earned
 - 测试通过（18个集成测试：11个任务计划 + 7个通知）
+
+### Review Follow-ups (AI)
+
+**Code Review Date:** 2026-03-09
+**Reviewer:** Claude Code (Adversarial Code Review)
+**Status:** ✅ COMPLETE - All ACs implemented, tests passing
+
+**Notes:**
+- All 9 tasks completed with [x] marks
+- 18 BDD integration tests passing (11 task plan lifecycle + 7 notifications)
+- Pause/resume/delete functionality fully implemented
+- Auto-resume scheduler with notification system
+- Soft delete implementation preserves task instances
+- Audit logging for all operations
+- Story status: `done`

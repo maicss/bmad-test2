@@ -36,18 +36,24 @@ export default function CreateTaskPlanPage() {
 
   /**
    * Handle form submission
+   *
+   * Story 2.3 Task 4.4: Serialize dateRule to JSON for API
+   * The dateRule contains the complete date generation configuration
+   * including frequency type, days of week, interval, specific dates,
+   * and excluded dates.
    */
   const handleSubmit = async (formData: TaskPlanFormData, status: 'draft' | 'published') => {
     setIsLoading(true);
 
     try {
       // Prepare data for API
+      // Story 2.3 Task 4.4: Serialize the complete dateRule object to JSON
+      // The dateRule field contains the entire date generation configuration
       const requestData = {
         title: formData.title,
         task_type: formData.task_type,
         points: formData.points,
-        rule: JSON.stringify({ frequency: formData.frequency }),
-        excluded_dates: formData.excluded_dates ? JSON.stringify(formData.excluded_dates) : undefined,
+        rule: JSON.stringify(formData.dateRule),
         reminder_time: formData.reminder_time || undefined,
         status,
         assigned_children: formData.assigned_children,
