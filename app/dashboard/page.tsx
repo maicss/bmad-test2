@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 
 /**
  * Dashboard redirect page
- * 
+ *
  * Redirects to appropriate dashboard based on user role:
- * - Parents: /parent/dashboard (when implemented)
+ * - Parents: /parent
  * - Children: /child-dashboard
  */
 
@@ -15,9 +15,34 @@ export default function DashboardRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    // For now, redirect to child dashboard
-    // TODO: Implement role-based redirection when parent dashboard is available
-    router.replace('/child-dashboard');
+    async function checkUserRoleAndRedirect() {
+      try {
+        // Fetch user role from API
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const data = await response.json();
+          const userRole = data.user?.role;
+
+          if (userRole === 'child') {
+            router.replace('/child-dashboard');
+          } else if (userRole === 'parent') {
+            router.replace('/approval');
+          } else {
+            // Admin or other roles
+            router.replace('/approval');
+          }
+        } else {
+          // Not authenticated, redirect to login
+          router.replace('/login');
+        }
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        // Default to parent dashboard on error
+        router.replace('/parent');
+      }
+    }
+
+    checkUserRoleAndRedirect();
   }, [router]);
 
   return (

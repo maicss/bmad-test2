@@ -2,6 +2,37 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## 🚨 CRITICAL: READ BEFORE EDITING ANY CODE
+
+**These rules have been violated multiple times. You MUST follow them.**
+
+### 1. Git Branch Rule (Violated 4+ times)
+
+**BEFORE editing ANY code, ALWAYS check:**
+```bash
+git branch --show-current
+```
+
+**If output is `main` → STOP. Do NOT edit files.**
+
+**Required workflow:**
+1. `git checkout main && git pull`
+2. `git checkout -b feature/story-X-Y-name`
+3. THEN you may edit code
+
+### 2. Dependency Installation
+
+**NEVER install dependencies without user approval.**
+
+If you need a new dependency:
+1. First check if existing dependencies can solve the problem
+2. If truly needed, ASK the user first
+3. Wait for approval before running `bun add`
+
+---
+
 ## Project Overview
 
 Family Reward is a family behavior management gamification platform. Parents create tasks with points, children complete tasks to earn points, and points can be exchanged for wishes.
