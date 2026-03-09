@@ -33,6 +33,19 @@ function RegisterForm() {
     }
   }, [modeParam]);
 
+  // Expose test helper for E2E testing
+  useEffect(() => {
+    (window as any).testHandleRegister = () => {
+      const form = document.querySelector('form');
+      if (form) {
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    };
+    return () => {
+      delete (window as any).testHandleRegister;
+    };
+  }, []);
+
   // Handle OTP send
   const handleSendOTP = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -69,6 +82,8 @@ function RegisterForm() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Rest of the function...
 
     // Validate phone
     if (!phone || phone.length !== 11 || !phone.startsWith('1')) {

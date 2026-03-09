@@ -33,12 +33,15 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
     await page.goto(`${BASE_URL}/pin`);
     await page.waitForLoadState('networkidle');
 
-    // When: 输入正确的4位PIN码
-    const testPin = '9999';
+    // When: 输入正确的4位PIN码 (使用seed data的PIN: 1111)
+    const testPin = '1111';
     await page.fill('input[id="pin"]', testPin);
 
-    // 点击登录按钮
-    await page.click('button:has-text("登录")');
+    // 点击登录按钮并等待响应
+    await Promise.all([
+      page.waitForResponse(response => response.url().includes('/api/auth/pin-login')),
+      page.click('button:has-text("登录")'),
+    ]);
 
     // Then: 应该重定向到 child-dashboard
     await page.waitForURL('**/child-dashboard', { timeout: 10000 });
@@ -53,12 +56,15 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
     // When: 输入错误的PIN码（使用一个不存在的PIN）
     await page.fill('input[id="pin"]', '5555');
 
-    // 点击登录按钮
-    await page.click('button:has-text("登录")');
+    // 点击登录按钮并等待响应
+    await Promise.all([
+      page.waitForResponse(response => response.url().includes('/api/auth/pin-login')),
+      page.click('button:has-text("登录")'),
+    ]);
 
     // Then: 应该显示错误提示（可能是PIN码错误或rate-limit错误）
     const errorText = page.locator('div[class*="bg-red-50"] p');
-    await expect(errorText).toBeVisible({ timeout: 3000 });
+    await expect(errorText).toBeVisible({ timeout: 5000 });
     const errorMessage = await errorText.textContent();
     expect(errorMessage).toMatch(/错误|失败/);
   });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -29,6 +29,19 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+
+  // Expose test helper for E2E testing
+  useEffect(() => {
+    (window as any).testHandleLogin = () => {
+      const form = document.querySelector('form');
+      if (form) {
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    };
+    return () => {
+      delete (window as any).testHandleLogin;
+    };
+  }, []);
 
   const handleSendOTP = async () => {
     if (phone.length !== 11) {

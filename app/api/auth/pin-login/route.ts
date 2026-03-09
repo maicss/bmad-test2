@@ -56,6 +56,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check rate limiting (Story 1.2 AC #4: Rate limiting for security)
+    const rateLimitError = rateLimitLoginAttempts(ipAddress, request.headers);
+    if (rateLimitError) {
+      await logUserAction(null, 'pin_login_failed', {
+        ip_address: ipAddress,
+        auth_method: 'pin',
+        reason: 'rate_limited',
+        device_id: deviceId,
+        device_type: deviceType,
+      });
+      return NextResponse.json(
+        { error: rateLimitError },
+        { status: 429 }
+      );
+    }
+
     // Verify child exists with PIN
     const user = await getChildByPIN(pin);
 
@@ -160,7 +176,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Return user data and session token
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -176,6 +192,17 @@ export async function POST(request: NextRequest) {
         expires_at: session.expires_at,
       },
     });
+
+    // Set HttpOnly session cookie
+    response.cookies.set('better-auth.session_token', sessionToken, {
+      httpOnly: true,
+      secure: Bun.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 36, // 36 hours
+    });
+
+    return response;
   } catch (error) {
     console.error('PIN login error:', error);
     console.error('Error details:', {
