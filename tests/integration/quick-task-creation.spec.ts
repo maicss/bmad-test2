@@ -8,7 +8,6 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test';
-import request from 'supertest';
 import { promises as fs } from 'fs';
 import db from '@/lib/db';
 import { users, taskPlans, tasks, families, sessions } from '@/lib/db/schema';
@@ -17,6 +16,7 @@ import { getSessionByToken } from '@/lib/db/queries/sessions';
 import { createManualTask } from '@/lib/db/queries/tasks';
 import { getFamilyChildren } from '@/lib/db/queries/users';
 import { createTaskPlan } from '@/lib/db/queries/task-plans';
+import { testRequest } from '../setup-test-app';
 
 const TEST_DB_PATH = 'database/test-db.sqlite';
 
@@ -140,9 +140,11 @@ describe('Quick Task Creation - Story 2.6', () => {
       expect(session?.user_id).toBe(testParent.id);
 
       // When: 获取模板列表
-      const response = await request('http://localhost:3000')
-        .get('/api/task-plans/for-quick-create')
-        .set('Cookie', `better-auth.session_token=${sessionToken}`);
+      const response = await testRequest({
+        method: 'GET',
+        url: '/api/task-plans/for-quick-create',
+        cookies: { 'better-auth.session_token': sessionToken },
+      });
 
       // Then: 返回该家长的模板
       expect(response.status).toBe(200);
@@ -168,9 +170,11 @@ describe('Quick Task Creation - Story 2.6', () => {
       });
 
       // When: 搜索包含"刷牙"的模板
-      const response = await request('http://localhost:3000')
-        .get('/api/task-plans/for-quick-create?search=刷牙')
-        .set('Cookie', `better-auth.session_token=${sessionToken}`);
+      const response = await testRequest({
+        method: 'GET',
+        url: '/api/task-plans/for-quick-create?search=刷牙',
+        cookies: { 'better-auth.session_token': sessionToken },
+      });
 
       // Then: 只返回匹配的模板
       expect(response.status).toBe(200);
@@ -185,10 +189,11 @@ describe('Quick Task Creation - Story 2.6', () => {
       const today = new Date().toISOString().split('T')[0];
 
       // When: 使用模板创建手动任务并修改值
-      const response = await request('http://localhost:3000')
-        .post('/api/tasks')
-        .set('Cookie', `better-auth.session_token=${sessionToken}`)
-        .send({
+      const response = await testRequest({
+        method: 'POST',
+        url: '/api/tasks',
+        cookies: { 'better-auth.session_token': sessionToken },
+        body: {
           task_plan_id: testTaskPlan.id,
           title: '临时刷牙任务', // 修改标题
           task_type: '刷牙',
@@ -196,7 +201,8 @@ describe('Quick Task Creation - Story 2.6', () => {
           scheduled_date: today,
           child_ids: [testChild1.id],
           notes: '这是手动创建的任务',
-        });
+        },
+      });
 
       // Then: 任务实例立即生成
       expect(response.status).toBe(201);
@@ -219,16 +225,18 @@ describe('Quick Task Creation - Story 2.6', () => {
       const today = new Date().toISOString().split('T')[0];
 
       // When: 为2个儿童批量创建任务
-      const response = await request('http://localhost:3000')
-        .post('/api/tasks')
-        .set('Cookie', `better-auth.session_token=${sessionToken}`)
-        .send({
+      const response = await testRequest({
+        method: 'POST',
+        url: '/api/tasks',
+        cookies: { 'better-auth.session_token': sessionToken },
+        body: {
           title: '临时任务',
           task_type: '运动',
           points: 5,
           scheduled_date: today,
           child_ids: [testChild1.id, testChild2.id],
-        });
+        },
+      });
 
       // Then: 为每个儿童生成独立任务
       expect(response.status).toBe(201);
@@ -281,9 +289,11 @@ describe('Quick Task Creation - Story 2.6', () => {
       });
 
       // When: 筛选is_manual=true的任务
-      const response = await request('http://localhost:3000')
-        .get(`/api/tasks?family_id=${testFamily.id}&child_id=${testChild1.id}&is_manual=true`)
-        .set('Cookie', `better-auth.session_token=${sessionToken}`);
+      const response = await testRequest({
+        method: 'GET',
+        url: `/api/tasks?family_id=${testFamily.id}&child_id=${testChild1.id}&is_manual=true`,
+        cookies: { 'better-auth.session_token': sessionToken },
+      });
 
       // Then: 只返回手动任务
       expect(response.status).toBe(200);
@@ -300,16 +310,18 @@ describe('Quick Task Creation - Story 2.6', () => {
       const today = new Date().toISOString().split('T')[0];
 
       // When: 提交请求
-      const response = await request('http://localhost:3000')
-        .post('/api/tasks')
-        .set('Cookie', `better-auth.session_token=${sessionToken}`)
-        .send({
+      const response = await testRequest({
+        method: 'POST',
+        url: '/api/tasks',
+        cookies: { 'better-auth.session_token': sessionToken },
+        body: {
           title: '测试任务',
           task_type: '学习',
           points: 5,
           scheduled_date: today,
           child_ids: ['non-existent-child-id'],
-        });
+        },
+      });
 
       // Then: 返回400错误
       expect(response.status).toBe(400);
@@ -323,16 +335,18 @@ describe('Quick Task Creation - Story 2.6', () => {
       const pastDate = yesterday.toISOString().split('T')[0];
 
       // When: 提交请求
-      const response = await request('http://localhost:3000')
-        .post('/api/tasks')
-        .set('Cookie', `better-auth.session_token=${sessionToken}`)
-        .send({
+      const response = await testRequest({
+        method: 'POST',
+        url: '/api/tasks',
+        cookies: { 'better-auth.session_token': sessionToken },
+        body: {
           title: '测试任务',
           task_type: '学习',
           points: 5,
           scheduled_date: pastDate,
           child_ids: [testChild1.id],
-        });
+        },
+      });
 
       // Then: 返回400错误
       expect(response.status).toBe(400);
@@ -344,20 +358,316 @@ describe('Quick Task Creation - Story 2.6', () => {
       const today = new Date().toISOString().split('T')[0];
 
       // When: 提交请求
-      const response = await request('http://localhost:3000')
-        .post('/api/tasks')
-        .set('Cookie', `better-auth.session_token=${sessionToken}`)
-        .send({
+      const response = await testRequest({
+        method: 'POST',
+        url: '/api/tasks',
+        cookies: { 'better-auth.session_token': sessionToken },
+        body: {
           title: '测试任务',
           task_type: '学习',
           points: 5,
           scheduled_date: today,
           child_ids: [],
-        });
+        },
+      });
 
       // Then: 返回400错误
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('儿童');
+    });
+  });
+
+  describe('Task 7.7: Given 手动任务和计划任务已创建，when 查询任务列表，then 任务列表正确显示区分', () => {
+    it('given 已创建手动任务和计划任务，when 获取任务列表，then 手动任务有is_manual标记', async () => {
+      // Given: 已创建手动任务和计划任务
+      const today = new Date().toISOString().split('T')[0];
+
+      // 创建手动任务
+      await createManualTask({
+        family_id: testFamily.id,
+        title: '手动任务',
+        task_type: '学习',
+        points: 5,
+        scheduled_date: today,
+        child_ids: [testChild1.id],
+        is_manual: true,
+      });
+
+      // 创建计划任务
+      const scheduledTaskId = Bun.randomUUIDv7();
+      await db.insert(tasks).values({
+        id: scheduledTaskId,
+        family_id: testFamily.id,
+        task_plan_id: testTaskPlan.id,
+        assigned_child_id: testChild1.id,
+        title: '计划任务',
+        task_type: '刷牙',
+        points: 5,
+        scheduled_date: today,
+        status: 'pending',
+        is_manual: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      // When: 获取任务列表
+      const response = await testRequest({
+        method: 'GET',
+        url: `/api/tasks?family_id=${testFamily.id}&child_id=${testChild1.id}`,
+        cookies: { 'better-auth.session_token': sessionToken },
+      });
+
+      // Then: 手动任务有is_manual标记
+      expect(response.status).toBe(200);
+      const taskList = response.body.tasks;
+      expect(taskList.length).toBe(2);
+
+      const manualTask = taskList.find((t: any) => t.title === '手动任务');
+      const scheduledTask = taskList.find((t: any) => t.title === '计划任务');
+
+      expect(manualTask).toBeDefined();
+      expect(manualTask.is_manual).toBe(true);
+      expect(manualTask.task_plan_id).toBeNull();
+
+      expect(scheduledTask).toBeDefined();
+      expect(scheduledTask.is_manual).toBe(false);
+      expect(scheduledTask.task_plan_id).toBe(testTaskPlan.id);
+    });
+
+    it('given 已创建手动任务，when 筛选手动任务，then 只返回手动任务', async () => {
+      // Given: 已创建手动任务和计划任务
+      const today = new Date().toISOString().split('T')[0];
+
+      await createManualTask({
+        family_id: testFamily.id,
+        title: '手动任务1',
+        task_type: '学习',
+        points: 5,
+        scheduled_date: today,
+        child_ids: [testChild1.id],
+        is_manual: true,
+      });
+
+      const scheduledTaskId = Bun.randomUUIDv7();
+      await db.insert(tasks).values({
+        id: scheduledTaskId,
+        family_id: testFamily.id,
+        task_plan_id: testTaskPlan.id,
+        assigned_child_id: testChild1.id,
+        title: '计划任务1',
+        task_type: '刷牙',
+        points: 5,
+        scheduled_date: today,
+        status: 'pending',
+        is_manual: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      // When: 筛选手动任务
+      const response = await testRequest({
+        method: 'GET',
+        url: `/api/tasks?family_id=${testFamily.id}&child_id=${testChild1.id}&is_manual=true`,
+        cookies: { 'better-auth.session_token': sessionToken },
+      });
+
+      // Then: 只返回手动任务
+      expect(response.status).toBe(200);
+      const taskList = response.body.tasks;
+      expect(taskList.length).toBe(1);
+      expect(taskList[0].is_manual).toBe(true);
+      expect(taskList[0].title).toBe('手动任务1');
+    });
+
+    it('given 已创建计划任务，when 筛选计划任务，then 只返回计划任务', async () => {
+      // Given: 已创建手动任务和计划任务
+      const today = new Date().toISOString().split('T')[0];
+
+      await createManualTask({
+        family_id: testFamily.id,
+        title: '手动任务2',
+        task_type: '学习',
+        points: 5,
+        scheduled_date: today,
+        child_ids: [testChild1.id],
+        is_manual: true,
+      });
+
+      const scheduledTaskId = Bun.randomUUIDv7();
+      await db.insert(tasks).values({
+        id: scheduledTaskId,
+        family_id: testFamily.id,
+        task_plan_id: testTaskPlan.id,
+        assigned_child_id: testChild1.id,
+        title: '计划任务2',
+        task_type: '刷牙',
+        points: 5,
+        scheduled_date: today,
+        status: 'pending',
+        is_manual: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      // When: 筛选计划任务
+      const response = await testRequest({
+        method: 'GET',
+        url: `/api/tasks?family_id=${testFamily.id}&child_id=${testChild1.id}&is_manual=false`,
+        cookies: { 'better-auth.session_token': sessionToken },
+      });
+
+      // Then: 只返回计划任务
+      expect(response.status).toBe(200);
+      const taskList = response.body.tasks;
+      expect(taskList.length).toBe(1);
+      expect(taskList[0].is_manual).toBe(false);
+      expect(taskList[0].title).toBe('计划任务2');
+    });
+
+    it('given 已创建手动任务，when 编辑手动任务，then 编辑成功', async () => {
+      // Given: 已创建手动任务
+      const today = new Date().toISOString().split('T')[0];
+
+      const createdTasks = await createManualTask({
+        family_id: testFamily.id,
+        title: '原任务名称',
+        task_type: '学习',
+        points: 5,
+        scheduled_date: today,
+        child_ids: [testChild1.id],
+        is_manual: true,
+      });
+
+      const taskId = createdTasks[0].id;
+
+      // When: 编辑手动任务
+      const response = await testRequest({
+        method: 'PATCH',
+        url: `/api/tasks?id=${taskId}`,
+        cookies: { 'better-auth.session_token': sessionToken },
+        body: {
+          title: '新任务名称',
+          points: 10,
+        },
+      });
+
+      // Then: 编辑成功
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.task.title).toBe('新任务名称');
+      expect(response.body.task.points).toBe(10);
+    });
+
+    it('given 已创建计划任务，when 尝试编辑计划任务，then 返回400错误', async () => {
+      // Given: 已创建计划任务
+      const today = new Date().toISOString().split('T')[0];
+
+      const scheduledTaskId = Bun.randomUUIDv7();
+      await db.insert(tasks).values({
+        id: scheduledTaskId,
+        family_id: testFamily.id,
+        task_plan_id: testTaskPlan.id,
+        assigned_child_id: testChild1.id,
+        title: '计划任务',
+        task_type: '刷牙',
+        points: 5,
+        scheduled_date: today,
+        status: 'pending',
+        is_manual: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      // When: 尝试编辑计划任务
+      const response = await testRequest({
+        method: 'PATCH',
+        url: `/api/tasks?id=${scheduledTaskId}`,
+        cookies: { 'better-auth.session_token': sessionToken },
+        body: {
+          title: '新任务名称',
+        },
+      });
+
+      // Then: 返回400错误
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('只能编辑手动创建的任务');
+    });
+
+    it('given 已创建手动任务，when 删除手动任务，then 删除成功', async () => {
+      // Given: 已创建手动任务
+      const today = new Date().toISOString().split('T')[0];
+
+      const createdTasks = await createManualTask({
+        family_id: testFamily.id,
+        title: '待删除任务',
+        task_type: '学习',
+        points: 5,
+        scheduled_date: today,
+        child_ids: [testChild1.id],
+        is_manual: true,
+      });
+
+      const taskId = createdTasks[0].id;
+
+      // When: 删除手动任务
+      const response = await testRequest({
+        method: 'DELETE',
+        url: `/api/tasks?id=${taskId}`,
+        cookies: { 'better-auth.session_token': sessionToken },
+      });
+
+      // Then: 删除成功
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+
+      // And: 任务已不存在
+      const getResponse = await testRequest({
+        method: 'GET',
+        url: `/api/tasks?family_id=${testFamily.id}&child_id=${testChild1.id}`,
+        cookies: { 'better-auth.session_token': sessionToken },
+      });
+      expect(getResponse.body.tasks).toHaveLength(0);
+    });
+
+    it('given 已创建计划任务，when 尝试删除计划任务，then 返回400错误', async () => {
+      // Given: 已创建计划任务
+      const today = new Date().toISOString().split('T')[0];
+
+      const scheduledTaskId = Bun.randomUUIDv7();
+      await db.insert(tasks).values({
+        id: scheduledTaskId,
+        family_id: testFamily.id,
+        task_plan_id: testTaskPlan.id,
+        assigned_child_id: testChild1.id,
+        title: '计划任务',
+        task_type: '刷牙',
+        points: 5,
+        scheduled_date: today,
+        status: 'pending',
+        is_manual: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      // When: 尝试删除计划任务
+      const response = await testRequest({
+        method: 'DELETE',
+        url: `/api/tasks?id=${scheduledTaskId}`,
+        cookies: { 'better-auth.session_token': sessionToken },
+      });
+
+      // Then: 返回400错误
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('只能删除手动创建的任务');
+
+      // And: 计划任务仍然存在 (通过查询验证)
+      const getResponse = await testRequest({
+        method: 'GET',
+        url: `/api/tasks?family_id=${testFamily.id}&child_id=${testChild1.id}`,
+        cookies: { 'better-auth.session_token': sessionToken },
+      });
+      expect(getResponse.body.tasks).toHaveLength(1);
+      expect(getResponse.body.tasks[0].id).toBe(scheduledTaskId);
     });
   });
 });
