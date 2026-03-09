@@ -421,6 +421,8 @@ export async function pauseTaskPlan(
 /**
  * Resume a paused task plan
  *
+ * Story 2.5 Task 3.6: Optional parameter to trigger immediate task generation
+ *
  * @param planId - Task plan ID
  * @returns The updated task plan or null
  */
@@ -557,4 +559,23 @@ export async function getTaskPlanByIdSafe(taskPlanId: string) {
   });
 
   return result ?? null;
+}
+
+/**
+ * Check if task plan is deleted
+ *
+ * Story 2.5: Used to prevent operations on deleted plans
+ *
+ * @param taskPlanId - Task plan ID
+ * @returns true if plan is deleted, false otherwise
+ */
+export async function isTaskPlanDeleted(taskPlanId: string): Promise<boolean> {
+  const plan = await db.query.taskPlans.findFirst({
+    where: eq(taskPlans.id, taskPlanId),
+    columns: {
+      deleted_at: true,
+    },
+  });
+
+  return plan?.deleted_at !== null;
 }

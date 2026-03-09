@@ -253,6 +253,22 @@ export const pointsHistory = sqliteTable('points_history', {
   index('idx_points_history_created_at').on(table.created_at),
 ]);
 
+// Story 2.5 Task 7.6: Notifications table for task plan resume notifications
+export const notifications = sqliteTable('notifications', {
+  id: text('id').primaryKey(),
+  user_id: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: text('type', { enum: ['task_plan_resumed', 'task_paused', 'task_approved', 'points_earned'] }).notNull(),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  metadata: text('metadata'), // JSON string for additional data
+  is_read: integer('is_read', { mode: 'boolean' }).notNull().default(false),
+  created_at: integer('created_at', { mode: 'timestamp' }).notNull().default(sql `(strftime('%s', 'now'))`),
+}, (table) => [
+  index('idx_notifications_user_id').on(table.user_id),
+  index('idx_notifications_is_read').on(table.is_read),
+  index('idx_notifications_user_created').on(table.user_id, table.created_at),
+]);
+
 // Type exports for task-related tables
 export type TaskPlan = typeof taskPlans.$inferSelect;
 export type NewTaskPlan = typeof taskPlans.$inferInsert;
@@ -264,3 +280,5 @@ export type PointsBalance = typeof pointBalances.$inferSelect;
 export type NewPointsBalance = typeof pointBalances.$inferInsert;
 export type PointsHistory = typeof pointsHistory.$inferSelect;
 export type NewPointsHistory = typeof pointsHistory.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
