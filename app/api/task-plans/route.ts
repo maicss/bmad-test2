@@ -44,9 +44,7 @@ import { z } from 'zod';
  */
 const createTaskPlanSchema = z.object({
   title: z.string().min(1, '模板名称不能为空').max(50, '模板名称最多50个字符'),
-  task_type: z.enum(['刷牙', '学习', '运动', '家务', '自定义'], {
-    errorMap: () => ({ message: '请选择有效的任务类型' }),
-  }),
+  task_type: z.enum(['刷牙', '学习', '运动', '家务', '签到', '自定义']),
   points: z.number().int('积分必须是整数').min(1, '积分最少1分').max(100, '积分最多100分'),
   rule: z.string().min(1, '循环规则不能为空'),
   excluded_dates: z.string().optional(),
@@ -60,7 +58,7 @@ const createTaskPlanSchema = z.object({
  */
 const updateTaskPlanSchema = z.object({
   title: z.string().min(1).max(50).optional(),
-  task_type: z.enum(['刷牙', '学习', '运动', '家务', '自定义']).optional(),
+  task_type: z.enum(['刷牙', '学习', '运动', '家务', '签到', '自定义']).optional(),
   points: z.number().int().min(1).max(100).optional(),
   rule: z.string().optional(),
   excluded_dates: z.string().optional(),

@@ -166,7 +166,7 @@ export const taskPlans = sqliteTable('task_plans', {
   id: text('id').primaryKey(),
   family_id: text('family_id').notNull().references(() => families.id, { onDelete: 'cascade' }),
   title: text('title').notNull(), // Template name, max 50 chars
-  task_type: text('task_type', { enum: ['刷牙', '学习', '运动', '家务', '自定义'] }).notNull(),
+  task_type: text('task_type', { enum: ['刷牙', '学习', '运动', '家务', '签到', '自定义'] }).notNull(),
   points: integer('points').notNull(), // 1-100
   rule: text('rule').notNull(), // JSON: stores date strategy (daily/weekly/weekdays/weekends/custom)
   excluded_dates: text('excluded_dates'), // JSON array: optional date strings
@@ -188,13 +188,14 @@ export const taskPlans = sqliteTable('task_plans', {
 // Stores concrete task instances generated from task plans
 // Story 2.6: Added is_manual field for manual task creation
 // Story 2.7: Added proof_image field for task completion proof
+// Story 2.9: Added 签到 task type
 export const tasks = sqliteTable('tasks', {
   id: text('id').primaryKey(),
   family_id: text('family_id').notNull().references(() => families.id, { onDelete: 'cascade' }),
   task_plan_id: text('task_plan_id').references(() => taskPlans.id, { onDelete: 'cascade' }),
   assigned_child_id: text('assigned_child_id').references(() => users.id, { onDelete: 'restrict' }),
   title: text('title').notNull(),
-  task_type: text('task_type', { enum: ['刷牙', '学习', '运动', '家务', '自定义'] }).notNull(),
+  task_type: text('task_type', { enum: ['刷牙', '学习', '运动', '家务', '签到', '自定义'] }).notNull(),
   points: integer('points').notNull(),
   scheduled_date: text('scheduled_date').notNull(), // YYYY-MM-DD format
   status: text('status', { enum: ['pending', 'in_progress', 'completed', 'approved', 'rejected', 'skipped'] }).notNull().default('pending'),

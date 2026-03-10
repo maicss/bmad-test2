@@ -22,7 +22,7 @@ export interface CreateTaskDTO {
   task_plan_id?: string | null;
   assigned_child_id?: string | null;
   title: string;
-  task_type: '刷牙' | '学习' | '运动' | '家务' | '自定义';
+  task_type: '刷牙' | '学习' | '运动' | '家务' | '签到' | '自定义';
   points: number;
   scheduled_date: string; // YYYY-MM-DD format
   status?: 'pending' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'skipped';
@@ -32,7 +32,7 @@ export interface CreateTaskDTO {
 export interface CreateManualTaskDTO {
   family_id: string;
   title: string;
-  task_type: '刷牙' | '学习' | '运动' | '家务' | '自定义';
+  task_type: '刷牙' | '学习' | '运动' | '家务' | '签到' | '自定义';
   points: number;
   scheduled_date: string; // YYYY-MM-DD format
   child_ids: string[]; // Array of child IDs for batch creation
@@ -42,7 +42,7 @@ export interface CreateManualTaskDTO {
 
 export interface UpdateTaskDTO {
   title?: string;
-  task_type?: '刷牙' | '学习' | '运动' | '家务' | '自定义';
+  task_type?: '刷牙' | '学习' | '运动' | '家务' | '签到' | '自定义';
   points?: number;
   scheduled_date?: string;
   status?: 'pending' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'skipped';
@@ -747,4 +747,38 @@ export function getTaskStatusDisplay(status: string): 'pending' | 'completed' | 
   }
 
   return 'pending';
+}
+
+// Story 2.9: Child Marks Task Complete
+
+/**
+ * Extended update DTO for task completion with proof image
+ */
+export interface MarkTaskCompleteDTO {
+  status: 'completed' | 'approved';
+  proof_image?: string;
+  completed_at?: Date;
+}
+
+/**
+ * Mark task as complete by child
+ *
+ * Story 2.9: Child marks task complete with optional proof image
+ *
+ * @param taskId - Task ID
+ * @param data - Task completion data
+ * @returns The updated task or null
+ */
+export async function markTaskComplete(taskId: string, data: MarkTaskCompleteDTO) {
+  const result = await db.update(tasks)
+    .set({
+      status: data.status,
+      proof_image: data.proof_image ?? null,
+      completed_at: data.completed_at ?? new Date(),
+      updated_at: new Date(),
+    })
+    .where(eq(tasks.id, taskId))
+    .returning();
+
+  return result[0] ?? null;
 }
