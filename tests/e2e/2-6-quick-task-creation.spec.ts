@@ -11,19 +11,24 @@
 
 import { test, expect } from '@playwright/test';
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!;
+
 test.describe('Quick Task Creation - Story 2.6', () => {
   test.beforeEach(async ({ page }) => {
     // Login as parent
-    await page.goto('http://localhost:3000/auth/login');
-    await page.fill('input[name="phone"]', '13800000100');
-    await page.fill('input[name="password"]', '1111');
+    await page.goto(`${BASE_URL}/login`);
+    await page.waitForLoadState('domcontentloaded');
+    // Select password mode
+    await page.locator('input[value="password"]').click();
+    await page.fill('input[id="phone"]', '13800000100');
+    await page.fill('input[id="password"]', '1111');
     await page.click('button[type="submit"]');
-    await page.waitForURL('http://localhost:3000/dashboard');
+    await page.waitForURL('**/dashboard', { timeout: 10000 });
   });
 
   test('Given 家长有已发布任务模板，When 点击"使用模板创建任务"，Then 显示模板列表对话框', async ({ page }) => {
     // Given: 家长已登录并有任务模板
-    await page.goto('http://localhost:3000/tasks');
+    await page.goto(`${BASE_URL}/tasks`);
 
     // When: 点击"使用模板创建任务"按钮
     await page.click('button:has-text("使用模板创建任务")');
@@ -40,7 +45,7 @@ test.describe('Quick Task Creation - Story 2.6', () => {
 
   test('Given 模板选择器已打开，When 选择一个模板，Then 显示快速任务创建表单并预填模板信息', async ({ page }) => {
     // Given: 打开模板选择器并选择模板
-    await page.goto('http://localhost:3000/tasks');
+    await page.goto('${BASE_URL}/tasks');
     await page.click('button:has-text("使用模板创建任务")');
 
     // When: 选择第一个模板
@@ -63,7 +68,7 @@ test.describe('Quick Task Creation - Story 2.6', () => {
 
   test('Given 已选择模板，When 修改任务名称和积分，Then 表单显示修改后的值', async ({ page }) => {
     // Given: 打开快速任务创建表单
-    await page.goto('http://localhost:3000/tasks');
+    await page.goto('${BASE_URL}/tasks');
     await page.click('button:has-text("使用模板创建任务")');
     await page.locator('[role="dialog"]').locator('label').first().click();
     await page.click('button:has-text("选择模板")');
@@ -82,7 +87,7 @@ test.describe('Quick Task Creation - Story 2.6', () => {
 
   test('Given 已填写表单并选择儿童，When 点击创建任务，Then 任务创建成功并显示成功提示', async ({ page }) => {
     // Given: 打开快速任务创建表单并填写信息
-    await page.goto('http://localhost:3000/tasks');
+    await page.goto('${BASE_URL}/tasks');
     await page.click('button:has-text("使用模板创建任务")');
     await page.locator('[role="dialog"]').locator('label').first().click();
     await page.click('button:has-text("选择模板")');
@@ -102,7 +107,7 @@ test.describe('Quick Task Creation - Story 2.6', () => {
 
   test('Given 已选择模板，When 点击重置为模板值，Then 表单恢复到模板默认值', async ({ page }) => {
     // Given: 打开快速任务创建表单
-    await page.goto('http://localhost:3000/tasks');
+    await page.goto('${BASE_URL}/tasks');
     await page.click('button:has-text("使用模板创建任务")');
     await page.locator('[role="dialog"]').locator('label').first().click();
     await page.click('button:has-text("选择模板")');
@@ -124,7 +129,7 @@ test.describe('Quick Task Creation - Story 2.6', () => {
 
   test('Given 模板选择器已打开，When 搜索模板，Then 显示匹配的模板', async ({ page }) => {
     // Given: 打开模板选择器
-    await page.goto('http://localhost:3000/tasks');
+    await page.goto('${BASE_URL}/tasks');
     await page.click('button:has-text("使用模板创建任务")');
 
     // When: 在搜索框输入关键词
@@ -143,7 +148,7 @@ test.describe('Quick Task Creation - Story 2.6', () => {
 
   test('Given 模板选择器已打开，When 切换到"我的模板"，Then 只显示家长创建的模板', async ({ page }) => {
     // Given: 打开模板选择器
-    await page.goto('http://localhost:3000/tasks');
+    await page.goto('${BASE_URL}/tasks');
     await page.click('button:has-text("使用模板创建任务")');
 
     // When: 点击"我的模板"筛选
@@ -157,7 +162,7 @@ test.describe('Quick Task Creation - Story 2.6', () => {
 
   test('Given 快速任务表单已打开，When 不选择儿童，Then 显示验证错误', async ({ page }) => {
     // Given: 打开快速任务创建表单
-    await page.goto('http://localhost:3000/tasks');
+    await page.goto('${BASE_URL}/tasks');
     await page.click('button:has-text("使用模板创建任务")');
     await page.locator('[role="dialog"]').locator('label').first().click();
     await page.click('button:has-text("选择模板")');
@@ -172,7 +177,7 @@ test.describe('Quick Task Creation - Story 2.6', () => {
 
   test('Given 快速任务表单已打开，When 使用过去的日期，Then 显示验证错误', async ({ page }) => {
     // Given: 打开快速任务创建表单
-    await page.goto('http://localhost:3000/tasks');
+    await page.goto('${BASE_URL}/tasks');
     await page.click('button:has-text("使用模板创建任务")');
     await page.locator('[role="dialog"]').locator('label').first().click();
     await page.click('button:has-text("选择模板")');
