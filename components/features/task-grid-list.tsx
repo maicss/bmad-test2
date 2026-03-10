@@ -58,7 +58,7 @@ export function TaskGridList({ tasks, isLoading, onTaskClick }: TaskGridListProp
         <TaskCardChild
           key={task.id}
           task={task}
-          onClick={() => onTaskClick?.(task)}
+          onComplete={onTaskClick ? (taskId) => onTaskClick(task) : undefined}
         />
       ))}
     </div>
