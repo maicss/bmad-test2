@@ -19,6 +19,8 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!
 
 
 test.describe('Story 1.3: Child PIN Login - E2E', () => {
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ page }) => {
     // 重置 rate limit，避免测试之间相互干扰
     const resetResponse = await fetch(`${BASE_URL}/api/test/reset-rate-limit`);
@@ -30,8 +32,8 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 已注册儿童输入正确PIN码，when 提交PIN登录表单，then 成功登录并重定向到儿童Dashboard', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto(`${BASE_URL}/pin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/pin`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // When: 输入正确的4位PIN码 (使用seed data的PIN: 1111)
     const testPin = '1111';
@@ -50,8 +52,8 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 儿童输入错误PIN码，when 提交PIN登录表单，then 显示错误提示', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto(`${BASE_URL}/pin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/pin`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // When: 输入错误的PIN码（使用一个不存在的PIN）
     await page.fill('input[id="pin"]', '5555');
@@ -71,8 +73,8 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 儿童输入不足4位PIN码，when 尝试点击登录按钮，then 按钮应该被禁用', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto(`${BASE_URL}/pin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/pin`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // When: 输入不足4位的PIN码
     await page.fill('input[id="pin"]', '123');
@@ -84,8 +86,8 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 使用家长账号的PIN码登录，when 尝试登录，then 显示错误提示（非儿童角色）', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto(`${BASE_URL}/pin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/pin`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // When: 输入一个肯定不存在的PIN码
     await page.fill('input[id="pin"]', '8888');
@@ -105,8 +107,8 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test.skip('given 连续5次PIN登录失败，when 尝试第6次登录，then 显示锁定提示（10分钟）', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto(`${BASE_URL}/pin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/pin`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // When: 连续5次输入错误的PIN码（使用一个不存在的PIN码）
     for (let i = 0; i < 5; i++) {
@@ -138,8 +140,8 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 访问PIN登录页面，when 检查页面元素，then 页面应该包含所有必需的UI组件', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto(`${BASE_URL}/pin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/pin`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // When: 检查页面元素
 
@@ -152,8 +154,8 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given PIN输入框，when 页面加载，then 应该自动聚焦', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto(`${BASE_URL}/pin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/pin`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // When: 检查PIN输入框
 
@@ -167,8 +169,8 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // When: 访问PIN登录页面
-    await page.goto(`${BASE_URL}/pin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/pin`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Then: PIN输入框应该使用数字键盘
     const pinInput = page.locator('input[id="pin"]');
@@ -178,8 +180,8 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 儿童输入PIN码超过4位，when 输入，then 自动截断为4位', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto(`${BASE_URL}/pin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/pin`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // When: 输入超过4位的PIN码
     const pinInput = page.locator('input[id="pin"]');
@@ -192,8 +194,8 @@ test.describe('Story 1.3: Child PIN Login - E2E', () => {
 
   test('given 儿童输入非数字字符，when 输入，then 自动过滤非数字字符', async ({ page }) => {
     // Given: 访问PIN登录页面
-    await page.goto(`${BASE_URL}/pin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/pin`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // When: 输入非数字字符（分步输入）
     const pinInput = page.locator('input[id="pin"]');

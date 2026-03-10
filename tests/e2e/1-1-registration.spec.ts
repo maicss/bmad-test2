@@ -29,12 +29,22 @@ async function submitRegistration(page: any) {
 test.describe('Story 1.1: Parent Phone Registration', () => {
   test.describe.configure({ mode: 'serial' });
 
+  test.beforeEach(async () => {
+    // Reset rate limit before each test
+    try {
+      const resetResponse = await fetch(`${BASE_URL}/api/test/reset-rate-limit`);
+      await resetResponse.text();
+    } catch (e) {
+      // Ignore if endpoint doesn't exist
+    }
+  });
+
   test.describe('Password Registration Flow', () => {
     test('given 访问注册页面，when 选择密码方式并输入正确信息，then 应该成功注册', async ({ page }) => {
       const phone = generateTestPhone();
 
       // Given: 访问注册页面 - 使用URL参数直接选择密码模式
-      await page.goto(BASE_URL + '/register?mode=password');
+      await page.goto(BASE_URL + '/register?mode=password', { waitUntil: 'domcontentloaded' });
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(500);
 
@@ -66,7 +76,7 @@ test.describe('Story 1.1: Parent Phone Registration', () => {
 
     test('given 访问注册页面，when 输入弱密码，then 应该显示密码强度提示', async ({ page }) => {
       // Given: 访问注册页面
-      await page.goto(BASE_URL + '/register?mode=password');
+      await page.goto(BASE_URL + '/register?mode=password', { waitUntil: 'domcontentloaded' });
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(500);
 
@@ -92,7 +102,7 @@ test.describe('Story 1.1: Parent Phone Registration', () => {
 
     test('given 访问注册页面，when 密码不匹配，then 应该显示错误提示', async ({ page }) => {
       // Given: 访问注册页面
-      await page.goto(BASE_URL + '/register?mode=password');
+      await page.goto(BASE_URL + '/register?mode=password', { waitUntil: 'domcontentloaded' });
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(500);
 
@@ -118,7 +128,7 @@ test.describe('Story 1.1: Parent Phone Registration', () => {
 
     test('given 访问注册页面，when 输入强密码，then 应该显示强密码提示', async ({ page }) => {
       // Given: 访问注册页面
-      await page.goto(BASE_URL + '/register?mode=password');
+      await page.goto(BASE_URL + '/register?mode=password', { waitUntil: 'domcontentloaded' });
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(500);
 
@@ -136,7 +146,7 @@ test.describe('Story 1.1: Parent Phone Registration', () => {
 
     test('given 访问注册页面，when 密码缺少大写字母，then 应该显示错误提示', async ({ page }) => {
       // Given: 访问注册页面
-      await page.goto(BASE_URL + '/register?mode=password');
+      await page.goto(BASE_URL + '/register?mode=password', { waitUntil: 'domcontentloaded' });
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(500);
 
@@ -162,7 +172,7 @@ test.describe('Story 1.1: Parent Phone Registration', () => {
 
     test('given 访问注册页面，when 密码缺少数字，then 应该显示错误提示', async ({ page }) => {
       // Given: 访问注册页面
-      await page.goto(BASE_URL + '/register?mode=password');
+      await page.goto(BASE_URL + '/register?mode=password', { waitUntil: 'domcontentloaded' });
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(500);
 
@@ -192,7 +202,7 @@ test.describe('Story 1.1: Parent Phone Registration', () => {
       const phone = generateTestPhone();
 
       // Given: 访问注册页面（默认就是OTP模式）
-      await page.goto(BASE_URL + '/register');
+      await page.goto(BASE_URL + '/register', { waitUntil: 'domcontentloaded' });
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(500);
 
