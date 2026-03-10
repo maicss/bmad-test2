@@ -3,13 +3,14 @@
  *
  * Story 2.8: Child Views Today's Task List
  * Task 2-6: 实现任务刷新机制
+ * Task 4: 实现任务排序逻辑
  *
  * Zustand store for child task state management
- * Handles task loading, refreshing, error states
+ * Handles task loading, refreshing, error states, and sorting
  */
 
 import { create } from 'zustand';
-import { getTodayTasksByChild, getTaskProgressByChild, getTaskStatusDisplay } from '@/lib/db/queries/tasks';
+import { getTodayTasksByChild, getTaskProgressByChild, getTaskStatusDisplay, TaskSortOption } from '@/lib/db/queries/tasks';
 
 // Type definitions
 export interface Task {
@@ -35,10 +36,12 @@ interface TaskState {
   isLoading: boolean;
   isRefreshing: boolean;
   error: string | null;
+  sortOption: TaskSortOption;
 
   // Actions
   fetchTasks: (childId: string) => Promise<void>;
   refreshTasks: (childId: string) => Promise<void>;
+  setSortOption: (sort: TaskSortOption, childId?: string) => void;
   clearError: () => void;
 }
 
@@ -49,13 +52,15 @@ export const useTaskStore = create<TaskState>((set) => ({
   isLoading: false,
   isRefreshing: false,
   error: null,
+  sortOption: 'created' as TaskSortOption,
 
   // Fetch tasks (initial load)
   fetchTasks: async (childId: string) => {
     set({ isLoading: true, error: null });
 
     try {
-      const tasks = await getTodayTasksByChild(childId);
+      const sortOption = useTaskStore.getState().sortOption;
+      const tasks = await getTodayTasksByChild(childId, sortOption);
       const progress = await getTaskProgressByChild(childId);
 
       // Add display status to each task
@@ -82,7 +87,8 @@ export const useTaskStore = create<TaskState>((set) => ({
     set({ isRefreshing: true, error: null });
 
     try {
-      const tasks = await getTodayTasksByChild(childId);
+      const sortOption = useTaskStore.getState().sortOption;
+      const tasks = await getTodayTasksByChild(childId, sortOption);
       const progress = await getTaskProgressByChild(childId);
 
       const tasksWithDisplayStatus = tasks.map(task => ({
@@ -99,6 +105,27 @@ export const useTaskStore = create<TaskState>((set) => ({
       set({
         error: error instanceof Error ? error.message : '刷新任务失败',
         isRefreshing: false,
+      });
+    }
+  },
+
+  // Set sort option and refetch tasks
+  setSortOption: async (sort: TaskSortOption, childId?: string) => {
+    set({ sortOption: sort });
+
+    // Refetch tasks with new sort option if childId is provided
+    if (childId) {
+      const tasks = await getTodayTasksByChild(childId, sort);
+      const progress = await getTaskProgressByChild(childId);
+
+      const tasksWithDisplayStatus = tasks.map(task => ({
+        ...task,
+        displayStatus: getTaskStatusDisplay(task.status),
+      }));
+
+      set({
+        tasks: tasksWithDisplayStatus,
+        progress,
       });
     }
   },
