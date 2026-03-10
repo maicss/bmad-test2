@@ -38,30 +38,30 @@ test.describe('Story 2.1: Parent Creates Task Plan Template', () => {
 
     // Step 4: Verify all form elements exist and are accessible
     // Title input
-    const titleInput = page.getByLabel(/模板名称/);
+    const titleInput = page.getByPlaceholder(/例如：每日刷牙/);
     await expect(titleInput).toBeVisible();
     await expect(titleInput).toBeEnabled();
 
     // Points input
-    const pointsInput = page.getByLabel(/积分值/);
+    const pointsInput = page.getByRole('spinbutton', { name: /积分值/ });
     await expect(pointsInput).toBeVisible();
     await expect(pointsInput).toBeEnabled();
 
     // Task type selector
-    const taskTypeSelect = page.getByLabel(/任务类型/);
+    const taskTypeSelect = page.getByRole('combobox', { name: /任务类型/ });
     await expect(taskTypeSelect).toBeVisible();
 
-    // Frequency selector
-    const frequencySelect = page.getByLabel(/循环规则/);
+    // Frequency selector - use text selector
+    const frequencySelect = page.getByText('规则类型');
     await expect(frequencySelect).toBeVisible();
 
     // Reminder time input
-    const reminderTimeInput = page.getByLabel(/任务提醒时间/);
+    const reminderTimeInput = page.getByRole('textbox', { name: /任务提醒时间/ });
     await expect(reminderTimeInput).toBeVisible();
     await expect(reminderTimeInput).toBeEnabled();
 
     // Excluded dates input
-    const excludedDatesInput = page.getByPlaceholder(/2026-03-10/);
+    const excludedDatesInput = page.getByPlaceholder(/YYYY-MM-DD/);
     await expect(excludedDatesInput).toBeVisible();
     await expect(excludedDatesInput).toBeEnabled();
 
