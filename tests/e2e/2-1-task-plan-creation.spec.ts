@@ -15,26 +15,50 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Story 2.1: Parent Creates Task Plan Template', () => {
+  test.beforeEach(async () => {
+    // Reset rate limit before each test
+    try {
+      const resetResponse = await fetch(`${BASE_URL}/api/test/reset-rate-limit`);
+      await resetResponse.text();
+    } catch (e) {
+      // Ignore if endpoint doesn't exist
+    }
+  });
+
   test('Happy Path: Login, Navigate to Tasks, Navigate to Create Page, Verify Form Elements', async ({ page }) => {
     // Step 1: Login
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
-    await page.locator('input[value="password"]').first().click();
+
+    // Wait for test helper to be available
+    await page.waitForFunction(() => typeof (window as any).testSetAuthMode === 'function', { timeout: 5000 });
+
+    // Use test helper to switch to password mode
+    await page.evaluate(() => {
+      (window as any).testSetAuthMode('password');
+    });
+    await page.waitForTimeout(500);
+
+    // Wait for password input to be visible
+    await page.waitForSelector('input[id="password"]', { state: 'visible', timeout: 5000 });
+
     await page.fill('input[id="phone"]', '13800000100');
     await page.fill('input[id="password"]', '1111');
     await page.click('button[type="submit"]');
     await page.waitForTimeout(3000);
 
     // Step 2: Navigate to tasks page
-    await page.goto(`${BASE_URL}/tasks`);
+    await page.goto(`${BASE_URL}/parent/tasks`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
-    expect(page.url()).toContain('/tasks');
+    expect(page.url()).toContain('/parent/tasks');
 
     // Step 3: Navigate to create page
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/parent/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
-    expect(page.url()).toContain('/tasks/create');
+    expect(page.url()).toContain('/parent/tasks/create');
 
     // Step 4: Verify all form elements exist and are accessible
     // Title input

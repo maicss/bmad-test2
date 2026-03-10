@@ -15,12 +15,36 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3344';
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
+  test.beforeEach(async () => {
+    // Reset rate limit before each test
+    try {
+      const resetResponse = await fetch(`${BASE_URL}/api/test/reset-rate-limit`);
+      await resetResponse.text();
+    } catch (e) {
+      // Ignore if endpoint doesn't exist
+    }
+  });
+
   test.beforeEach(async ({ page }) => {
     // Login before each test
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
-    await page.locator('input[value="password"]').first().click();
+
+    // Wait for test helper to be available
+    await page.waitForFunction(() => typeof (window as any).testSetAuthMode === 'function', { timeout: 5000 });
+
+    // Use test helper to switch to password mode
+    await page.evaluate(() => {
+      (window as any).testSetAuthMode('password');
+    });
+    await page.waitForTimeout(500);
+
+    // Wait for password input to be visible
+    await page.waitForSelector('input[id="password"]', { state: 'visible', timeout: 5000 });
+
     await page.fill('input[id="phone"]', '13800000100');
     await page.fill('input[id="password"]', '1111');
     await page.click('button[type="submit"]');
@@ -28,7 +52,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC1: Daily task rule - creates tasks every day', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select daily frequency
@@ -51,7 +75,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC2: Weekly task rule - can select multiple days of week', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select weekly frequency
@@ -86,7 +110,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC3: Weekdays rule - Monday through Friday only', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select weekdays frequency
@@ -109,7 +133,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC3: Weekends rule - Saturday and Sunday only', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select weekends frequency
@@ -132,7 +156,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC4: Custom interval rule - every N days', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select interval frequency
@@ -163,7 +187,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC5: Specific dates rule - only on specified dates', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select specific dates frequency
@@ -196,7 +220,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC6: Exclusion dates - permanent exclusion', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select daily frequency first
@@ -234,7 +258,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC6: Exclusion dates - "once" scope exclusion', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select daily frequency
@@ -269,7 +293,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC7: Task preview shows generation dates', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select daily frequency
@@ -298,7 +322,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC7: Task preview updates in real-time when rule changes', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Start with daily rule
@@ -329,7 +353,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC7: Preview shows warnings for gaps or low frequency', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select interval rule with large interval (should trigger warning)
@@ -353,7 +377,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('Happy Path: Complete workflow - Create weekly task with exclusions and preview', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Step 1: Fill in basic info
@@ -393,7 +417,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC Validation: Weekly rule requires at least one day selected', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select weekly frequency
@@ -413,7 +437,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC Validation: Interval must be greater than 0', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select interval frequency
@@ -437,7 +461,7 @@ test.describe('Story 2.3: Parent Sets Task Date Rules', () => {
   });
 
   test('AC Validation: Specific dates requires at least one date', async ({ page }) => {
-    await page.goto(`${BASE_URL}/tasks/create`);
+    await page.goto(`${BASE_URL}/tasks/create`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
     // Select specific dates frequency

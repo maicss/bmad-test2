@@ -38,8 +38,13 @@ export default function LoginPage() {
         form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
       }
     };
+    // Test helper for switching auth mode in E2E tests
+    (window as any).testSetAuthMode = (mode: 'otp' | 'password') => {
+      setAuthMethod(mode);
+    };
     return () => {
       delete (window as any).testHandleLogin;
+      delete (window as any).testSetAuthMode;
     };
   }, []);
 
