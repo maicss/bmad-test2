@@ -3,8 +3,9 @@
  *
  * Story 2.8: Child Views Today's Task List
  * Task 2.4: 实现任务数据加载
+ * Task 4: 实现任务排序逻辑
  *
- * GET /api/child/tasks - 获取儿童今日任务列表
+ * GET /api/child/tasks?sort=time|created|points - 获取儿童今日任务列表
  *
  * 认证: 需要儿童PIN登录
  * RBAC: 只能返回当前登录儿童的任务
@@ -13,7 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionByToken } from '@/lib/db/queries/sessions';
 import { getUserById } from '@/lib/db/queries/users';
-import { getTodayTasksByChild, getTaskProgressByChild, getTaskStatusDisplay } from '@/lib/db/queries/tasks';
+import { getTodayTasksByChild, getTaskProgressByChild, getTaskStatusDisplay, TaskSortOption } from '@/lib/db/queries/tasks';
 import { cookies } from 'next/headers';
 
 /**
@@ -58,8 +59,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 获取今日任务
-    const tasks = await getTodayTasksByChild(user.id);
+    // Get sort option from query params
+    const { searchParams } = new URL(request.url);
+    const sortParam = searchParams.get('sort') as TaskSortOption | undefined;
+    const sortOption: TaskSortOption = sortParam && ['time', 'created', 'points'].includes(sortParam)
+      ? sortParam
+      : 'created';
+
+    // 获取今日任务（支持排序）
+    const tasks = await getTodayTasksByChild(user.id, sortOption);
 
     // 获取任务进度
     const progress = await getTaskProgressByChild(user.id);
@@ -73,6 +81,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       tasks: tasksWithDisplayStatus,
       progress,
+      sortOption,
     });
   } catch (error) {
     console.error('获取儿童任务失败:', error);

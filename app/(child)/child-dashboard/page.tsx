@@ -4,9 +4,6 @@
  * Story 2.8: Child Views Today's Task List
  *
  * 儿童端首页 - 显示今日任务列表
- * - 任务进度显示
- * - 任务卡片网格布局
- * - 自动刷新机制
  */
 
 'use client';
@@ -14,70 +11,95 @@
 import { useEffect, useState } from 'react';
 import { ProgressHeader } from '@/components/features/progress-header';
 import { TaskGridList } from '@/components/features/task-grid-list';
+import { TaskDetailDialog } from '@/components/dialogs/task-detail-dialog';
 import { useTaskStore, Task } from '@/lib/store/task-store';
-
-interface ChildData {
-  tasks: Task[];
-  progress: {
-    completed: number;
-    total: number;
-    progress: number;
-  };
-}
+import { toast } from 'sonner';
+import { TaskSortSelector, TaskSortOption } from '@/components/features/task-sort-selector';
 
 export default function ChildDashboardPage() {
-  const [childData, setChildData] = useState<ChildData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [currentChildId, setCurrentChildId] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [sortOption, setSortOption] = useState<TaskSortOption>('created');
 
-  // 加载任务数据
-  const loadTasks = async (showRefreshing = false) => {
-    try {
-      if (showRefreshing) {
-        setIsRefreshing(true);
-      } else {
-        setIsLoading(true);
+  // Get state and actions from task store
+  const { tasks, progress, isLoading, error, fetchTasks, refreshTasks, setSortOption: setStoreSortOption } = useTaskStore();
+
+  // Get current child ID from session
+  useEffect(() => {
+    const getChildId = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user?.role === 'child') {
+            setCurrentChildId(data.user.id);
+            fetchTasks(data.user.id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to get child info:', error);
       }
-      setError(null);
+    };
 
-      const response = await fetch('/api/child/tasks');
-      if (!response.ok) {
-        throw new Error('加载任务失败');
-      }
+    getChildId();
+  }, []);
 
-      const data = await response.json();
-      setChildData(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载任务失败');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+  // Auto-refresh (every 5 seconds)
+  useEffect(() => {
+    if (!currentChildId) return;
+    const interval = setInterval(() => refreshTasks(currentChildId), 5000);
+    return () => clearInterval(interval);
+  }, [currentChildId, refreshTasks]);
+
+  // Handle sort option change
+  const handleSortChange = (newSort: TaskSortOption) => {
+    setSortOption(newSort);
+    if (currentChildId) {
+      setStoreSortOption(newSort, currentChildId);
     }
   };
 
-  // 初始加载
-  useEffect(() => {
-    loadTasks();
-  }, []);
-
-  // 自动刷新（每5秒）
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadTasks(true);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // 任务点击处理
+  // Handle task click - show detail dialog
   const handleTaskClick = (task: Task) => {
-    // Story 2.9: 实现任务完成功能
-    console.log('Task clicked:', task);
+    setSelectedTask(task);
+    setIsDetailOpen(true);
   };
 
-  // 加载中状态
-  if (isLoading) {
+  // Handle task completion
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      const response = await fetch(`/api/child/tasks/${taskId}/complete`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '标记任务失败');
+      }
+
+      const data = await response.json();
+
+      // Show success toast
+      toast.success('任务已完成！等待家长审批', {
+        description: '太棒了！',
+      });
+
+      // Refresh tasks
+      if (currentChildId) {
+        await refreshTasks(currentChildId);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Failed to complete task:', error);
+      toast.error(error instanceof Error ? error.message : '标记任务失败');
+      throw error;
+    }
+  };
+
+  // Loading state
+  if (isLoading && tasks.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -88,59 +110,34 @@ export default function ChildDashboardPage() {
     );
   }
 
-  // 错误状态
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center bg-white rounded-2xl shadow-lg p-8">
-          <div className="text-6xl mb-4">😢</div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">加载失败</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => loadTasks()}
-            className="px-6 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
-          >
-            重试
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
-      {/* 页面标题 */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          我的主页
-        </h1>
-        <p className="text-gray-600">
-          完成任务，赚取积分！
-        </p>
+      {/* Header with sort selector */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">我的主页</h1>
+        <TaskSortSelector
+          value={sortOption}
+          onChange={handleSortChange}
+        />
       </div>
 
-      {/* 刷新指示器 */}
-      {isRefreshing && (
-        <div className="mb-4 flex items-center justify-center gap-2 text-sm text-gray-600">
-          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <span>同步中...</span>
-        </div>
-      )}
+      {/* Progress display */}
+      {progress && <ProgressHeader progress={progress} />}
 
-      {/* 进度显示 */}
-      {childData?.progress && <ProgressHeader progress={childData.progress} />}
-
-      {/* 任务列表 */}
+      {/* Task list */}
       <TaskGridList
-        tasks={childData?.tasks || []}
+        tasks={tasks}
         isLoading={isLoading}
         onTaskClick={handleTaskClick}
       />
 
-      {/* 下拉刷新提示 */}
-      <div className="mt-8 text-center text-sm text-gray-500">
-        <p>💡 任务列表会自动刷新</p>
-      </div>
+      {/* Task detail dialog */}
+      <TaskDetailDialog
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        task={selectedTask}
+        onComplete={handleCompleteTask}
+      />
     </div>
   );
 }

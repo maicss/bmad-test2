@@ -71,7 +71,7 @@ async function createTestChildUser() {
  */
 async function createTestParentUser() {
   const parentId = 'test-parent-1111';
-  const parentPhone = '13800000001'; // Test phone for parent
+  const parentPhone = '13999999999'; // Use unique phone for E2E tests
   const parentPassword = 'Test1234';
 
   // Hash the phone number using SHA256
@@ -91,7 +91,7 @@ async function createTestParentUser() {
   if (existingParent) {
     console.log('Test parent user already exists, updating...');
     await db.update(users)
-      .set({ phone_hash: phoneHash, password_hash: passwordHash })
+      .set({ phone: parentPhone, phone_hash: phoneHash, password_hash: passwordHash })
       .where(eq(users.id, parentId));
   } else {
     // Create a test family

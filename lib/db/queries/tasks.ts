@@ -605,23 +605,68 @@ export async function countPendingApprovalTasks(familyId: string): Promise<numbe
 // Story 2.8: Child Views Today's Task List
 
 /**
+ * Sort options for task list
+ */
+export type TaskSortOption = 'time' | 'created' | 'points';
+
+/**
  * Get today's tasks for a child
  *
  * Story 2.8 Task 2.4: 实现任务数据加载
+ * Story 2.8 Task 4: 实现任务排序逻辑
  *
  * @param childId - Child user ID
+ * @param sortOption - How to sort tasks (default: created)
  * @returns Array of today's tasks for the child
  */
-export async function getTodayTasksByChild(childId: string) {
+export async function getTodayTasksByChild(childId: string, sortOption: TaskSortOption = 'created') {
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+  let orderBy;
+  switch (sortOption) {
+    case 'points':
+      // Sort by points (highest first)
+      orderBy = [desc(tasks.points), desc(tasks.created_at)];
+      break;
+    case 'time':
+      // Sort by time (tasks with time requirements first, then by creation time)
+      // For now, sort by creation time as we don't have a specific time field
+      orderBy = [desc(tasks.created_at)];
+      break;
+    case 'created':
+    default:
+      // Sort by creation time (newest first)
+      orderBy = [desc(tasks.created_at)];
+      break;
+  }
 
   const result = await db.query.tasks.findMany({
     where: and(
       eq(tasks.assigned_child_id, childId),
       eq(tasks.scheduled_date, today)
     ),
-    orderBy: [desc(tasks.created_at)],
+    orderBy,
   });
+
+  // Apply additional sorting logic for 'time' option
+  if (sortOption === 'time') {
+    // Tasks with specific time requirements would be sorted first
+    // For now, we'll use the creation order as a proxy
+    // In a full implementation, this would check for a task_time field
+    result.sort((a, b) => {
+      // Priority: pending > completed > other statuses
+      const statusOrder = { pending: 0, in_progress: 1, completed: 2, approved: 3, rejected: 4, skipped: 5 };
+      const statusA = statusOrder[a.status as keyof typeof statusOrder] ?? 99;
+      const statusB = statusOrder[b.status as keyof typeof statusOrder] ?? 99;
+
+      if (statusA !== statusB) {
+        return statusA - statusB;
+      }
+
+      // Then by creation time
+      return b.created_at.getTime() - a.created_at.getTime();
+    });
+  }
 
   return result;
 }
