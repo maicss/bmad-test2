@@ -32,6 +32,35 @@ echo $SHELL
 
 ---
 
+## 🚨 Git 分支检测（每次实现工作开始前执行）
+
+**在开始任何实现工作之前，必须检查当前 Git 分支：**
+
+```bash
+# 检查当前分支
+git branch --show-current
+
+# 如果在 main 分支，必须先创建 feature 分支
+git checkout main && git pull
+git checkout -b feature/story-X-Y-name
+```
+
+| 当前分支 | 是否允许实现 | 操作 |
+|----------|--------------|------|
+| `main` | ❌ 禁止 | 必须创建 feature 分支 |
+| `fix-e2e` | ❌ 禁止 | 仅供 E2E 测试修复 |
+| `hotfix-*` | ❌ 禁止 | 仅供紧急修复 |
+| `feature/story-X-Y-*` | ✅ 允许 | 正确的功能分支 |
+| `experiment-*` | ✅ 允许 | 实验性分支 |
+
+**分支命名规范：**
+- 功能开发：`feature/story-{Epic}-{Story}-{description}`
+- 示例：`feature/story-2-9-child-marks-task-complete`
+
+**参考：** [docs/GIT_WORKFLOW.md](./docs/GIT_WORKFLOW.md) 第 7-23 行
+
+---
+
 ## 🔴 RED LIST（绝对禁止）
 
 违反以下任何一条将导致任务失败：

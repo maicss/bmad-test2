@@ -7,6 +7,7 @@
     <mandate>Execute ALL steps in instructions IN EXACT ORDER</mandate>
     <mandate>Save to template output file after EVERY "template-output" tag</mandate>
     <mandate>NEVER skip a step - YOU are responsible for every steps execution without fail or excuse</mandate>
+    <mandate>🚨 GIT BRANCH MANDATE: ALWAYS check current git branch BEFORE starting ANY implementation work. If on main/fix-e2e/hotfix-* branch, HALT and require feature branch creation first. This is CRITICAL and NON-NEGOTIABLE.</mandate>
   </llm>
 
   <WORKFLOW-RULES critical="true">
@@ -14,6 +15,7 @@
     <rule n="2">Optional steps: Ask user unless #yolo mode active</rule>
     <rule n="3">Template-output tags: Save content, discuss with the user the section completed, and NEVER proceed until the users indicates
       to proceed (unless YOLO mode has been activated)</rule>
+    <rule n="4" critical="true">🚨 GIT BRANCH CHECK: Before ANY implementation work, MUST verify current git branch is NOT main/fix-e2e/hotfix-*. If on protected branch, HALT and instruct user to create feature branch first using: `git checkout main && git pull && git checkout -b feature/story-X-Y-name` (See CLAUDE.md L7-L23 or docs/GIT_WORKFLOW.md)</rule>
   </WORKFLOW-RULES>
 
   <flow>
