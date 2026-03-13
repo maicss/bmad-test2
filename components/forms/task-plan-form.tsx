@@ -21,7 +21,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -96,6 +96,31 @@ export function TaskPlanForm({
 
   const [errors, setErrors] = useState<Partial<Record<keyof TaskPlanFormData, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<keyof TaskPlanFormData, boolean>>>({});
+
+  // E2E Test helpers - expose functions to window object
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).testSetFrequency = (freq: string) => {
+        setFormData(prev => ({
+          ...prev,
+          dateRule: {
+            ...prev.dateRule,
+            frequency: freq as any,
+            ...(freq === 'weekly' && { daysOfWeek: [] }),
+            ...(freq === 'interval' && { intervalDays: 2 }),
+            ...(freq === 'specific' && { specificDates: [] }),
+          },
+        }));
+      };
+      (window as any).testGetCurrentFormData = () => formData;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).testSetFrequency;
+        delete (window as any).testGetCurrentFormData;
+      }
+    };
+  }, []);
 
   // Validate form
   const validateForm = (): boolean => {
@@ -209,6 +234,7 @@ export function TaskPlanForm({
           </Label>
           <Input
             id="title"
+            name="title"
             placeholder="例如：每日刷牙"
             value={formData.title}
             onChange={e => handleFieldChange('title', e.target.value)}
@@ -261,6 +287,8 @@ export function TaskPlanForm({
           {/* Points Input */}
           <Input
             id="points"
+            name="points"
+            aria-label="积分值"
             type="number"
             min={1}
             max={100}
