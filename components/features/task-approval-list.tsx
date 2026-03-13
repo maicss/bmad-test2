@@ -17,7 +17,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useApprovalStore } from '@/lib/store/approval-store';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -34,6 +34,7 @@ interface Task {
   title: string;
   task_type: string;
   points: number;
+  status: string;
   completed_at: Date | null;
   proof_image: string | null;
   assigned_child_id: string | null;
@@ -48,7 +49,7 @@ interface Child {
 interface TaskApprovalListProps {
   familyId: string;
   tasks: Task[];
-  children: Child[];
+  familyChildren: Child[];
   onRefresh?: () => Promise<void>;
 }
 
@@ -62,12 +63,13 @@ export const taskTypeIcons: Record<string, string> = {
 };
 
 export function TaskApprovalList({
-  familyId: _familyId,
+  familyId, // keeping for props compatibility
   tasks,
-  children,
+  familyChildren,
   onRefresh,
 }: TaskApprovalListProps) {
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>(tasks);
+  const [selectedStatus, setSelectedStatus] = useState<'completed' | 'approved' | 'rejected'>('completed');
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -82,19 +84,67 @@ export function TaskApprovalList({
     getSelectedCount,
   } = useApprovalStore();
 
-  // Update filtered tasks when props change
-  useEffect(() => {
-    if (selectedChildId) {
-      setFilteredTasks(tasks.filter(t => t.assigned_child_id === selectedChildId));
-    } else {
-      setFilteredTasks(tasks);
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartRef = useRef<{ x: number, y: number } | null>(null);
+
+  const handlePointerDown = useCallback(() => {
+    if (selectedStatus !== 'completed') return;
+    
+    pressTimerRef.current = setTimeout(() => {
+      // Long press triggers select all
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(50);
+      }
+      toggleAllTasks(filteredTasks.map(t => t.id));
+      pressTimerRef.current = null;
+    }, 500);
+  }, [filteredTasks, selectedStatus, toggleAllTasks]);
+
+  const clearTimer = useCallback(() => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
     }
-  }, [tasks, selectedChildId]);
+  }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent, taskId: string) => {
+    if (!touchStartRef.current || selectedStatus !== 'completed') return;
+
+    const diffX = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const diffY = Math.abs(e.changedTouches[0].clientY - touchStartRef.current.y);
+
+    // If swiped horizontally mostly and passed threshold
+    if (Math.abs(diffX) > 50 && diffY < 30) {
+      // Swipe left or right both toggle for better UX, or swipe right to select, left to unselect
+      toggleTaskSelection(taskId);
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(20);
+      }
+    }
+    
+    touchStartRef.current = null;
+  };
+
+  // Update filtered tasks when props or filters change
+  useEffect(() => {
+    let result = tasks.filter(t => t.status === selectedStatus);
+    if (selectedChildId) {
+      result = result.filter(t => t.assigned_child_id === selectedChildId);
+    }
+    setFilteredTasks(result);
+  }, [tasks, selectedChildId, selectedStatus]);
 
   // Get child name by ID
   const getChildName = (childId: string | null): string => {
     if (!childId) return '未知儿童';
-    const child = children.find(c => c.id === childId);
+    const child = familyChildren.find(c => c.id === childId);
     return child?.name || '未知儿童';
   };
 
@@ -182,7 +232,34 @@ export function TaskApprovalList({
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
+      {/* Status Filters */}
+      <div className="flex gap-2 mb-2">
+        <Button
+          variant={selectedStatus === 'completed' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSelectedStatus('completed')}
+          data-testid="status-filter-pending"
+        >
+          待审批
+        </Button>
+        <Button
+          variant={selectedStatus === 'approved' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSelectedStatus('approved')}
+          data-testid="status-filter-approved"
+        >
+          已批准
+        </Button>
+        <Button
+          variant={selectedStatus === 'rejected' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSelectedStatus('rejected')}
+          data-testid="status-filter-rejected"
+        >
+          已驳回
+        </Button>
+      </div>
+
       <div className="flex flex-wrap gap-2 items-center justify-between">
         <div className="flex gap-2">
           <Button
@@ -193,7 +270,7 @@ export function TaskApprovalList({
           >
             全部儿童
           </Button>
-          {children.map(child => (
+          {familyChildren.map(child => (
             <Button
               key={child.id}
               variant={selectedChildId === child.id ? 'default' : 'outline'}
@@ -206,14 +283,16 @@ export function TaskApprovalList({
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
-          <Checkbox
-            checked={allSelected}
-            onCheckedChange={() => toggleAllTasks(filteredTasks.map(t => t.id))}
-            data-testid="select-all-checkbox"
-          />
-          <span className="text-sm text-muted-foreground">全选</span>
-        </div>
+        {selectedStatus === 'completed' && (
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={() => toggleAllTasks(filteredTasks.map(t => t.id))}
+              data-testid="select-all-checkbox"
+            />
+            <span className="text-sm text-muted-foreground">全选</span>
+          </div>
+        )}
       </div>
 
       {/* Task List */}
@@ -224,14 +303,34 @@ export function TaskApprovalList({
       ) : (
         <div className="space-y-3">
           {filteredTasks.map(task => (
-            <Card key={task.id} className="p-4" data-testid="task-card">
-              <div className="flex items-start gap-3">
-                {/* Checkbox */}
-                <Checkbox
-                  checked={isTaskSelected(task.id)}
-                  onCheckedChange={() => toggleTaskSelection(task.id)}
-                  className="mt-1"
-                />
+            <Card 
+              key={task.id} 
+              className="p-4" 
+              data-testid="task-card"
+              onPointerDown={handlePointerDown}
+              onPointerUp={clearTimer}
+              onPointerMove={clearTimer}
+              onPointerLeave={clearTimer}
+              onContextMenu={(e) => { 
+                // Only prevent context menu if we are in state to show long press action
+                if (selectedStatus === 'completed') {
+                  e.preventDefault(); 
+                }
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={(e) => handleTouchEnd(e, task.id)}
+            >
+              <div className="flex items-start gap-3 pointer-events-none sm:pointer-events-auto">
+                {/* Checkbox (only for completed/pending approval status) */}
+                {selectedStatus === 'completed' && (
+                  <div className="pointer-events-auto">
+                    <Checkbox
+                      checked={isTaskSelected(task.id)}
+                      onCheckedChange={() => toggleTaskSelection(task.id)}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
 
                 {/* Task Icon */}
                 <div className="text-2xl" data-testid="task-icon">
@@ -253,27 +352,33 @@ export function TaskApprovalList({
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleSingleApprove(task.id)}
-                        disabled={isProcessing}
-                        aria-label="通过任务"
-                      >
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleSingleReject(task.id)}
-                        disabled={isProcessing}
-                        aria-label="驳回任务"
-                      >
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      </Button>
-                    </div>
+                    {/* Action Buttons (only for completed/pending approval status) */}
+                    {selectedStatus === 'completed' ? (
+                      <div className="flex gap-2 pointer-events-auto">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleSingleApprove(task.id)}
+                          disabled={isProcessing}
+                          aria-label="通过任务"
+                        >
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleSingleReject(task.id)}
+                          disabled={isProcessing}
+                          aria-label="驳回任务"
+                        >
+                          <XCircle className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Badge variant={selectedStatus === 'approved' ? 'default' : 'destructive'} className="self-start">
+                        {selectedStatus === 'approved' ? '已批准' : '已驳回'}
+                      </Badge>
+                    )}
                   </div>
 
                   {/* Proof Image */}

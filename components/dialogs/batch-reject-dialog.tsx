@@ -34,6 +34,7 @@ interface Task {
   title: string;
   task_type: string;
   points: number;
+  assigned_child_id: string | null;
 }
 
 interface BatchRejectDialogProps {
@@ -55,7 +56,7 @@ const PRESET_REASONS = [
 export function BatchRejectDialog({
   open,
   onOpenChange,
-  taskIds: _taskIds,
+  taskIds, // defined but never used, keeping for props compatibility
   tasks,
   onConfirm,
 }: BatchRejectDialogProps) {

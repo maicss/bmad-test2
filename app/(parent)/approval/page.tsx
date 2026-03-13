@@ -14,7 +14,7 @@
 
 import { redirect } from 'next/navigation';
 import { TaskApprovalList } from '@/components/features/task-approval-list';
-import { getPendingApprovalTasks } from '@/lib/db/queries/tasks';
+import { getTasksByFilter } from '@/lib/db/queries/tasks';
 import { getFamilyChildren } from '@/lib/db/queries/users';
 import { getSessionByToken } from '@/lib/db/queries/sessions';
 import { getUserById } from '@/lib/db/queries/users';
@@ -62,13 +62,15 @@ export default async function ApprovalPage({
   }
 
   // Get data
-  const [pendingTasks, familyChildren] = await Promise.all([
-    getPendingApprovalTasks(familyId),
+  const [tasksResult, familyChildren] = await Promise.all([
+    getTasksByFilter({
+      family_id: familyId,
+      status: ['completed', 'approved', 'rejected']
+    }),
     getFamilyChildren(familyId),
   ]);
 
-  // Transform data to match component props
-  const tasks = pendingTasks.map(task => ({
+  const tasks = tasksResult.map(task => ({
     ...task,
     completed_at: task.completed_at ? new Date(task.completed_at) : null,
   }));
@@ -90,7 +92,7 @@ export default async function ApprovalPage({
       <TaskApprovalList
         familyId={familyId}
         tasks={tasks}
-        children={children}
+        familyChildren={children}
         onRefresh={async () => {
           'use server';
           // This would trigger a revalidation

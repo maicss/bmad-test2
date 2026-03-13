@@ -33,7 +33,7 @@ interface Task {
   title: string;
   task_type: string;
   points: number;
-  assigned_child_id: string;
+  assigned_child_id: string | null;
 }
 
 interface BatchApproveDialogProps {
@@ -47,7 +47,7 @@ interface BatchApproveDialogProps {
 export function BatchApproveDialog({
   open,
   onOpenChange,
-  taskIds: _taskIds,
+  taskIds, // defined but never used, keeping for props compatibility
   tasks,
   onConfirm,
 }: BatchApproveDialogProps) {
