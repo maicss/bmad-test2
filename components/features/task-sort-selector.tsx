@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export type TaskSortOption = 'time' | 'created' | 'points';
 
@@ -27,13 +27,18 @@ const SORT_OPTIONS = [
 
 export function TaskSortSelector({ value, onChange }: TaskSortSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const hasInitialized = useRef(false);
 
-  // Load saved preference from localStorage
+  // Load saved preference from localStorage (run once on mount)
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     const saved = localStorage.getItem('child-task-sort-preference') as TaskSortOption;
     if (saved && SORT_OPTIONS.find(opt => opt.value === saved)) {
       onChange(saved);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle sort option change

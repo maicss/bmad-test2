@@ -67,10 +67,17 @@ export function GamifiedFeedback({
 
   useEffect(() => {
     if (show) {
-      // Get random feedback message for the type
+      // Get random feedback message for the type with defensive check
       const messages = FEEDBACK_MESSAGES[type];
-      const randomFeedback = messages[Math.floor(Math.random() * messages.length)];
-      setFeedback(randomFeedback);
+      if (!messages || messages.length === 0) {
+        // Fallback to 'complete' type if invalid type provided
+        const fallbackMessages = FEEDBACK_MESSAGES.complete;
+        const randomFeedback = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+        setFeedback(randomFeedback);
+      } else {
+        const randomFeedback = messages[Math.floor(Math.random() * messages.length)];
+        setFeedback(randomFeedback);
+      }
       setIsVisible(true);
 
       // Play sound

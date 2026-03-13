@@ -127,6 +127,26 @@ export async function getTaskById(taskId: string) {
 }
 
 /**
+ * Get multiple tasks by IDs (batch query)
+ *
+ * Story 2.7: Fix N+1 query pattern in batch approval
+ *
+ * @param taskIds - Array of task IDs
+ * @returns Array of tasks (may contain nulls for non-existent IDs)
+ */
+export async function getTasksByIds(taskIds: string[]): Promise<(typeof tasks.$inferSelect | null)[]> {
+  if (taskIds.length === 0) return [];
+
+  const results = await db.query.tasks.findMany({
+    where: inArray(tasks.id, taskIds),
+  });
+
+  // Return results in same order as input IDs, with nulls for missing tasks
+  const resultMap = new Map(results.map(r => [r.id, r]));
+  return taskIds.map(id => resultMap.get(id) ?? null);
+}
+
+/**
  * Get tasks by family
  *
  * @param filter - Task filter options

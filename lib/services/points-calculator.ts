@@ -252,11 +252,13 @@ export async function batchApproveTasks(
       );
     }
 
-    // Validate all tasks are in 'completed' status
+    // Validate all tasks are in a status that can be approved
+    // Note: Accept both 'completed' and 'pending_approval' for flexibility
+    const APPROVAL_PENDING_STATUSES = ['completed', 'pending_approval'];
     for (const task of validTasks) {
-      if (task.status !== 'completed') {
+      if (!APPROVAL_PENDING_STATUSES.includes(task.status)) {
         throw new PointsSettlementError(
-          `Task ${task.id} is not in completed status (current: ${task.status})`,
+          `Task ${task.id} is not in approvable status (current: ${task.status})`,
           task.id
         );
       }
@@ -418,13 +420,15 @@ export async function batchRejectTasks(
       };
     }
 
-    // Validate all tasks are in 'completed' status
+    // Validate all tasks are in a status that can be rejected
+    // Note: Accept both 'completed' and 'pending_approval' for flexibility
+    const APPROVAL_PENDING_STATUSES = ['completed', 'pending_approval'];
     for (const task of validTasks) {
-      if (task.status !== 'completed') {
+      if (!APPROVAL_PENDING_STATUSES.includes(task.status)) {
         return {
           success: false,
           rejectedCount: 0,
-          error: `Task ${task.id} is not in completed status`,
+          error: `Task ${task.id} is not in approvable status (current: ${task.status})`,
         };
       }
     }
