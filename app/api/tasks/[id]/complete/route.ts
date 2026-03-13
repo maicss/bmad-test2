@@ -20,6 +20,7 @@ import { getTaskById, markTaskComplete } from '@/lib/db/queries/tasks';
 import { calculatePointsOnApproval } from '@/lib/services/points-calculator';
 import { taskNeedsApproval, taskIsAutoApproved } from '@/types/task-type';
 import type { TaskType } from '@/types/task-type';
+import { requireChildAuth, AuthError } from '@/lib/auth/guards';
 
 /**
  * Task completion request body
@@ -51,14 +52,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<CompleteTaskResponse | { error: string }>> {
   try {
-    // Get child session from Better-Auth
-    const session = req.headers.get('cookie');
-    if (!session) {
-      return NextResponse.json(
-        { error: '请先登录' },
-        { status: 401 }
-      );
-    }
+    // Verify child is authenticated
+    const session = await requireChildAuth(req);
 
     // Parse request body
     const body: CompleteTaskRequest = await req.json().catch(() => ({}));
@@ -77,15 +72,13 @@ export async function POST(
       );
     }
 
-    // TODO: Verify child is marking their own task
-    // For now, we'll check the session in a real implementation
-    // const childId = await getChildIdFromSession(session);
-    // if (task.assigned_child_id !== childId) {
-    //   return NextResponse.json(
-    //     { error: '不能完成其他人的任务' },
-    //     { status: 403 }
-    //   );
-    // }
+    // Verify child is marking their own task
+    if (task.assigned_child_id !== session.userId) {
+      return NextResponse.json(
+        { error: '不能完成其他人的任务' },
+        { status: 403 }
+      );
+    }
 
     // Check if task is already completed or in progress
     if (task.status !== 'pending') {
@@ -96,17 +89,18 @@ export async function POST(
     }
 
     // Determine if task needs approval based on task type
+    // Story 2.9: checkin (签到) is auto-approved, others need parent approval
     const taskType = task.task_type as TaskType;
     const needsApproval = taskNeedsApproval(taskType);
     const autoApproved = taskIsAutoApproved(taskType);
 
-    let newStatus: 'completed' | 'approved';
+    let newStatus: 'pending_approval' | 'completed';
     let pointsAwarded = 0;
     let message = '';
 
     if (autoApproved) {
-      // Auto-approved: complete and award points immediately
-      newStatus = 'approved';
+      // Auto-approved (签到类型): complete and award points immediately
+      newStatus = 'completed';
 
       try {
         // Calculate and award points
@@ -121,8 +115,8 @@ export async function POST(
         );
       }
     } else {
-      // Needs parent approval
-      newStatus = 'completed';
+      // Needs parent approval → status becomes pending_approval
+      newStatus = 'pending_approval';
       message = '任务已提交审批';
     }
 
@@ -152,6 +146,14 @@ export async function POST(
       message,
     });
   } catch (error) {
+    // Handle AuthError specifically
+    if (error instanceof AuthError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.statusCode }
+      );
+    }
+
     console.error('Task completion failed:', error);
     return NextResponse.json(
       { error: '任务完成失败，请重试' },

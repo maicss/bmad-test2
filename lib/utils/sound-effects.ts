@@ -1,133 +1,223 @@
 /**
  * Sound Effects Utility
  *
- * Story 2.8: Child Views Today's Task List
- * Task 8: 实现儿童端游戏化元素
+ * Story 2.9: Child Marks Task Complete
+ * Task 8.2: 实现音效播放
  *
  * Provides sound effects for gamification using Web Audio API
- * - Task completion sound
- * - Success sound
- * - Error sound
- * - Click sound
+ * - Success sounds for task completion
+ * - Achievement sounds for milestones
+ * - Error sounds for failures
+ *
+ * Uses browser's built-in Web Audio API - no external dependencies needed
+ *
+ * Source: Story 2.9 Dev Notes - Sound Effects
  */
-
-type SoundType = 'complete' | 'success' | 'error' | 'click' | 'refresh';
-
-// Audio context for playing sounds
-let audioContext: AudioContext | null = null;
-
-function getAudioContext(): AudioContext {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  }
-  return audioContext;
-}
 
 /**
- * Play a sound effect using Web Audio API
- * Generates simple synthesized sounds without external files
+ * Sound effect types
  */
-export function playSound(type: SoundType): void {
-  try {
-    const ctx = getAudioContext();
+export type SoundEffectType =
+  | 'success'      // Task completed successfully
+  | 'approval'     // Task approved by parent
+  | 'achievement'  // Milestone reached
+  | 'error'        // Something went wrong
+  | 'click';       // Button click
 
-    // Create oscillator for sound generation
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
+/**
+ * Sound effects configuration
+ */
+interface SoundConfig {
+  frequency: number;
+  duration: number;
+  type: OscillatorType;
+  volume: number;
+}
 
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
+const SOUND_CONFIGS: Record<SoundEffectType, SoundConfig> = {
+  success: {
+    frequency: 523.25,  // C5
+    duration: 0.15,
+    type: 'sine',
+    volume: 0.3,
+  },
+  approval: {
+    frequency: 659.25,  // E5
+    duration: 0.2,
+    type: 'sine',
+    volume: 0.3,
+  },
+  achievement: {
+    frequency: 783.99,  // G5
+    duration: 0.3,
+    type: 'sine',
+    volume: 0.4,
+  },
+  error: {
+    frequency: 200,     // Low tone
+    duration: 0.2,
+    type: 'sawtooth',
+    volume: 0.2,
+  },
+  click: {
+    frequency: 800,
+    duration: 0.05,
+    type: 'sine',
+    volume: 0.1,
+  },
+};
 
-    const now = ctx.currentTime;
+/**
+ * Sound Effects Manager using Web Audio API
+ */
+class SoundEffectsManager {
+  private audioContext: AudioContext | null = null;
+  private enabled: boolean = true;
 
-    switch (type) {
-      case 'complete':
-        // Ascending chime (C-E-G-C arpeggio)
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(523.25, now); // C5
-        oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
-        oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
-        oscillator.frequency.setValueAtTime(1046.50, now + 0.3); // C6
-        gainNode.gain.setValueAtTime(0.3, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-        oscillator.start(now);
-        oscillator.stop(now + 0.5);
-        break;
+  /**
+   * Get or create AudioContext
+   */
+  private getAudioContext(): AudioContext | null {
+    if (typeof window === 'undefined') return null;
 
-      case 'success':
-        // Victory fanfare (three notes)
-        oscillator.type = 'triangle';
-        oscillator.frequency.setValueAtTime(523.25, now); // C5
-        oscillator.frequency.setValueAtTime(659.25, now + 0.15); // E5
-        oscillator.frequency.setValueAtTime(783.99, now + 0.3); // G5
-        gainNode.gain.setValueAtTime(0.2, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
-        oscillator.start(now);
-        oscillator.stop(now + 0.6);
-        break;
-
-      case 'error':
-        // Low buzz
-        oscillator.type = 'sawtooth';
-        oscillator.frequency.setValueAtTime(150, now);
-        oscillator.frequency.linearRampToValueAtTime(100, now + 0.2);
-        gainNode.gain.setValueAtTime(0.2, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-        oscillator.start(now);
-        oscillator.stop(now + 0.3);
-        break;
-
-      case 'click':
-        // Short click
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(800, now);
-        gainNode.gain.setValueAtTime(0.1, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-        oscillator.start(now);
-        oscillator.stop(now + 0.05);
-        break;
-
-      case 'refresh':
-        // Swoosh sound
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(400, now);
-        oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.1);
-        oscillator.frequency.exponentialRampToValueAtTime(400, now + 0.2);
-        gainNode.gain.setValueAtTime(0.15, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-        oscillator.start(now);
-        oscillator.stop(now + 0.25);
-        break;
+    if (!this.audioContext) {
+      try {
+        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch {
+        console.warn('Web Audio API not supported');
+        return null;
+      }
     }
-  } catch (error) {
-    console.warn('Failed to play sound:', error);
+
+    // Resume context if suspended (browser autoplay policy)
+    if (this.audioContext.state === 'suspended') {
+      this.audioContext.resume().catch(console.warn);
+    }
+
+    return this.audioContext;
+  }
+
+  /**
+   * Play a sound effect
+   *
+   * @param type - Type of sound to play
+   * @returns Promise that resolves when sound finishes
+   */
+  async play(type: SoundEffectType): Promise<void> {
+    if (!this.enabled) return;
+
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+
+    const config = SOUND_CONFIGS[type];
+
+    try {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.type = config.type;
+      oscillator.frequency.setValueAtTime(config.frequency, ctx.currentTime);
+
+      // Envelope for smooth sound
+      gainNode.gain.setValueAtTime(0, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(config.volume, ctx.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + config.duration);
+
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + config.duration);
+
+      // Wait for sound to finish
+      await new Promise(resolve => setTimeout(resolve, config.duration * 1000));
+    } catch (error) {
+      console.warn('Failed to play sound:', error);
+    }
+  }
+
+  /**
+   * Play a sequence of sounds (chord)
+   *
+   * @param types - Array of sound types to play in sequence
+   */
+  async playSequence(types: SoundEffectType[]): Promise<void> {
+    for (const type of types) {
+      await this.play(type);
+      // Small delay between sounds
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  }
+
+  /**
+   * Enable sound effects
+   */
+  enable(): void {
+    this.enabled = true;
+  }
+
+  /**
+   * Disable sound effects
+   */
+  disable(): void {
+    this.enabled = false;
+  }
+
+  /**
+   * Check if sounds are enabled
+   */
+  isEnabled(): boolean {
+    return this.enabled;
+  }
+
+  /**
+   * Play success chord (ascending notes)
+   */
+  async playSuccessChord(): Promise<void> {
+    await this.playSequence(['success', 'approval']);
+  }
+
+  /**
+   * Play achievement fanfare (longer sequence)
+   */
+  async playAchievementFanfare(): Promise<void> {
+    await this.playSequence(['success', 'approval', 'achievement']);
   }
 }
 
-/**
- * Check if sound is enabled (stored in localStorage)
- */
-export function isSoundEnabled(): boolean {
-  if (typeof window === 'undefined') return true;
-  const enabled = localStorage.getItem('child-sound-enabled');
-  return enabled !== 'false'; // Default to true
-}
+// Singleton instance
+export const soundEffects = new SoundEffectsManager();
 
 /**
- * Toggle sound on/off
+ * Hook for using sound effects in React components
+ *
+ * @returns Sound effects API
+ *
+ * @example
+ * ```tsx
+ * function MyComponent() {
+ *   const { playSuccess, playError, enabled, toggle } = useSoundEffects();
+ *
+ *   const handleClick = () => {
+ *     playSuccess();
+ *   };
+ *
+ *   return <button onClick={handleClick}>Click me</button>;
+ * }
+ * ```
  */
-export function toggleSound(): boolean {
-  const current = isSoundEnabled();
-  const newValue = !current;
-  localStorage.setItem('child-sound-enabled', String(newValue));
-  return newValue;
-}
-
-/**
- * Play sound only if enabled
- */
-export function playSoundIfEnabled(type: SoundType): void {
-  if (isSoundEnabled()) {
-    playSound(type);
-  }
+export function useSoundEffects() {
+  return {
+    playSuccess: () => soundEffects.play('success'),
+    playApproval: () => soundEffects.play('approval'),
+    playAchievement: () => soundEffects.play('achievement'),
+    playError: () => soundEffects.play('error'),
+    playClick: () => soundEffects.play('click'),
+    playSuccessChord: () => soundEffects.playSuccessChord(),
+    playAchievementFanfare: () => soundEffects.playAchievementFanfare(),
+    enabled: soundEffects.isEnabled(),
+    enable: () => soundEffects.enable(),
+    disable: () => soundEffects.disable(),
+    toggle: () => soundEffects.isEnabled() ? soundEffects.disable() : soundEffects.enable(),
+  };
 }

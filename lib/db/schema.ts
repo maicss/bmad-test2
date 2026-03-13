@@ -188,7 +188,7 @@ export const taskPlans = sqliteTable('task_plans', {
 // Stores concrete task instances generated from task plans
 // Story 2.6: Added is_manual field for manual task creation
 // Story 2.7: Added proof_image field for task completion proof
-// Story 2.9: Added 签到 task type
+// Story 2.9: Added 签到 task type, updated status enum with pending_approval
 export const tasks = sqliteTable('tasks', {
   id: text('id').primaryKey(),
   family_id: text('family_id').notNull().references(() => families.id, { onDelete: 'cascade' }),
@@ -198,7 +198,8 @@ export const tasks = sqliteTable('tasks', {
   task_type: text('task_type', { enum: ['刷牙', '学习', '运动', '家务', '签到', '自定义'] }).notNull(),
   points: integer('points').notNull(),
   scheduled_date: text('scheduled_date').notNull(), // YYYY-MM-DD format
-  status: text('status', { enum: ['pending', 'in_progress', 'completed', 'approved', 'rejected', 'skipped'] }).notNull().default('pending'),
+  // Story 2.9: Status flow - pending → pending_approval (child marked) → completed (parent approved) or rejected
+  status: text('status', { enum: ['pending', 'pending_approval', 'completed', 'rejected'] }).notNull().default('pending'),
   completed_at: integer('completed_at', { mode: 'timestamp' }),
   approved_by: text('approved_by').references(() => users.id, { onDelete: 'restrict' }),
   approved_at: integer('approved_at', { mode: 'timestamp' }),
