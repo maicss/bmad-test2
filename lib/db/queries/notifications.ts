@@ -70,6 +70,20 @@ export async function getNotificationsByUserId(
 }
 
 /**
+ * Get notification by ID
+ *
+ * @param notificationId - Notification ID
+ * @returns The notification or null
+ */
+export async function getNotificationById(notificationId: string) {
+  const result = await db.query.notifications.findFirst({
+    where: eq(notifications.id, notificationId),
+  });
+
+  return result ?? null;
+}
+
+/**
  * Mark notification as read
  *
  * @param notificationId - Notification ID

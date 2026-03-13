@@ -185,26 +185,45 @@ export function TaskApprovalList({
     }
   };
 
-  // Handle reject action
+  // Handle reject action - uses batch endpoint for multiple, single endpoint for one
   const handleReject = async (reason: string) => {
     setIsProcessing(true);
     try {
       const selectedTasks = filteredTasks.filter(t => isTaskSelected(t.id));
       const taskIds = selectedTasks.map(t => t.id);
 
-      const response = await fetch('/api/tasks/batch-reject', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskIds, reason }),
-      });
+      // Use single-task endpoint if only one task selected
+      if (taskIds.length === 1) {
+        const response = await fetch(`/api/tasks/${taskIds[0]}/reject`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || '驳回失败');
+        if (!response.ok) {
+          throw new Error(data.error || '驳回失败');
+        }
+
+        toast.success(data.message || `任务已驳回`);
+      } else {
+        // Use batch endpoint for multiple tasks
+        const response = await fetch('/api/tasks/batch-reject', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskIds, reason }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || '驳回失败');
+        }
+
+        toast.success(data.message || `已驳回 ${data.rejectedCount} 个任务`);
       }
 
-      toast.success(data.message || `已驳回 ${data.rejectedCount} 个任务`);
       clearSelection();
       setRejectDialogOpen(false);
       onRefresh?.();
@@ -215,14 +234,35 @@ export function TaskApprovalList({
     }
   };
 
-  // Handle single task approve
+  // Handle single task approve - uses single task endpoint
   const handleSingleApprove = async (taskId: string) => {
-    toggleTaskSelection(taskId);
-    setApproveDialogOpen(true);
+    setIsProcessing(true);
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '审批失败');
+      }
+
+      toast.success(data.message || `任务"${data.taskTitle}"已通过审批，+${data.pointsAdded} 积分`);
+      onRefresh?.();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '审批失败，请重试');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  // Handle single task reject
+  // Handle single task reject - opens dialog for reason input
   const handleSingleReject = async (taskId: string) => {
+    // Clear any existing selections first, then select only this task
+    clearSelection();
     toggleTaskSelection(taskId);
     setRejectDialogOpen(true);
   };
