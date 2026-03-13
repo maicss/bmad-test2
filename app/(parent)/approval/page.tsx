@@ -14,6 +14,7 @@
 
 import { redirect } from 'next/navigation';
 import { TaskApprovalList } from '@/components/features/task-approval-list';
+import { AuditLogList } from '@/components/features/audit-log-list';
 import { getTasksByFilter } from '@/lib/db/queries/tasks';
 import { getFamilyChildren } from '@/lib/db/queries/users';
 import { getSessionByToken } from '@/lib/db/queries/sessions';
@@ -81,7 +82,7 @@ export default async function ApprovalPage({
   }));
 
   return (
-    <div className="container max-w-4xl mx-auto py-8">
+    <div className="container max-w-6xl mx-auto py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">任务审批</h1>
         <p className="text-muted-foreground">
@@ -89,16 +90,26 @@ export default async function ApprovalPage({
         </p>
       </div>
 
-      <TaskApprovalList
-        familyId={familyId}
-        tasks={tasks}
-        familyChildren={children}
-        onRefresh={async () => {
-          'use server';
-          // This would trigger a revalidation
-          console.log('Refreshing task list...');
-        }}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main task approval list */}
+        <div className="lg:col-span-2">
+          <TaskApprovalList
+            familyId={familyId}
+            tasks={tasks}
+            familyChildren={children}
+            onRefresh={async () => {
+              'use server';
+              // This would trigger a revalidation
+              console.log('Refreshing task list...');
+            }}
+          />
+        </div>
+
+        {/* Audit log sidebar */}
+        <div className="lg:col-span-1">
+          <AuditLogList userId={parent.id} limit={10} />
+        </div>
+      </div>
     </div>
   );
 }

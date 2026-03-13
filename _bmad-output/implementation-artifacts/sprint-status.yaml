@@ -34,7 +34,7 @@ development_status:
 MX|  2-7-parent-batch-approves-tasks: review
 MX|  2-8-child-views-todays-task-list: done
 MX|  2-9-child-marks-task-complete: done
-MX|  2-10-parent-approves-task-completion: ready-for-dev
+MX|  2-10-parent-approves-task-completion: review
 MX|  2-11-parent-rejects-task-completion: ready-for-dev
 MX|  2-12-parent-creates-one-time-task: ready-for-dev
 MX|  2-13-task-reminder-push-notification: ready-for-dev
