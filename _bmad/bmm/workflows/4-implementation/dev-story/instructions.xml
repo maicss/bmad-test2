@@ -14,28 +14,27 @@
 
   <!-- 🚨 GIT BRANCH CHECK - Execute BEFORE any implementation work -->
   <step n="0" goal="Verify correct git branch" critical="true">
-    <action>Check current git branch using: git branch --show-current</action>
-    <check if="branch is 'main' or 'fix-e2e' or starts with 'hotfix-'">
+    <action>RUN MANDATORY branch check script: bun run scripts/check-branch.ts</action>
+    <check if="script exit code is 1 (FAILED)">
       <output>🚨 **CRITICAL: Git Branch Rule Violation Detected**
 
-        Current branch: **{{current_branch}}**
+        The check-branch.ts script failed. Implementation work MUST NOT be done on the current branch.
 
-        Implementation work MUST NOT be done on protected branches (main, fix-e2e, hotfix-*).
+        **Protected branches:** main, fix-e2e, hotfix-*
+        **Required format:** feature/story-X-Y-name
 
         **Required Action:**
         ```bash
         git checkout main && git pull
         git checkout -b feature/story-X-Y-name
+        bun run scripts/check-branch.ts  # Verify it passes
         ```
 
-        Please create the appropriate feature branch for this story before continuing.
+        Please create the appropriate feature branch and ensure check-branch.ts passes before continuing.
       </output>
-      <ask>Press Enter once you've created the feature branch, or provide the branch name to switch to:</ask>
-      <check if="user provides branch name">
-        <action>Switch to user-provided branch: git checkout {{branch_name}}</action>
-      </check>
+      <ask>Press Enter once you've created the feature branch and check-branch.ts passes:</ask>
     </check>
-    <check if="branch starts with 'feature/' or branch is not a protected branch">
+    <check if="script exit code is 0 (PASSED)">
       <output>✅ Git branch check passed: {{current_branch}}</output>
     </check>
   </step>

@@ -1,6 +1,6 @@
 # Story 2.11: Parent Rejects Task Completion
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -33,39 +33,39 @@ so that 我可以拒绝不符合要求的任务完成并告知孩子原因。
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create task rejection API endpoint (AC: 1, 2)
-  - [ ] Subtask 1.1: Design API route for `POST /api/tasks/[id]/reject`
-  - [ ] Subtask 1.2: Implement task status update logic (pending_approval -> pending)
-  - [ ] Subtask 1.3: Validate rejection reason (required, max 200 chars)
-  - [ ] Subtask 1.4: Store rejection reason in task record
-  - [ ] Subtask 1.5: Add rejection audit logging
-  - [ ] Subtask 1.6: Test rejection workflow with BDD tests
+- [x] Task 1: Create task rejection API endpoint (AC: 1, 2)
+  - [x] Subtask 1.1: Design API route for `POST /api/tasks/[id]/reject`
+  - [x] Subtask 1.2: Implement task status update logic (pending_approval -> pending)
+  - [x] Subtask 1.3: Validate rejection reason (required, max 200 chars)
+  - [x] Subtask 1.4: Store rejection reason in task record
+  - [x] Subtask 1.5: Add rejection audit logging
+  - [x] Subtask 1.6: Test rejection workflow with BDD tests
 
-- [ ] Task 2: Build parent rejection UI (AC: 1)
-  - [ ] Subtask 2.1: Create rejection dialog component with reason input
-  - [ ] Subtask 2.2: Add preset rejection reasons (selectable)
-  - [ ] Subtask 2.3: Add custom reason input field (max 200 chars)
-  - [ ] Subtask 2.4: Implement validation for required reason
-  - [ ] Subtask 2.5: Add optimistic UI updates
-  - [ ] Subtask 2.6: Display rejection reason on task card after rejection
+- [x] Task 2: Build parent rejection UI (AC: 1)
+  - [x] Subtask 2.1: Create rejection dialog component with reason input
+  - [x] Subtask 2.2: Add preset rejection reasons (selectable)
+  - [x] Subtask 2.3: Add custom reason input field (max 200 chars)
+  - [x] Subtask 2.4: Implement validation for required reason
+  - [x] Subtask 2.5: Add optimistic UI updates
+  - [x] Subtask 2.6: Display rejection reason on task card after rejection
 
-- [ ] Task 3: Implement rejection notification (AC: 1, 3)
-  - [ ] Subtask 3.1: Create rejection notification service
-  - [ ] Subtask 3.2: Send notification to child on rejection
-  - [ ] Subtask 3.3: Polling implementation (2-3 second intervals)
-  - [ ] Subtask 3.4: Test notification delivery timing
+- [x] Task 3: Implement rejection notification (AC: 1, 3)
+  - [x] Subtask 3.1: Create rejection notification service
+  - [x] Subtask 3.2: Send notification to child on rejection
+  - [x] Subtask 3.3: Polling implementation (2-3 second intervals)
+  - [x] Subtask 3.4: Test notification delivery timing
 
-- [ ] Task 4: Add rejection audit log (AC: 1)
-  - [ ] Subtask 4.1: Create audit log database schema (if not exists)
-  - [ ] Subtask 4.2: Implement audit log query functions
-  - [ ] Subtask 4.3: Add rejection audit logging to API
-  - [ ] Subtask 4.4: Test audit log functionality
+- [x] Task 4: Add rejection audit log (AC: 1)
+  - [x] Subtask 4.1: Create audit log database schema (if not exists)
+  - [x] Subtask 4.2: Implement audit log query functions
+  - [x] Subtask 4.3: Add rejection audit logging to API
+  - [x] Subtask 4.4: Test audit log functionality
 
-- [ ] Task 5: Integrate with existing approval system (AC: 2)
-  - [ ] Subtask 5.1: Ensure rejection returns task to pending state
-  - [ ] Subtask 5.2: Verify no points are awarded for rejected tasks
-  - [ ] Subtask 5.3: Test child can re-attempt rejected task
-  - [ ] Subtask 5.4: Verify rejection reason visible in child's task list
+- [x] Task 5: Integrate with existing approval system (AC: 2)
+  - [x] Subtask 5.1: Ensure rejection returns task to pending state
+  - [x] Subtask 5.2: Verify no points are awarded for rejected tasks
+  - [x] Subtask 5.3: Test child can re-attempt rejected task
+  - [x] Subtask 5.4: Verify rejection reason visible in child's task list
 
 ## Dev Notes
 
@@ -432,38 +432,32 @@ None - This is a fresh story file creation.
 
 ### Completion Notes List
 
-1. Epic 2, Story 2.11 is being created following Story 2.10 (Parent Approves Task Completion)
-2. This story implements FR18: 家长驳回任务
-3. Rejection workflow mirrors approval workflow for consistency
-4. Real-time notification timing requirement: < 3 seconds per NFR4
-5. Audit logging is required per NFR14
-6. All database queries MUST use Drizzle ORM in lib/db/queries/ directory
-7. Rejection reasons must be ≤ 200 characters to prevent abuse
-8. Rejection returns task to pending state, allowing child to re-attempt
-9. No points are awarded for rejected tasks
+1. Epic 2, Story 2.11 implemented - Parent Rejects Task Completion
+2. Rejection API endpoint updated with correct notification type 'task_rejected'
+3. Rejection returns task to 'pending' status (not 'rejected') so child can re-attempt
+4. Preset rejection reasons updated to match Story 2.11 requirements
+5. Rejection reason display added to both parent approval list and child task cards
+6. Notification type 'task_rejected' added to schema and queries
+7. BDD integration tests created in tests/integration/2-11-task-rejection.spec.ts
+8. All validation implemented: required reason, max 200 chars, trim check
+9. No points awarded for rejected tasks (rejection doesn't trigger points calculation)
 
 ### File List
 
-**Files to Create:**
-- `_bmad-output/implementation-artifacts/2-11-parent-rejects-task-completion.md` (this file)
+**Files Modified:**
+- `lib/db/schema.ts` - Added 'task_rejected' to notification type enum
+- `lib/db/queries/notifications.ts` - Added 'task_rejected' to NotificationType
+- `app/api/tasks/[id]/reject/route.ts` - Updated to use correct notification type, removed approved_by/approved_at from rejection, added rejectionReason to response
+- `components/dialogs/batch-reject-dialog.tsx` - Updated preset reasons to match Story 2.11 requirements
+- `components/features/task-approval-list.tsx` - Added rejection_reason to Task interface and display
+- `components/features/task-card.tsx` - Added rejectionReason prop and display
+- `components/features/task-list.tsx` - Added rejectionReason to Task interface and pass to TaskCard
 
-**Files to Modify (During Implementation):**
-- `app/api/tasks/[id]/reject/route.ts` - Create rejection API endpoint
-- `lib/db/queries/tasks.ts` - Add rejection query function
-- `lib/db/queries/notifications.ts` - Add notification query functions (if not exists)
-- `lib/db/queries/audit-log.ts` - Add audit log query functions (if not exists)
-- `components/features/task-rejection-dialog.tsx` - Create rejection dialog component
-- `app/(parent)/approvals/[id]/page.tsx` - Add rejection dialog to task detail page
-- `types/task.ts` - Add task-related type definitions
-- `tests/integration/task-rejection.spec.ts` - Create BDD integration tests
-- `tests/e2e/approval-rejection-flow.spec.ts` - Create E2E tests
+**Files Created:**
+- `tests/integration/2-11-task-rejection.spec.ts` - Comprehensive BDD integration tests for rejection
 
-**Existing Files to Reference:**
-- `app/api/tasks/[id]/approve/route.ts` - Approval endpoint (for pattern reference)
-- `database/schema/tasks.ts` - Task table schema
-- `database/schema/notifications.ts` - Notifications table schema
-- `database/schema/audit-log.ts` - Audit log table schema
-- `lib/db/schema/index.ts` - Schema exports
-- `lib/auth/guards.ts` - Auth guards (for parent authorization)
-- `components/ui/dialog.tsx` - Shadcn Dialog component
-- `components/ui/toast.tsx` - Shadcn Toast component
+**Existing Files Referenced:**
+- `app/api/tasks/[id]/approve/route.ts` - Approval endpoint (pattern reference)
+- `lib/db/queries/tasks.ts` - Task queries (rejectTask function exists)
+- `lib/db/queries/audit-logs.ts` - Audit logging functions
+- `lib/db/schema.ts` - Database schema (tasks, notifications, audit_logs tables)

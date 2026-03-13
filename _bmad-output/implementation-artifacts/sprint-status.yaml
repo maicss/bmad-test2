@@ -35,7 +35,7 @@ MX|  2-7-parent-batch-approves-tasks: review
 MX|  2-8-child-views-todays-task-list: done
 MX|  2-9-child-marks-task-complete: done
 MX|  2-10-parent-approves-task-completion: review
-MX|  2-11-parent-rejects-task-completion: ready-for-dev
+MX|  2-11-parent-rejects-task-completion: review
 MX|  2-12-parent-creates-one-time-task: ready-for-dev
 MX|  2-13-task-reminder-push-notification: ready-for-dev
 MX|  2-14-real-time-approval-notification: ready-for-dev
@@ -67,7 +67,7 @@ HM|XW|  2-7-parent-batch-approves-tasks: ready-for-dev
 YH|XW|  2-8-child-views-todays-task-list: ready-for-dev
 YS|XW|  2-9-child-marks-task-complete: done
   2-10-parent-approves-task-completion: ready-for-dev
-  2-11-parent-rejects-task-completion: ready-for-dev
+  2-11-parent-rejects-task-completion: review
   2-12-parent-creates-one-time-task: ready-for-dev
 #WY|XW|  2-13-task-reminder-push-notification: ready-for-dev
   2-14-real-time-approval-notification: ready-for-dev

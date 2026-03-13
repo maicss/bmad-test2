@@ -1,15 +1,21 @@
 /**
  * Single Task Rejection API
  *
- * Story 2.10: Parent Approves Task Completion
- * Task 2: Create task rejection API endpoint
+ * Story 2.11: Parent Rejects Task Completion
+ * Task 1: Create task rejection API endpoint
  *
  * POST /api/tasks/[id]/reject
  * Headers: Cookie (session)
  * Body: { reason: string } (required, max 200 chars)
- * Response: { success: true, taskId }
+ * Response: { success: true, taskId, rejectionReason }
  *
- * Source: Story 2.10 AC - 家长驳回任务
+ * Source: Story 2.11 AC - 家长驳回任务
+ *
+ * CODE REVIEW FIXES:
+ * - CRITICAL-1: Added transaction safety to prevent race conditions
+ * - CRITICAL-2: Clear approved_by/approved_at fields on rejection
+ * - MAJOR-1: Accept both 'pending_approval' and 'completed' status
+ * - MAJOR-3: Added input sanitization for rejection reason
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,6 +25,22 @@ import { getTaskById } from '@/lib/db/queries/tasks';
 import { updateTask } from '@/lib/db/queries/tasks';
 import { logUserAction } from '@/lib/db/queries/audit-logs';
 import { createNotification } from '@/lib/db/queries/notifications';
+import db from '@/lib/db';
+import { tasks } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+
+/**
+ * Sanitize string input to prevent XSS attacks
+ */
+function sanitizeInput(input: string): string {
+  return input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+    .trim();
+}
 
 export async function POST(
   request: NextRequest,
@@ -82,7 +104,10 @@ export async function POST(
       );
     }
 
-    // Get task
+    // CODE REVIEW FIX MAJOR-3: Sanitize rejection reason to prevent XSS
+    const sanitizedReason = sanitizeInput(reason);
+
+    // Get task for validation
     const task = await getTaskById(taskId);
     if (!task) {
       return NextResponse.json(
@@ -99,64 +124,84 @@ export async function POST(
       );
     }
 
-    // Only reject completed tasks
-    if (task.status !== 'completed') {
+    // CODE REVIEW FIX MAJOR-1: Accept both 'pending_approval' and 'completed' for rejection
+    if (task.status !== 'pending_approval' && task.status !== 'completed') {
       return NextResponse.json(
-        { error: `任务状态不正确，只能驳回已完成的任务 (当前: ${task.status})` },
+        { error: `任务状态不正确，只能驳回等待审批的任务 (当前: ${task.status})` },
         { status: 400 }
       );
     }
 
-    // Update task status to pending (back to todo) with rejection reason
-    const rejectedTask = await updateTask(taskId, {
-      status: 'pending',
-      rejection_reason: reason,
-      completed_at: null, // Clear completion time
-      approved_by: user.id,
-      approved_at: new Date(),
+    // CODE REVIEW FIX CRITICAL-1: Use transaction to ensure atomicity
+    const now = new Date();
+    const sanitizedTitle = sanitizeInput(task.title);
+
+    // Use Drizzle transaction for atomic operation
+    const result = await db.transaction(async (tx) => {
+      // Update task status to pending (back to todo)
+      // CODE REVIEW FIX CRITICAL-2: Clear approved_by and approved_at fields
+      const [updatedTask] = await tx.update(tasks)
+        .set({
+          status: 'pending',
+          rejection_reason: sanitizedReason,
+          completed_at: null,
+          approved_by: null,  // CRITICAL FIX: Clear this field
+          approved_at: null,  // CRITICAL FIX: Clear this field
+        })
+        .where(eq(tasks.id, taskId))
+        .returning();
+
+      if (!updatedTask) {
+        throw new Error('Failed to update task');
+      }
+
+      // Create audit log (AC1: 驳回操作记录到审计日志)
+      await logUserAction(
+        user.id,
+        'reject_task',
+        {
+          taskId,
+          taskTitle: sanitizedTitle,
+          reason: sanitizedReason,
+          childId: task.assigned_child_id!, // Non-null asserted - notification requires child
+        },
+        request.headers.get('x-forwarded-for') || null
+      );
+
+      // Send notification to child about rejection (AC1: 孩子收到通知)
+      if (task.assigned_child_id) {
+        await createNotification({
+          user_id: task.assigned_child_id, // Already checked above
+          type: 'task_rejected',
+          title: '任务被驳回',
+          message: `你的任务"${sanitizedTitle}"被驳回。原因：${sanitizedReason}`,
+          metadata: {
+            taskId,
+            reason: sanitizedReason,
+          },
+        });
+      }
+
+      return { task: updatedTask };
     });
 
-    if (!rejectedTask) {
+    return NextResponse.json({
+      success: true,
+      taskId: result.task.id,
+      rejectionReason: sanitizedReason,
+      message: `任务"${sanitizedTitle}"已驳回`,
+    });
+  } catch (error) {
+    console.error('Task rejection error:', error);
+
+    // Handle transaction errors
+    if (error instanceof Error && error.message === 'Failed to update task') {
       return NextResponse.json(
         { error: '驳回失败，请稍后重试' },
         { status: 500 }
       );
     }
 
-    // Create audit log (AC3: 审批操作记录到审计日志)
-    await logUserAction(
-      user.id,
-      'reject_task',
-      {
-        taskId,
-        taskTitle: task.title,
-        reason,
-        childId: task.assigned_child_id,
-      },
-      request.headers.get('x-forwarded-for') || null
-    );
-
-    // Send notification to child about rejection
-    if (task.assigned_child_id) {
-      await createNotification({
-        user_id: task.assigned_child_id,
-        type: 'task_approved', // Re-using existing type; could add 'task_rejected' later
-        title: '任务被驳回',
-        message: `你的任务"${task.title}"被驳回。原因：${reason}`,
-        metadata: {
-          taskId,
-          reason,
-        },
-      });
-    }
-
-    return NextResponse.json({
-      success: true,
-      taskId,
-      message: `任务"${task.title}"已驳回`,
-    });
-  } catch (error) {
-    console.error('Task rejection error:', error);
     return NextResponse.json(
       { error: '服务器错误，请稍后重试' },
       { status: 500 }

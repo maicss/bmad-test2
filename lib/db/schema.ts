@@ -265,7 +265,7 @@ export const pointsHistory = sqliteTable('points_history', {
 export const notifications = sqliteTable('notifications', {
   id: text('id').primaryKey(),
   user_id: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  type: text('type', { enum: ['task_plan_resumed', 'task_paused', 'task_approved', 'points_earned'] }).notNull(),
+  type: text('type', { enum: ['task_plan_resumed', 'task_paused', 'task_approved', 'task_rejected', 'points_earned'] }).notNull(),
   title: text('title').notNull(),
   message: text('message').notNull(),
   metadata: text('metadata'), // JSON string for additional data

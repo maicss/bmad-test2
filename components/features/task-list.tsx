@@ -38,6 +38,8 @@ export interface Task {
   scheduledDate: string;
   isManual: boolean;
   notes?: string | null;
+  // Story 2.11: Rejection reason to display on task card
+  rejectionReason?: string | null;
 }
 
 export interface TaskListProps {
@@ -254,6 +256,7 @@ export function TaskList({
               scheduledDate={task.scheduledDate}
               isManual={task.isManual}
               notes={task.notes}
+              rejectionReason={task.rejectionReason}
               onEdit={onEdit}
               onDelete={onDelete}
               onStatusChange={onStatusChange}

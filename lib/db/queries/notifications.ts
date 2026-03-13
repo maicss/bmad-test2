@@ -14,7 +14,7 @@ import db from '../index';
 import { notifications, users, taskPlans } from '../schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 
-export type NotificationType = 'task_plan_resumed' | 'task_paused' | 'task_approved' | 'points_earned';
+export type NotificationType = 'task_plan_resumed' | 'task_paused' | 'task_approved' | 'task_rejected' | 'points_earned';
 
 export interface CreateNotificationDTO {
   user_id: string;

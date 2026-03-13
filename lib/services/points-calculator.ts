@@ -277,7 +277,7 @@ export async function batchApproveTasks(
         approved_by: parentUserId,
         approved_at: now,
       });
-    }));
+    }
 
     // Step 3: Group by child and calculate points
     const pointsByChild = new Map<string, number>();
@@ -432,13 +432,13 @@ export async function batchRejectTasks(
     }
 
     // Update all tasks to 'pending' status (back to todo) in parallel
-    await Promise.all(validTasks.map(task => 
+    await Promise.all(validTasks.map(task =>
       updateTask(task.id, {
         status: 'pending',
         rejection_reason: reason,
         completed_at: null, // Clear completion time
-        approved_by: parentUserId,
-        approved_at: now,
+        approved_by: null, // CODE REVIEW FIX CRITICAL-2: Clear approval fields on rejection
+        approved_at: null, // CODE REVIEW FIX CRITICAL-2: Clear approval fields on rejection
       })
     ));
 

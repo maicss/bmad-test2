@@ -10,19 +10,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 1. Git Branch Rule (Violated 4+ times)
 
-**BEFORE editing ANY code, ALWAYS check:**
+**MANDATORY: Before editing ANY code, ALWAYS run:**
 ```bash
-git branch --show-current
-# OR run the provided branch check script to validate it:
 bun run scripts/check-branch.ts
 ```
 
-**If output is `main` → STOP. Do NOT edit files.**
+**If script fails (exit code 1) → STOP. Do NOT edit files.**
+
+This script validates:
+- Current branch is NOT `main`, `fix-e2e`, or `hotfix-*`
+- Branch name follows `feature/story-X-Y-name` format
+- Auto-switches to a valid branch if available
 
 **Required workflow:**
 1. `git checkout main && git pull`
 2. `git checkout -b feature/story-X-Y-name`
-3. THEN you may edit code
+3. `bun run scripts/check-branch.ts` (MUST PASS)
+4. THEN you may edit code
 
 ### 2. Dependency Installation
 

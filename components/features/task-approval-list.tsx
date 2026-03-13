@@ -39,6 +39,7 @@ interface Task {
   proof_image: string | null;
   assigned_child_id: string | null;
   created_at: Date;
+  rejection_reason: string | null; // Story 2.11: Display rejection reason on task card
 }
 
 interface Child {
@@ -428,6 +429,16 @@ export function TaskApprovalList({
                         imageUrl={task.proof_image}
                         taskTitle={task.title}
                       />
+                    </div>
+                  )}
+
+                  {/* Story 2.11: Display rejection reason on task card after rejection */}
+                  {task.rejection_reason && (
+                    <div className="mt-2 p-2 bg-red-50 dark:bg-red-950/20 rounded-md border border-red-200 dark:border-red-900">
+                      <p className="text-sm text-red-700 dark:text-red-400">
+                        <span className="font-medium">驳回原因：</span>
+                        {task.rejection_reason}
+                      </p>
                     </div>
                   )}
                 </div>
