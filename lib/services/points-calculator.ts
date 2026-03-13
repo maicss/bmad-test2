@@ -269,15 +269,15 @@ export async function batchApproveTasks(
       }
     }
 
-    // Step 2: Update all tasks to 'approved' status
-    for (const task of validTasks) {
-      await updateTask(task.id, {
+    // Step 2: Update all tasks to 'approved' status in parallel
+    await Promise.all(validTasks.map(task => {
+      approvedTaskIds.push(task.id); // Track approved task IDs
+      return updateTask(task.id, {
         status: 'approved',
         approved_by: parentUserId,
         approved_at: now,
       });
-      approvedTaskIds.push(task.id); // Track approved task IDs
-    }
+    }));
 
     // Step 3: Group by child and calculate points
     const pointsByChild = new Map<string, number>();
@@ -287,8 +287,8 @@ export async function batchApproveTasks(
       pointsByChild.set(childId, current + task.points);
     }
 
-    // Step 4: Update balances for each child
-    for (const [childId, points] of pointsByChild) {
+    // Step 4: Update balances for each child in parallel
+    await Promise.all(Array.from(pointsByChild.entries()).map(async ([childId, points]) => {
       const updated = await addPointsToBalance(childId, points);
 
       if (!updated) {
@@ -307,10 +307,10 @@ export async function batchApproveTasks(
           newBalance: updated.balance,
         });
       }
-    }
+    }));
 
-    // Step 5: Create points history records
-    for (const task of validTasks) {
+    // Step 5: Create points history records in parallel
+    await Promise.all(validTasks.map(async (task) => {
       const previousBalance = await getPointsBalance(task.assigned_child_id!);
       const previous = previousBalance?.balance ?? task.points;
 
@@ -324,7 +324,7 @@ export async function batchApproveTasks(
         new_balance: previous,
         created_at: now,
       });
-    }
+    }));
 
     const totalPoints = Array.from(pointsByChild.values()).reduce((a, b) => a + b, 0);
 
@@ -429,16 +429,16 @@ export async function batchRejectTasks(
       }
     }
 
-    // Update all tasks to 'pending' status (back to todo)
-    for (const task of validTasks) {
-      await updateTask(task.id, {
+    // Update all tasks to 'pending' status (back to todo) in parallel
+    await Promise.all(validTasks.map(task => 
+      updateTask(task.id, {
         status: 'pending',
         rejection_reason: reason,
         completed_at: null, // Clear completion time
         approved_by: parentUserId,
         approved_at: now,
-      });
-    }
+      })
+    ));
 
     return {
       success: true,

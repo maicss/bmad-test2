@@ -1,0 +1,154 @@
+app/(parent)/settings/members/page.tsx(260,44): error TS2503: Cannot find namespace 'JSX'.
+app/(parent)/tasks/page.tsx(253,9): error TS2719: Type '(template: TaskPlan) => void' is not assignable to type '(template: TaskPlan) => void'. Two different types with this name exist, but they are unrelated.
+  Types of parameters 'template' and 'template' are incompatible.
+    Type 'TaskPlan' is missing the following properties from type 'TaskPlan': created_at, rule
+app/_actions/register.ts(90,7): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string | undefined'.
+app/_actions/register.ts(112,90): error TS2554: Expected 1-2 arguments, but got 0.
+app/_actions/register.ts(207,90): error TS2554: Expected 1-2 arguments, but got 0.
+app/api/auth/cleanup-sessions/route.ts(26,7): error TS2783: 'success' is specified more than once, so this usage will be overwritten.
+app/api/auth/login/route.ts(124,25): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string'.
+app/api/auth/login/route.ts(299,25): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string'.
+app/api/auth/pin-login/route.ts(62,27): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string'.
+app/api/auth/pin-login/route.ts(85,27): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string'.
+app/api/auth/register/route.ts(96,9): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string | undefined'.
+app/api/task-plans/route.ts(47,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: readonly ["鍒风墮", "瀛︿範", "杩愬姩", "瀹跺姟", "鑷畾涔?], params?: string | { error?: string | $ZodErrorMap<$ZodIssueInvalidValue<unknown>> | undefined; message?: string | undefined; } | undefined): ZodEnum<...>', gave the following error.
+    Object literal may only specify known properties, and 'errorMap' does not exist in type '{ error?: string | $ZodErrorMap<$ZodIssueInvalidValue<unknown>> | undefined; message?: string | undefined; }'.
+  Overload 2 of 2, '(entries: Readonly<Record<string, EnumValue>>, params?: string | { error?: string | $ZodErrorMap<$ZodIssueInvalidValue<unknown>> | undefined; message?: string | undefined; } | undefined): ZodEnum<...>', gave the following error.
+    Argument of type 'string[]' is not assignable to parameter of type 'Readonly<Record<string, EnumValue>>'.
+      Index signature for type 'string' is missing in type 'string[]'.
+app/api/task-plans/route.ts(209,45): error TS2339: Property 'errors' does not exist on type 'ZodError<{ title: string; task_type: "鍒风墮" | "瀛︿範" | "杩愬姩" | "瀹跺姟" | "鑷畾涔?; points: number; rule: string; status: "draft" | "published"; excluded_dates?: string | undefined; reminder_time?: string | undefined; assigned_children?: string[] | undefined; }>'.
+app/api/task-plans/route.ts(209,56): error TS7006: Parameter 'e' implicitly has an 'any' type.
+components/features/task-preview.tsx(180,15): error TS2740: Type 'Date[]' is missing the following properties from type 'Date': toDateString, toTimeString, toLocaleDateString, toLocaleTimeString, and 37 more.
+components/forms/points-input.tsx(92,13): error TS2774: This condition will always return true since this function is always defined. Did you mean to call it instead?
+components/forms/task-plan-form.tsx(175,26): error TS2536: Type 'TaskPlanFormData[K]' cannot be used to index type 'Record<"鍒风墮" | "瀛︿範" | "杩愬姩" | "瀹跺姟" | "鑷畾涔?, "simple" | "medium" | "hard" | "special">'.
+dist/dev/types/validator.ts(243,31): error TS2344: Type 'typeof import("C:/Users/Administrator/workspace/bmad-test2/app/api/auth/sessions/[sessionId]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/auth/sessions/[sessionId]">'.
+  Types of property 'POST' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { sessionId: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ success: boolean; message: string; session: { id: string; last_activity_at: Date; expires_at: Date; }; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ sessionId: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ sessionId: string; }>; }' is not assignable to type '{ params: { sessionId: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'sessionId' is missing in type 'Promise<{ sessionId: string; }>' but required in type '{ sessionId: string; }'.
+dist/dev/types/validator.ts(297,31): error TS2344: Type 'typeof import("C:/Users/Administrator/workspace/bmad-test2/app/api/families/members/[memberId]/audit-logs/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/families/members/[memberId]/audit-logs">'.
+  Types of property 'GET' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { memberId: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ success: boolean; member: { id: any; name: any; }; audit_logs: { ...; }[]; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ memberId: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ memberId: string; }>; }' is not assignable to type '{ params: { memberId: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'memberId' is missing in type 'Promise<{ memberId: string; }>' but required in type '{ memberId: string; }'.
+dist/dev/types/validator.ts(306,31): error TS2344: Type 'typeof import("C:/Users/Administrator/workspace/bmad-test2/app/api/families/members/[memberId]/resume/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/families/members/[memberId]/resume">'.
+  Types of property 'POST' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { memberId: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ success: boolean; message: string; user: { id: any; name: any; is_suspended: any; }; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ memberId: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ memberId: string; }>; }' is not assignable to type '{ params: { memberId: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'memberId' is missing in type 'Promise<{ memberId: string; }>' but required in type '{ memberId: string; }'.
+dist/dev/types/validator.ts(315,31): error TS2344: Type 'typeof import("C:/Users/Administrator/workspace/bmad-test2/app/api/families/members/[memberId]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/families/members/[memberId]">'.
+  Types of property 'POST' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { memberId: string; }; }) => Promise<NextResponse<{ success: boolean; message: string; user_id: string; }> | NextResponse<{ error: any; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ memberId: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ memberId: string; }>; }' is not assignable to type '{ params: { memberId: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'memberId' is missing in type 'Promise<{ memberId: string; }>' but required in type '{ memberId: string; }'.
+dist/dev/types/validator.ts(324,31): error TS2344: Type 'typeof import("C:/Users/Administrator/workspace/bmad-test2/app/api/families/members/[memberId]/suspend/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/families/members/[memberId]/suspend">'.
+  Types of property 'POST' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { memberId: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ success: boolean; message: string; user: { id: any; name: any; is_suspended: any; suspended_at: any; suspended_reason: any; }; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ memberId: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ memberId: string; }>; }' is not assignable to type '{ params: { memberId: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'memberId' is missing in type 'Promise<{ memberId: string; }>' but required in type '{ memberId: string; }'.
+lib/auth/rate-limit.ts(44,37): error TS7053: Element implicitly has an 'any' type because expression of type '"X-Test-Rate-Limit"' can't be used to index type 'Headers | Record<string, string>'.
+  Property 'X-Test-Rate-Limit' does not exist on type 'Headers | Record<string, string>'.
+lib/auth/session-utils.ts(83,3): error TS2322: Type '{ id: string; user_id: string; token: string; device_id: string; device_type: "mobile" | "tablet" | "desktop"; user_agent: string | null; ip_address: string | null; last_activity_at: Date; expires_at: Date; is_active: boolean; remember_me: boolean; created_at: Date; }' is not assignable to type 'Session'.
+  Types of property 'user_agent' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+lib/db/queries/families.ts(19,9): error TS2488: Type 'void | any[]' must have a '[Symbol.iterator]()' method that returns an iterator.
+lib/db/queries/members.ts(122,10): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+lib/db/queries/members.ts(154,10): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+lib/db/queries/members.ts(272,10): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+lib/db/queries/point-balances.ts(198,14): error TS2554: Expected 0 arguments, but got 1.
+lib/db/queries/users.ts(140,7): error TS2322: Type 'undefined' is not assignable to type 'string | null'.
+lib/db/schema.ts(16,14): error TS7022: 'users' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+lib/db/schema.ts(22,43): error TS7024: Function implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions.
+lib/db/schema.ts(50,14): error TS7022: 'families' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+lib/db/schema.ts(52,59): error TS7024: Function implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions.
+lib/services/account-management.ts(67,9): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(left: SQLiteColumn<{ name: "is_active"; tableName: "sessions"; dataType: "boolean"; columnType: "SQLiteBoolean"; data: boolean; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>, right: boolean | SQLWrapper): SQL<...>', gave the following error.
+    Argument of type '1' is not assignable to parameter of type 'boolean | SQLWrapper'.
+  Overload 2 of 3, '(left: Aliased<number>, right: number | SQLWrapper): SQL<unknown>', gave the following error.
+    Argument of type 'SQLiteColumn<{ name: "is_active"; tableName: "sessions"; dataType: "boolean"; columnType: "SQLiteBoolean"; data: boolean; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'Aliased<number>'.
+      Type 'SQLiteColumn<{ name: "is_active"; tableName: "sessions"; dataType: "boolean"; columnType: "SQLiteBoolean"; data: boolean; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is missing the following properties from type 'Aliased<number>': sql, fieldAlias
+  Overload 3 of 3, '(left: never, right: unknown): SQL<unknown>', gave the following error.
+    Argument of type 'SQLiteColumn<{ name: "is_active"; tableName: "sessions"; dataType: "boolean"; columnType: "SQLiteBoolean"; data: boolean; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+lib/services/session-cleanup.ts(42,5): error TS2322: Type 'void' is not assignable to type 'number'.
+lib/services/task-engine.ts(16,10): error TS2305: Module '"bun"' has no exported member 'Bun'.
+lib/store/approval-store.ts(13,24): error TS2307: Cannot find module 'zustand' or its corresponding type declarations.
+lib/store/approval-store.ts(38,56): error TS7006: Parameter 'set' implicitly has an 'any' type.
+lib/store/approval-store.ts(38,61): error TS7006: Parameter 'get' implicitly has an 'any' type.
+lib/store/approval-store.ts(41,25): error TS7006: Parameter 'taskId' implicitly has an 'any' type.
+lib/store/approval-store.ts(41,41): error TS7006: Parameter 'state' implicitly has an 'any' type.
+lib/store/approval-store.ts(51,20): error TS7006: Parameter 'taskIds' implicitly has an 'any' type.
+lib/store/approval-store.ts(51,37): error TS7006: Parameter 'state' implicitly has an 'any' type.
+lib/store/approval-store.ts(53,23): error TS7006: Parameter 'id' implicitly has an 'any' type.
+lib/store/approval-store.ts(64,15): error TS7006: Parameter 'allTaskIds' implicitly has an 'any' type.
+lib/store/approval-store.ts(66,20): error TS7006: Parameter 'taskId' implicitly has an 'any' type.
+scripts/start-dev.ts(48,1): error TS1375: 'await' expressions are only allowed at the top level of a file when that file is a module, but this file has no imports or exports. Consider adding an empty 'export {}' to make this file a module.
+tests/bdd/parent-creates-task-plan-template.bdd.test.ts(517,24): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+tests/helpers/families.ts(17,10): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+tests/helpers/users.ts(26,10): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+tests/helpers/users.ts(44,10): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+tests/integration/api/task-plans-quick-create.test.ts(49,64): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string | undefined'.
+tests/integration/api/tasks-routes.test.ts(40,64): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string | undefined'.
+tests/integration/api/tasks-routes.test.ts(41,64): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string | undefined'.
+tests/integration/api/tasks-routes.test.ts(849,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(871,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(892,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(925,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(962,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(995,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(1026,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(1069,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(1112,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(1151,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(1188,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(1221,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(1254,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(1287,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(1320,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/api/tasks-routes.test.ts(1353,11): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/notifications.spec.ts(165,20): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+tests/integration/notifications.spec.ts(178,78): error TS2339: Property 'id' does not exist on type 'void | any[]'.
+  Property 'id' does not exist on type 'void'.
+tests/integration/points-setting.spec.ts(10,10): error TS2614: Module '"../../lib/db/index"' has no exported member 'db'. Did you mean to use 'import db from "../../lib/db/index"' instead?
+tests/integration/quick-task-creation.spec.ts(545,9): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/quick-task-creation.spec.ts(583,9): error TS2322: Type '"PATCH"' is not assignable to type '"POST" | "DELETE" | "GET" | "PUT"'.
+tests/integration/task-generation.spec.ts(32,16): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+tests/integration/task-generation.spec.ts(41,16): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+tests/integration/task-generation.spec.ts(50,15): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+tests/integration/task-generation.spec.ts(59,16): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type 'void | any[]'.
+  Property '0' does not exist on type 'void | any[]'.
+tests/setup-test-app.ts(104,31): error TS7006: Parameter 'value' implicitly has an 'any' type.
+tests/setup-test-app.ts(104,38): error TS7006: Parameter 'key' implicitly has an 'any' type.
+tests/unit/date-rule-parser.test.ts(331,13): error TS2741: Property 'excludedDates' is missing in type '{ frequency: "daily"; }' but required in type 'TaskDateRule'.
+tests/unit/date-rule-parser.test.ts(346,13): error TS2741: Property 'excludedDates' is missing in type '{ frequency: "weekly"; daysOfWeek: number[]; }' but required in type 'TaskDateRule'.
+tests/unit/date-rule-parser.test.ts(365,13): error TS2741: Property 'excludedDates' is missing in type '{ frequency: "weekdays"; }' but required in type 'TaskDateRule'.
+tests/unit/date-rule-parser.test.ts(384,13): error TS2741: Property 'excludedDates' is missing in type '{ frequency: "weekends"; }' but required in type 'TaskDateRule'.
+tests/unit/date-rule-parser.test.ts(402,13): error TS2741: Property 'excludedDates' is missing in type '{ frequency: "interval"; intervalDays: number; }' but required in type 'TaskDateRule'.
+tests/unit/date-rule-parser.test.ts(423,13): error TS2741: Property 'excludedDates' is missing in type '{ frequency: "specific"; specificDates: string[]; }' but required in type 'TaskDateRule'.
+tests/unit/date-rule-parser.test.ts(451,13): error TS2741: Property 'excludedDates' is missing in type '{ frequency: "daily"; }' but required in type 'TaskDateRule'.
+tests/verification/add-child-verification.ts(167,7): error TS2322: Type 'string' is not assignable to type 'null'.
+tests/verification/invitations-verification.ts(166,7): error TS2322: Type 'string' is not assignable to type 'null'.
+tests/verification/multi-device-login-verification.test.ts(41,10): error TS2300: Duplicate identifier 'sessions'.
+tests/verification/multi-device-login-verification.test.ts(43,10): error TS2300: Duplicate identifier 'sessions'.

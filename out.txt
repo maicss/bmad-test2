@@ -1,0 +1,31 @@
+bun test v1.3.10 (30e609e0)
+
+tests\integration\batch-approval.spec.ts:
+(pass) Story 2.7: Batch Approval Integration Tests > Task 9.2-9.3: 鎵归噺閫氳繃鍔熻兘 > given 鏈?涓緟瀹℃壒浠诲姟锛寃hen 鎵归噺閫氳繃锛宼hen 浠诲姟鐘舵€佸彉鏇翠负宸插畬鎴愶紝绉垎绱姞鍒板効绔ヨ处鎴?[391.00ms]
+74 |     if (!fields && !customResultMapper) {
+75 |       const params = fillPlaceholders(query.params, placeholderValues ?? {});
+76 |       logger.logQuery(query.sql, params);
+77 |       return stmt.all(...params);
+78 |     }
+79 |     const rows = this.values(placeholderValues);
+                           ^
+SQLiteError: UNIQUE constraint failed: users.phone
+      errno: 2067,
+ byteOffset: -1,
+       code: "SQLITE_CONSTRAINT_UNIQUE"
+
+      at all (C:\Users\Administrator\workspace\bmad-test2\node_modules\drizzle-orm\bun-sqlite\session.js:79:23)
+      at execute (C:\Users\Administrator\workspace\bmad-test2\node_modules\drizzle-orm\sqlite-core\query-builders\insert.js:174:41)
+      at then (C:\Users\Administrator\workspace\bmad-test2\node_modules\drizzle-orm\query-promise.js:21:17)
+(fail) Story 2.7: Batch Approval Integration Tests > Task 9.2-9.3: 鎵归噺閫氳繃鍔熻兘 > given 鏈変笉鍚屽効绔ョ殑浠诲姟锛寃hen 鎵归噺閫氳繃锛宼hen 绉垎鍒嗗埆绱姞鍒板搴斿効绔ヨ处鎴?[422.00ms]
+(pass) Story 2.7: Batch Approval Integration Tests > Task 9.4: 鎵归噺椹冲洖鍔熻兘 > given 鏈?涓緟瀹℃壒浠诲姟锛寃hen 鎵归噺椹冲洖锛宼hen 浠诲姟鐘舵€佽繑鍥炲緟瀹屾垚锛岃褰曢┏鍥炲師鍥?[312.00ms]
+(pass) Story 2.7: Batch Approval Integration Tests > Task 9.4: 鎵归噺椹冲洖鍔熻兘 > given 椹冲洖鍘熷洜瓒呰繃200瀛楃锛寃hen 鎵归噺椹冲洖锛宼hen 杩斿洖閿欒 [297.00ms]
+(pass) Story 2.7: Batch Approval Integration Tests > Task 9.4: 鎵归噺椹冲洖鍔熻兘 > given 椹冲洖鍘熷洜涓虹┖锛寃hen 鎵归噺椹冲洖锛宼hen 杩斿洖閿欒 [282.00ms]
+(pass) Story 2.7: Batch Approval Integration Tests > Task 9.6: 绉垎绱姞鍜岀粨绠楅€昏緫 > given 浠诲姟琚€氳繃锛寃hen 绉垎缁撶畻锛宼hen 鍒涘缓绉垎鍘嗗彶璁板綍 [296.00ms]
+(pass) Story 2.7: Batch Approval Integration Tests > Task 9.6: 绉垎绱姞鍜岀粨绠楅€昏緫 > given 澶氫釜浠诲姟琚€氳繃锛寃hen 绉垎缁撶畻锛宼hen 鎵€鏈変换鍔＄殑绉垎鎬诲拰姝ｇ‘ [329.00ms]
+(pass) Story 2.7: Batch Approval Integration Tests > Task 9.7: 鎿嶄綔缁撴灉鏄剧ず > given 鎵归噺鎿嶄綔鎴愬姛锛寃hen 鏌ョ湅缁撴灉锛宼hen 杩斿洖姝ｇ‘鐨勬搷浣滅粺璁?[359.00ms]
+
+ 7 pass
+ 1 fail
+ 27 expect() calls
+Ran 8 tests across 1 file. [2.87s]
