@@ -36,9 +36,14 @@ function RegisterForm() {
   // Expose test helper for E2E testing
   useEffect(() => {
     (window as any).testHandleRegister = () => {
-      const form = document.querySelector('form');
+      const form = document.querySelector('form') as HTMLFormElement;
       if (form) {
-        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        // Use SubmitEvent for proper form submission
+        const submitEvent = new SubmitEvent('submit', {
+          cancelable: true,
+          bubbles: true,
+        });
+        form.dispatchEvent(submitEvent);
       }
     };
     return () => {
@@ -137,7 +142,10 @@ function RegisterForm() {
       const data = await response.json();
 
       if (data.success) {
-        window.location.href = '/parent/dashboard';
+        // Small delay to ensure cookie is set before redirect
+        await new Promise(resolve => setTimeout(resolve, 100));
+        window.location.href = '/dashboard';
+        return;
       } else {
         setError(data.message || '注册失败，请重试');
       }

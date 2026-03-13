@@ -17,7 +17,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -69,6 +69,8 @@ interface DateRuleSelectorProps {
   disabled?: boolean;
   /** @deprecated Excluded dates are now managed separately via ExclusionDatePicker component */
   showExcludedDates?: boolean;
+  /** Enable test mode - exposes helper functions to window object */
+  testMode?: boolean;
 }
 
 /**
@@ -162,6 +164,23 @@ export function DateRuleSelector({
   // Get selected frequency option
   const selectedFrequency = FREQUENCY_OPTIONS.find(opt => opt.value === value.frequency);
 
+  // E2E Test helpers - expose functions to window object
+  // Use useLayoutEffect to ensure helpers are available after DOM commit
+  useLayoutEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).testSetFrequency = (freq: FrequencyType) => {
+        handleFrequencyChange(freq);
+      };
+      (window as any).testToggleDayOfWeek = (dayValue: number) => {
+        toggleDayOfWeek(dayValue);
+      };
+      (window as any).testSetIntervalDays = (days: number) => {
+        handleIntervalDaysChange(days);
+      };
+      (window as any).testGetCurrentRule = () => value;
+    }
+  }); // Run on every render to capture latest handlers
+
   return (
     <div className="space-y-4">
       {/* Frequency Type Selection */}
@@ -174,12 +193,16 @@ export function DateRuleSelector({
           onValueChange={handleFrequencyChange}
           disabled={disabled}
         >
-          <SelectTrigger id="frequency">
+          <SelectTrigger id="frequency" data-testid="frequency-select-trigger">
             <SelectValue placeholder="选择规则类型" />
           </SelectTrigger>
           <SelectContent>
             {FREQUENCY_OPTIONS.map(option => (
-              <SelectItem key={option.value} value={option.value}>
+              <SelectItem
+                key={option.value}
+                value={option.value}
+                data-testid={`frequency-option-${option.value}`}
+              >
                 <div className="flex flex-col">
                   <span>{option.label}</span>
                   <span className="text-xs text-muted-foreground">{option.description}</span>

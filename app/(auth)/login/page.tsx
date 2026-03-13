@@ -109,8 +109,9 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Redirect to dashboard
-        router.push('/dashboard');
+        // Redirect to dashboard with full page reload to ensure middleware runs
+        window.location.href = '/dashboard';
+        return;
       } else {
         setError(data.error || '登录失败');
       }
