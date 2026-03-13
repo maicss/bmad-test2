@@ -15,7 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionByToken } from '@/lib/db/queries/sessions';
 import { getUserById } from '@/lib/db/queries/users';
-import { getTaskById } from '@/lib/db/queries/tasks';
+import { getTasksByIds } from '@/lib/db/queries/tasks';
 import { batchApproveTasks } from '@/lib/services/points-calculator';
 import { logUserAction } from '@/lib/db/queries/audit-logs';
 
@@ -76,16 +76,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate all tasks exist and belong to user's family
-    for (const taskId of taskIds) {
-      const task = await getTaskById(taskId);
-      if (!task) {
-        return NextResponse.json(
-          { error: `任务不存在: ${taskId}` },
-          { status: 404 }
-        );
-      }
+    // Validate all tasks exist and belong to user's family (batch query - fixes N+1 issue)
+    const tasks = await getTasksByIds(taskIds);
 
+    // Check for missing tasks
+    const missingTaskIndex = tasks.findIndex(t => t === null);
+    if (missingTaskIndex !== -1) {
+      return NextResponse.json(
+        { error: `任务不存在: ${taskIds[missingTaskIndex]}` },
+        { status: 404 }
+      );
+    }
+
+    // Validate family ownership and status
+    const APPROVAL_PENDING_STATUSES = ['completed', 'pending_approval'];
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i]!;
       if (task.family_id !== user.family_id) {
         return NextResponse.json(
           { error: '无权审批此任务' },
@@ -93,8 +99,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Only approve completed tasks
-      if (task.status !== 'completed') {
+      // Only approve tasks that child has marked complete
+      // Note: Workflow is: pending → completed (child marks done) → approved (parent approves)
+      // The 'completed' status means child finished and is waiting for parent approval
+      if (!APPROVAL_PENDING_STATUSES.includes(task.status)) {
         return NextResponse.json(
           { error: `任务状态不正确: ${task.title} (当前: ${task.status})` },
           { status: 400 }

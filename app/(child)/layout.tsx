@@ -13,7 +13,10 @@
  * - Toast通知组件
  */
 
+'use client';
+
 import type { ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 
 interface ChildLayoutProps {
@@ -58,6 +61,26 @@ export default function ChildLayout({ children }: ChildLayoutProps) {
  * 显示网络状态和同步指示器
  */
 function StatusBar() {
+  const [isOnline, setIsOnline] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    // Set initial status
+    setIsOnline(navigator.onLine);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   return (
     <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b-4 border-blue-400 shadow-sm">
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
@@ -69,16 +92,20 @@ function StatusBar() {
 
         {/* 右侧：状态指示器 */}
         <div className="flex items-center gap-3">
-          {/* 网络状态指示 */}
+          {/* 网络状态指示 - 动态颜色 */}
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm text-gray-600">在线</span>
+            <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+            <span className="text-sm text-gray-600">
+              {isOnline ? '在线' : '离线'}
+            </span>
           </div>
 
           {/* 同步指示 */}
           <div className="flex items-center gap-1">
-            <span className="text-lg">🔄</span>
-            <span className="text-sm text-gray-600">已同步</span>
+            <span className={`text-lg ${isSyncing ? 'animate-spin' : ''}`}>🔄</span>
+            <span className="text-sm text-gray-600">
+              {isSyncing ? '同步中...' : '已同步'}
+            </span>
           </div>
         </div>
       </div>

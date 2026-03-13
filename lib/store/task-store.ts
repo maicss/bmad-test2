@@ -45,7 +45,43 @@ interface TaskState {
   clearError: () => void;
 }
 
-export const useTaskStore = create<TaskState>((set) => ({
+/**
+ * Shared logic to load tasks and progress
+ * Extracted to avoid code duplication between fetchTasks and refreshTasks
+ */
+async function loadTasksAndProgress(
+  childId: string,
+  sortOption: TaskSortOption,
+  storeSet: (partial: Partial<TaskState>) => void
+) {
+  storeSet({ error: null });
+
+  try {
+    const tasks = await getTodayTasksByChild(childId, sortOption);
+    const progress = await getTaskProgressByChild(childId);
+
+    // Add display status to each task
+    const tasksWithDisplayStatus = tasks.map(task => ({
+      ...task,
+      displayStatus: getTaskStatusDisplay(task.status),
+    }));
+
+    storeSet({
+      tasks: tasksWithDisplayStatus,
+      progress,
+      isLoading: false,
+      isRefreshing: false,
+    });
+  } catch (error) {
+    storeSet({
+      error: error instanceof Error ? error.message : '加载任务失败',
+      isLoading: false,
+      isRefreshing: false,
+    });
+  }
+}
+
+export const useTaskStore = create<TaskState>((set, get) => ({
   // Initial state
   tasks: [],
   progress: null,
@@ -57,56 +93,13 @@ export const useTaskStore = create<TaskState>((set) => ({
   // Fetch tasks (initial load)
   fetchTasks: async (childId: string) => {
     set({ isLoading: true, error: null });
-
-    try {
-      const sortOption = useTaskStore.getState().sortOption;
-      const tasks = await getTodayTasksByChild(childId, sortOption);
-      const progress = await getTaskProgressByChild(childId);
-
-      // Add display status to each task
-      const tasksWithDisplayStatus = tasks.map(task => ({
-        ...task,
-        displayStatus: getTaskStatusDisplay(task.status),
-      }));
-
-      set({
-        tasks: tasksWithDisplayStatus,
-        progress,
-        isLoading: false,
-      });
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : '加载任务失败',
-        isLoading: false,
-      });
-    }
+    await loadTasksAndProgress(childId, get().sortOption, set);
   },
 
   // Refresh tasks (pull-to-refresh or auto-refresh)
   refreshTasks: async (childId: string) => {
     set({ isRefreshing: true, error: null });
-
-    try {
-      const sortOption = useTaskStore.getState().sortOption;
-      const tasks = await getTodayTasksByChild(childId, sortOption);
-      const progress = await getTaskProgressByChild(childId);
-
-      const tasksWithDisplayStatus = tasks.map(task => ({
-        ...task,
-        displayStatus: getTaskStatusDisplay(task.status),
-      }));
-
-      set({
-        tasks: tasksWithDisplayStatus,
-        progress,
-        isRefreshing: false,
-      });
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : '刷新任务失败',
-        isRefreshing: false,
-      });
-    }
+    await loadTasksAndProgress(childId, get().sortOption, set);
   },
 
   // Set sort option and refetch tasks

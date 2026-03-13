@@ -47,12 +47,14 @@ interface BatchApproveDialogProps {
 export function BatchApproveDialog({
   open,
   onOpenChange,
-  taskIds, // defined but never used, keeping for props compatibility
+  taskIds,
   tasks,
   onConfirm,
 }: BatchApproveDialogProps) {
   const [isApproving, setIsApproving] = useState(false);
 
+  // Use taskIds to compute total count (tasks may be pre-filtered)
+  const totalCount = taskIds.length;
   const totalPoints = tasks.reduce((sum, task) => sum + task.points, 0);
   const uniqueChildren = Array.from(new Set(tasks.map(t => t.assigned_child_id)));
   const childrenCount = uniqueChildren.length;
@@ -75,7 +77,7 @@ export function BatchApproveDialog({
             确认通过任务
           </DialogTitle>
           <DialogDescription>
-            您即将通过 {tasks.length} 个任务，共 {childrenCount} 个儿童完成
+            您即将通过 {totalCount} 个任务，共 {childrenCount} 个儿童完成
           </DialogDescription>
         </DialogHeader>
 

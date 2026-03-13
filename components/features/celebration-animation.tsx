@@ -97,6 +97,7 @@ export function CelebrationAnimation({
   }, [show, duration, onComplete]);
 
   // Animate particles
+  // Note: Using a ref to track interval ID ensures cleanup on unmount
   useEffect(() => {
     if (!isVisible || particles.length === 0) return;
 
@@ -113,8 +114,9 @@ export function CelebrationAnimation({
       );
     }, 16); // ~60fps
 
+    // Cleanup: Clear interval on unmount or when dependencies change
     return () => clearInterval(animationInterval);
-  }, [isVisible, particles.length > 0]);
+  }, [isVisible, particles.length]);
 
   if (!isVisible || particles.length === 0) return null;
 

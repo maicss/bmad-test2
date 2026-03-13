@@ -15,6 +15,9 @@ import { TaskDetailDialog } from '@/components/dialogs/task-detail-dialog';
 import { useTaskStore, Task } from '@/lib/store/task-store';
 import { toast } from 'sonner';
 import { TaskSortSelector, TaskSortOption } from '@/components/features/task-sort-selector';
+import { CelebrationAnimation } from '@/components/features/celebration-animation';
+import { GamifiedFeedback, FeedbackType } from '@/components/features/gamified-feedback';
+import { PullToRefresh } from '@/components/features/pull-to-refresh';
 
 export default function ChildDashboardPage() {
   const [currentChildId, setCurrentChildId] = useState<string | null>(null);
@@ -24,6 +27,16 @@ export default function ChildDashboardPage() {
 
   // Get state and actions from task store
   const { tasks, progress, isLoading, error, fetchTasks, refreshTasks, setSortOption: setStoreSortOption } = useTaskStore();
+
+  // Track if we've celebrated for 100% completion
+  const [hasCelebrated, setHasCelebrated] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Gamification feedback state
+  const [gamifiedFeedback, setGamifiedFeedback] = useState<{ type: FeedbackType; show: boolean }>({
+    type: 'complete',
+    show: false,
+  });
 
   // Get current child ID from session
   useEffect(() => {
@@ -51,6 +64,18 @@ export default function ChildDashboardPage() {
     const interval = setInterval(() => refreshTasks(currentChildId), 5000);
     return () => clearInterval(interval);
   }, [currentChildId, refreshTasks]);
+
+  // Trigger celebration when all tasks are completed (100% progress)
+  useEffect(() => {
+    if (progress && progress.progress === 100 && progress.total > 0 && !hasCelebrated) {
+      setShowCelebration(true);
+      setHasCelebrated(true);
+      // Auto-hide after 3 seconds
+      setTimeout(() => setShowCelebration(false), 3000);
+    } else if (progress && progress.progress < 100) {
+      setHasCelebrated(false);
+    }
+  }, [progress, hasCelebrated]);
 
   // Handle sort option change
   const handleSortChange = (newSort: TaskSortOption) => {
@@ -80,6 +105,10 @@ export default function ChildDashboardPage() {
 
       const data = await response.json();
 
+      // Show gamified feedback for task completion
+      setGamifiedFeedback({ type: 'complete', show: true });
+      setTimeout(() => setGamifiedFeedback(prev => ({ ...prev, show: false })), 2000);
+
       // Show success toast
       toast.success('任务已完成！等待家长审批', {
         description: '太棒了！',
@@ -98,6 +127,16 @@ export default function ChildDashboardPage() {
     }
   };
 
+  // Handle pull-to-refresh
+  const handleRefresh = async () => {
+    if (currentChildId) {
+      await refreshTasks(currentChildId);
+      toast.success('刷新成功', {
+        description: '任务列表已更新',
+      });
+    }
+  };
+
   // Loading state
   if (isLoading && tasks.length === 0) {
     return (
@@ -111,33 +150,49 @@ export default function ChildDashboardPage() {
   }
 
   return (
-    <div>
-      {/* Header with sort selector */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">我的主页</h1>
-        <TaskSortSelector
-          value={sortOption}
-          onChange={handleSortChange}
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div>
+        {/* Header with sort selector */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">我的主页</h1>
+          <TaskSortSelector
+            value={sortOption}
+            onChange={handleSortChange}
+          />
+        </div>
+
+        {/* Progress display */}
+        {progress && <ProgressHeader progress={progress} />}
+
+        {/* Task list */}
+        <TaskGridList
+          tasks={tasks}
+          isLoading={isLoading}
+          onTaskClick={handleTaskClick}
+        />
+
+        {/* Task detail dialog */}
+        <TaskDetailDialog
+          open={isDetailOpen}
+          onOpenChange={setIsDetailOpen}
+          task={selectedTask}
+          onComplete={handleCompleteTask}
+        />
+
+        {/* Celebration animation for 100% completion */}
+        <CelebrationAnimation
+          show={showCelebration}
+          duration={3000}
+          onComplete={() => setShowCelebration(false)}
+        />
+
+        {/* Gamified feedback for task completion */}
+        <GamifiedFeedback
+          type={gamifiedFeedback.type}
+          show={gamifiedFeedback.show}
+          duration={2000}
         />
       </div>
-
-      {/* Progress display */}
-      {progress && <ProgressHeader progress={progress} />}
-
-      {/* Task list */}
-      <TaskGridList
-        tasks={tasks}
-        isLoading={isLoading}
-        onTaskClick={handleTaskClick}
-      />
-
-      {/* Task detail dialog */}
-      <TaskDetailDialog
-        open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
-        task={selectedTask}
-        onComplete={handleCompleteTask}
-      />
-    </div>
+    </PullToRefresh>
   );
 }
