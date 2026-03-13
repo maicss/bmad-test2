@@ -15,6 +15,7 @@
 
 import { create } from 'zustand';
 import { getTodayTasksByChild, getTaskProgressByChild, getTaskStatusDisplay, TaskSortOption } from '@/lib/db/queries/tasks';
+import { handleError, handleSuccess, retryWithBackoff, networkStatus } from '@/lib/utils/error-handler';
 
 // Type definitions
 export interface Task {
@@ -174,43 +175,59 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     }));
   },
 
-  // Complete task with optimistic update
+  // Complete task with optimistic update and error handling
   completeTask: async (taskId: string, proofImage?: string) => {
     const state = get();
     const task = state.tasks.find(t => t.id === taskId);
 
     if (!task) {
+      handleError('任务不存在');
       return { success: false, message: '任务不存在' };
     }
 
     if (task.status !== 'pending') {
+      handleError('任务已完成或正在处理中');
       return { success: false, message: '任务已完成或正在处理中' };
     }
 
     const previousStatus = task.status;
 
     // Optimistic update: show immediate feedback
-    // Auto-approved tasks go to 'approved', others to 'completed' (pending_approval display)
+    // Story 2.9: checkin (签到) is auto-approved → completed, others → pending_approval
     const taskType = task.task_type as '刷牙' | '学习' | '运动' | '家务' | '签到';
     const isAutoApproved = taskType === '签到';
-    const optimisticStatus = isAutoApproved ? 'approved' : 'completed';
+    const optimisticStatus = isAutoApproved ? 'completed' : 'pending_approval';
 
     state.updateTaskStatus(taskId, optimisticStatus);
     set({ isCompleting: true });
 
     try {
-      const response = await fetch(`/api/tasks/${taskId}/complete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ proofImage }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: '请求失败' }));
-        throw new Error(error.error || '请求失败');
+      // Check network status first
+      if (!networkStatus.isOnline()) {
+        throw new Error('网络连接失败，请检查网络后重试');
       }
+
+      // Use retry with backoff for network resilience
+      const response = await retryWithBackoff(
+        async () => {
+          const res = await fetch(`/api/tasks/${taskId}/complete`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ proofImage }),
+          });
+
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({ error: '请求失败' }));
+            throw new Error(errorData.error || '请求失败');
+          }
+
+          return res;
+        },
+        3, // max retries
+        1000 // initial delay
+      );
 
       const data = await response.json();
 
@@ -218,9 +235,9 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       state.updateTaskStatus(taskId, data.task.status);
 
       // Refresh progress
-      // For now, just update the progress locally
+      // Story 2.9: completed status means task is done (parent approved or auto-approved)
       const completedCount = state.tasks.filter(t =>
-        t.status === 'approved' || t.status === 'completed'
+        t.status === 'completed'
       ).length;
       const newProgress = {
         completed: completedCount,
@@ -237,10 +254,16 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     } catch (error) {
       // Rollback on error
       state.rollbackTaskStatus(taskId, previousStatus);
-      set({ error: error instanceof Error ? error.message : '任务完成失败' });
+
+      const errorMessage = error instanceof Error ? error.message : '任务完成失败';
+      set({ error: errorMessage });
+
+      // Show user-friendly error toast
+      handleError(error, undefined, errorMessage);
+
       return {
         success: false,
-        message: error instanceof Error ? error.message : '任务完成失败',
+        message: errorMessage,
       };
     } finally {
       set({ isCompleting: false });

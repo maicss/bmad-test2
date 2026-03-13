@@ -213,10 +213,11 @@ export function getSuggestedPoints(difficulty: 'simple' | 'medium' | 'hard' | 's
  * Batch approve tasks and settle points atomically
  *
  * Story 2.7 Task 6.2-6.5: 实现批量积分计算、余额更新、历史记录创建
+ * Story 2.9: Updated status flow - pending_approval → completed
  *
  * This function:
- * 1. Validates all tasks are in 'completed' status
- * 2. Updates task status to 'approved' with approver info
+ * 1. Validates all tasks are in 'pending_approval' status (child marked complete, waiting parent approval)
+ * 2. Updates task status to 'completed' with approver info
  * 3. Calculates total points for each child
  * 4. Updates point balances atomically
  * 5. Creates points history records for each task
@@ -252,13 +253,11 @@ export async function batchApproveTasks(
       );
     }
 
-    // Validate all tasks are in a status that can be approved
-    // Note: Accept both 'completed' and 'pending_approval' for flexibility
-    const APPROVAL_PENDING_STATUSES = ['completed', 'pending_approval'];
+    // Story 2.9: Validate all tasks are in 'pending_approval' status (child marked complete)
     for (const task of validTasks) {
-      if (!APPROVAL_PENDING_STATUSES.includes(task.status)) {
+      if (task.status !== 'pending_approval') {
         throw new PointsSettlementError(
-          `Task ${task.id} is not in approvable status (current: ${task.status})`,
+          `Task ${task.id} is not in pending_approval status (current: ${task.status})`,
           task.id
         );
       }
@@ -271,11 +270,10 @@ export async function batchApproveTasks(
       }
     }
 
-    // Step 2: Update all tasks to 'approved' status in parallel
-    await Promise.all(validTasks.map(task => {
-      approvedTaskIds.push(task.id); // Track approved task IDs
-      return updateTask(task.id, {
-        status: 'approved',
+    // Step 2: Update all tasks from 'pending_approval' to 'completed' (parent approved)
+    for (const task of validTasks) {
+      await updateTask(task.id, {
+        status: 'completed',
         approved_by: parentUserId,
         approved_at: now,
       });
@@ -340,10 +338,10 @@ export async function batchApproveTasks(
     // CRITICAL FIX: Rollback task status if settlement fails
     if (approvedTaskIds.length > 0) {
       try {
-        // Revert tasks back to 'completed' status if approval failed mid-process
+        // Revert tasks back to 'pending_approval' status if approval failed mid-process
         for (const taskId of approvedTaskIds) {
           await updateTask(taskId, {
-            status: 'completed',
+            status: 'pending_approval',
             approved_by: null,
             approved_at: null,
           });

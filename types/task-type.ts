@@ -13,7 +13,8 @@ export type TaskType =
   | '学习'     // Studying
   | '运动'    // Sports/Exercise
   | '家务'    // Housework
-  | '签到';   // Check-in (auto-approved)
+  | '签到'    // Check-in (auto-approved)
+  | '自定义';  // Custom tasks
 
 /**
  * Task types that require parent approval before completion
@@ -23,6 +24,7 @@ export const TASK_TYPES_NEEDING_APPROVAL = [
   '学习',
   '运动',
   '家务',
+  '自定义',
 ] as const;
 
 /**
@@ -57,25 +59,28 @@ export function taskIsAutoApproved(taskType: TaskType): boolean {
  * Get the display status for a task based on its internal status
  *
  * Story 2.9: Maps internal statuses to child-friendly display statuses
+ * Status flow: pending → pending_approval (child marked) → completed (parent approved)
  *
  * @param status - Internal task status
  * @returns Display status: 'pending' | 'completed' | 'pending_approval'
  */
 export function getTaskStatusDisplay(status: string): 'pending' | 'completed' | 'pending_approval' {
-  // Map internal statuses to child-friendly display statuses
+  // Story 2.9: Status values
   // pending → pending (待完成)
-  // in_progress → pending (待完成)
-  // completed → pending_approval (待审批 - child marked complete, waiting parent approval)
-  // approved → completed (已完成)
+  // pending_approval → pending_approval (待审批 - child marked complete, waiting parent approval)
+  // completed → completed (已完成 - parent approved or auto-approved like checkin)
   // rejected → pending (待完成 - rejected, need to redo)
-  // skipped → pending (待完成)
 
-  if (status === 'approved') {
-    return 'completed';
+  if (status === 'pending_approval') {
+    return 'pending_approval';
   }
 
   if (status === 'completed') {
-    return 'pending_approval';
+    return 'completed';
+  }
+
+  if (status === 'rejected') {
+    return 'pending';
   }
 
   return 'pending';

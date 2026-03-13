@@ -29,9 +29,11 @@ interface ImageUploadProps {
   error?: string;
   /** Disabled state */
   disabled?: boolean;
+  /** Test ID prefix for E2E testing */
+  testIdPrefix?: string;
 }
 
-export function ImageUpload({ value, onChange, error, disabled }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, error, disabled, testIdPrefix = 'image-upload' }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(value);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -125,12 +127,14 @@ export function ImageUpload({ value, onChange, error, disabled }: ImageUploadPro
             src={previewUrl}
             alt="Task proof"
             className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
+            data-testid={`${testIdPrefix}-preview`}
           />
           <button
             type="button"
             onClick={handleDelete}
             disabled={disabled}
             className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+            data-testid={`${testIdPrefix}-delete`}
           >
             <X className="w-4 h-4" />
           </button>
@@ -173,6 +177,7 @@ export function ImageUpload({ value, onChange, error, disabled }: ImageUploadPro
             onClick={handleCameraClick}
             disabled={disabled}
             className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+            data-testid={`${testIdPrefix}-camera`}
           >
             <Camera className="w-4 h-4" />
             <span>拍照</span>
@@ -182,6 +187,7 @@ export function ImageUpload({ value, onChange, error, disabled }: ImageUploadPro
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled}
             className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+            data-testid={`${testIdPrefix}-gallery`}
           >
             <Upload className="w-4 h-4" />
             <span>相册</span>

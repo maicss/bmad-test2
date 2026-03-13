@@ -17,6 +17,9 @@ import { tasks, taskPlans, users } from '../schema';
 import { eq, and, desc, inArray, lt, gte, sql } from 'drizzle-orm';
 
 // Type definitions for DTOs
+// Story 2.9: Status flow - pending → pending_approval (child marked) → completed (parent approved) or rejected
+export type TaskStatus = 'pending' | 'pending_approval' | 'completed' | 'rejected';
+
 export interface CreateTaskDTO {
   family_id: string;
   task_plan_id?: string | null;
@@ -25,7 +28,7 @@ export interface CreateTaskDTO {
   task_type: '刷牙' | '学习' | '运动' | '家务' | '签到' | '自定义';
   points: number;
   scheduled_date: string; // YYYY-MM-DD format
-  status?: 'pending' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'skipped';
+  status?: TaskStatus;
 }
 
 // Story 2.6: DTO for creating manual tasks
@@ -45,7 +48,7 @@ export interface UpdateTaskDTO {
   task_type?: '刷牙' | '学习' | '运动' | '家务' | '签到' | '自定义';
   points?: number;
   scheduled_date?: string;
-  status?: 'pending' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'skipped';
+  status?: TaskStatus;
   completed_at?: Date | null;
   approved_by?: string | null;
   approved_at?: Date | null;
@@ -60,7 +63,7 @@ export interface TaskFilter {
   scheduled_date?: string;
   scheduled_date_from?: string;
   scheduled_date_to?: string;
-  status?: Array<'pending' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'skipped'>;
+  status?: Array<TaskStatus>;
   is_manual?: boolean; // Story 2.6: Filter by manual/scheduled tasks
 }
 
@@ -310,6 +313,7 @@ export async function markTaskCompleted(taskId: string) {
 
 /**
  * Approve task completion (by parent)
+ * Story 2.9: Status flow - pending_approval → completed (parent approved)
  *
  * @param taskId - Task ID
  * @param approvedBy - Parent user ID
@@ -318,7 +322,7 @@ export async function markTaskCompleted(taskId: string) {
 export async function approveTask(taskId: string, approvedBy: string) {
   const result = await db.update(tasks)
     .set({
-      status: 'approved',
+      status: 'completed', // Parent approved, task is now complete
       approved_by: approvedBy,
       approved_at: new Date(),
       updated_at: new Date(),
@@ -753,9 +757,10 @@ export function getTaskStatusDisplay(status: string): 'pending' | 'completed' | 
 
 /**
  * Extended update DTO for task completion with proof image
+ * Status can be: pending_approval (needs parent approval) or completed (auto-approved like checkin)
  */
 export interface MarkTaskCompleteDTO {
-  status: 'completed' | 'approved';
+  status: 'pending_approval' | 'completed';
   proof_image?: string;
   completed_at?: Date;
 }

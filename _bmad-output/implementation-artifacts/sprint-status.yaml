@@ -33,7 +33,7 @@ development_status:
   2-6-parent-uses-template-to-quickly-create-task: done
 MX|  2-7-parent-batch-approves-tasks: review
 MX|  2-8-child-views-todays-task-list: done
-MX|  2-9-child-marks-task-complete: review
+MX|  2-9-child-marks-task-complete: done
 MX|  2-10-parent-approves-task-completion: ready-for-dev
 MX|  2-11-parent-rejects-task-completion: ready-for-dev
 MX|  2-12-parent-creates-one-time-task: ready-for-dev
@@ -65,7 +65,7 @@ WQ|XW|  2-5-parent-pauses-resumes-deletes-task-plan: ready-for-dev
 QQ|XW|  2-6-parent-uses-template-to-quickly-create-task: review
 HM|XW|  2-7-parent-batch-approves-tasks: ready-for-dev
 YH|XW|  2-8-child-views-todays-task-list: ready-for-dev
-YS|XW|  2-9-child-marks-task-complete: ready-for-dev
+YS|XW|  2-9-child-marks-task-complete: done
   2-10-parent-approves-task-completion: ready-for-dev
   2-11-parent-rejects-task-completion: ready-for-dev
   2-12-parent-creates-one-time-task: ready-for-dev

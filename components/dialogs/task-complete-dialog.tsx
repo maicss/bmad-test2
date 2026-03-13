@@ -46,6 +46,8 @@ interface TaskCompleteDialogProps {
   onConfirm: (proofImage?: string) => Promise<void>;
   /** Whether the submission is in progress */
   isSubmitting?: boolean;
+  /** Test ID prefix for E2E testing */
+  taskCardTestId?: string;
 }
 
 export function TaskCompleteDialog({
@@ -54,6 +56,7 @@ export function TaskCompleteDialog({
   task,
   onConfirm,
   isSubmitting = false,
+  taskCardTestId,
 }: TaskCompleteDialogProps) {
   const [proofImage, setProofImage] = useState<string | undefined>();
   const [uploadError, setUploadError] = useState<string>();
@@ -89,7 +92,7 @@ export function TaskCompleteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" data-testid="task-complete-dialog">
         <DialogHeader>
           <DialogTitle className="text-2xl text-center">完成任务</DialogTitle>
           <DialogDescription className="text-center">
@@ -115,7 +118,7 @@ export function TaskCompleteDialog({
         </div>
 
         {/* Image upload section */}
-        <div className="py-4 border-t border-b border-gray-200">
+        <div className="py-4 border-t border-b border-gray-200" data-testid="image-upload-area">
           <p className="text-sm text-gray-600 mb-2 text-center">
             上传完成证明（可选）
           </p>
@@ -127,6 +130,7 @@ export function TaskCompleteDialog({
             }}
             error={uploadError}
             disabled={isSubmitting}
+            testIdPrefix="task-complete"
           />
         </div>
 
@@ -137,6 +141,7 @@ export function TaskCompleteDialog({
             onClick={handleCancel}
             disabled={isSubmitting}
             className="flex-1"
+            data-testid="cancel-complete-button"
           >
             取消
           </Button>
@@ -145,6 +150,7 @@ export function TaskCompleteDialog({
             onClick={handleConfirm}
             disabled={isSubmitting}
             className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+            data-testid="confirm-complete-button"
           >
             {isSubmitting ? (
               <>
