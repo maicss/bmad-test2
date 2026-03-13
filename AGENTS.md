@@ -37,8 +37,8 @@ echo $SHELL
 **在开始任何实现工作之前，必须检查当前 Git 分支：**
 
 ```bash
-# 检查当前分支
-git branch --show-current
+# 检查当前分支是否符合规范（推荐，脚本会自动拦截非法名称）
+bun run scripts/check-branch.ts
 
 # 如果在 main 分支，必须先创建 feature 分支
 git checkout main && git pull

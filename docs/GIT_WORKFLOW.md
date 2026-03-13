@@ -107,8 +107,8 @@ git pull origin main
 # 创建功能分支
 git checkout -b feature/story-{Epic}-{Story}-{name}
 
-# 确认当前分支
-git branch
+# 运行规范检查脚本，确认当前分支名称合法
+bun run scripts/check-branch.ts
 ```
 
 #### 2. 开发阶段
@@ -218,6 +218,7 @@ Refs: #123"
 - [ ] 当前在 `main` 分支
 - [ ] `main` 分支已更新到最新
 - [ ] 创建了规范命名的功能分支
+- [ ] 运行 `bun run scripts/check-branch.ts` 验证通过
 
 ### 开发过程中
 

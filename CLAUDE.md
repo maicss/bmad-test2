@@ -13,6 +13,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **BEFORE editing ANY code, ALWAYS check:**
 ```bash
 git branch --show-current
+# OR run the provided branch check script to validate it:
+bun run scripts/check-branch.ts
 ```
 
 **If output is `main` → STOP. Do NOT edit files.**
