@@ -336,6 +336,12 @@ export async function approveTask(taskId: string, approvedBy: string) {
 /**
  * Reject task completion (by parent)
  *
+ * Story 2.11: Parent Rejects Task Completion
+ * Rejection returns task to 'pending' status so child can retry
+ * Also clears approval fields and completion time for clean state
+ *
+ * CODE REVIEW FIX CRITICAL-2: Clear approved_by/approved_at on rejection
+ *
  * @param taskId - Task ID
  * @param rejectionReason - Reason for rejection
  * @returns The updated task or null
@@ -343,8 +349,11 @@ export async function approveTask(taskId: string, approvedBy: string) {
 export async function rejectTask(taskId: string, rejectionReason: string) {
   const result = await db.update(tasks)
     .set({
-      status: 'rejected',
+      status: 'pending', // Return to to-do so child can retry (Story 2.11)
       rejection_reason: rejectionReason,
+      completed_at: null, // Clear completion time
+      approved_by: null, // CODE REVIEW FIX: Clear approval fields
+      approved_at: null, // CODE REVIEW FIX: Clear approval fields
       updated_at: new Date(),
     })
     .where(eq(tasks.id, taskId))

@@ -56,8 +56,10 @@ describe('Story 2.10: Direct Function Tests (Story 2.10 Core Logic)', () => {
   });
 
   describe('Core Query Functions', () => {
-    it('given 存在已完成的任务, when 调用审批函数, then 任务状态变更为approved', async () => {
-      // Given: 创建已完成的任务
+    it('given 存在等待审批的任务, when 调用审批函数, then 任务状态变更为completed且记录审批人', async () => {
+      // CODE REVIEW FIX: Updated test to reflect correct status flow
+      // Schema defines: pending -> pending_approval (child marked) -> completed (parent approved)
+      // Given: 创建等待审批的任务 (使用pending_approval状态)
       const task = await createTask({
         family_id: familyId,
         assigned_child_id: childUserId,
@@ -65,21 +67,23 @@ describe('Story 2.10: Direct Function Tests (Story 2.10 Core Logic)', () => {
         task_type: '学习',
         points: 10,
         scheduled_date: new Date().toISOString().split('T')[0],
-        status: 'completed',
+        status: 'pending_approval', // Child marked complete, waiting parent approval
       });
       testRecords.tasks.push(task.id);
 
       // When: 审批任务
       const result = await approveTask(task.id, parentUserId);
 
-      // Then: 任务状态为approved
+      // Then: 任务状态为completed (parent approved)
       expect(result).not.toBeNull();
-      expect(result?.status).toBe('approved');
+      expect(result?.status).toBe('completed');
       expect(result?.approved_by).toBe(parentUserId);
     });
 
-    it('given 存在已完成的任务, when 调用驳回函数, then 任务状态变更为rejected', async () => {
-      // Given: 创建已完成的任务
+    it('given 存在等待审批的任务, when 调用驳回函数, then 任务状态返回pending且记录驳回原因', async () => {
+      // CODE REVIEW FIX: Updated test to reflect correct rejection behavior
+      // Story 2.11: Rejection returns task to 'pending' so child can retry
+      // Given: 创建等待审批的任务
       const task = await createTask({
         family_id: familyId,
         assigned_child_id: childUserId,
@@ -87,17 +91,20 @@ describe('Story 2.10: Direct Function Tests (Story 2.10 Core Logic)', () => {
         task_type: '学习',
         points: 10,
         scheduled_date: new Date().toISOString().split('T')[0],
-        status: 'completed',
+        status: 'pending_approval',
       });
       testRecords.tasks.push(task.id);
 
       // When: 驳回任务
       const result = await rejectTask(task.id, '测试驳回原因');
 
-      // Then: 任务状态为rejected
+      // Then: 任务状态返回pending (to-do, child can retry)
       expect(result).not.toBeNull();
-      expect(result?.status).toBe('rejected');
+      expect(result?.status).toBe('pending');
       expect(result?.rejection_reason).toBe('测试驳回原因');
+      // CODE REVIEW FIX CRITICAL-2: Approval fields should be cleared on rejection
+      expect(result?.approved_by).toBeNull();
+      expect(result?.approved_at).toBeNull();
     });
 
     it('given 存在任务, when 按ID查询, then 返回任务详情', async () => {
