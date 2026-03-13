@@ -48,6 +48,8 @@ export interface TaskCardProps {
   scheduledDate: string;
   isManual: boolean;
   notes?: string | null;
+  // Story 2.11: Display rejection reason on task card
+  rejectionReason?: string | null;
   // Actions
   onEdit?: (taskId: string) => void;
   onDelete?: (taskId: string) => void;
@@ -72,6 +74,7 @@ export function TaskCard({
   scheduledDate,
   isManual,
   notes,
+  rejectionReason, // Story 2.11: Rejection reason display
   onEdit,
   onDelete,
   onStatusChange,
@@ -127,6 +130,16 @@ export function TaskCard({
           <Calendar className="h-4 w-4" />
           <span>{scheduledDate}</span>
         </div>
+
+        {/* Story 2.11: Display rejection reason when task was rejected */}
+        {rejectionReason && (
+          <div className="mt-2 p-2 bg-red-50 dark:bg-red-950/20 rounded-md border border-red-200 dark:border-red-900">
+            <p className="text-sm text-red-700 dark:text-red-400">
+              <span className="font-medium">驳回原因：</span>
+              {rejectionReason}
+            </p>
+          </div>
+        )}
 
         {/* Notes (if present) */}
         {notes && (

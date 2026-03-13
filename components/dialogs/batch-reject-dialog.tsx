@@ -2,14 +2,16 @@
  * Batch Reject Dialog Component
  *
  * Story 2.7: Parent Batch Approves Tasks
+ * Story 2.11: Parent Rejects Task Completion
  * Task 4: 实现批量驳回功能
  *
  * Dialog for rejecting tasks with reason
  * - Shows list of tasks to be rejected
  * - Requires rejection reason (required, max 200 chars)
- * - Preset rejection reasons for quick selection
+ * - Preset rejection reasons for quick selection (Story 2.11)
  *
  * Source: Story 2.7 AC - 批量驳回：一次性驳回所有选中任务，需填写驳回原因
+ * Source: Story 2.11 AC - 预设原因或自定义输入
  */
 
 'use client';
@@ -45,12 +47,12 @@ interface BatchRejectDialogProps {
   onConfirm: (reason: string) => Promise<void>;
 }
 
+// Story 2.11: Preset rejection reasons for parent to select
 const PRESET_REASONS = [
   '任务没有完成',
   '完成质量不达标',
-  '完成证明不清晰',
-  '需要重新完成',
-  '其他原因',
+  '时间不符合要求',
+  '其他',
 ];
 
 export function BatchRejectDialog({

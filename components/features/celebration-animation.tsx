@@ -13,7 +13,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { playSoundIfEnabled } from '@/lib/utils/sound-effects';
+import { soundEffects } from '@/lib/utils/sound-effects';
 
 interface CelebrationAnimationProps {
   show: boolean;
@@ -43,7 +43,7 @@ export function CelebrationAnimation({
   useEffect(() => {
     if (show) {
       setIsVisible(true);
-      playSoundIfEnabled('success');
+      soundEffects.play('success');
 
       // Generate confetti particles
       const colors = [
