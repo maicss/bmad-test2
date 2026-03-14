@@ -69,7 +69,7 @@ export function TaskApprovalList({
   familyChildren,
   onRefresh,
 }: TaskApprovalListProps) {
-  const [selectedStatus, setSelectedStatus] = useState<'completed' | 'approved' | 'rejected'>('completed');
+  const [selectedStatus, setSelectedStatus] = useState<'pending_approval' | 'completed' | 'rejected'>('pending_approval');
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
@@ -89,7 +89,7 @@ export function TaskApprovalList({
   const touchStartRef = useRef<{ x: number, y: number } | null>(null);
 
   const handlePointerDown = useCallback(() => {
-    if (selectedStatus !== 'completed') return;
+    if (selectedStatus !== 'pending_approval') return;
     
     pressTimerRef.current = setTimeout(() => {
       // Long press triggers select all
@@ -116,7 +116,7 @@ export function TaskApprovalList({
   };
 
   const handleTouchEnd = (e: React.TouchEvent, taskId: string) => {
-    if (!touchStartRef.current || selectedStatus !== 'completed') return;
+    if (!touchStartRef.current || selectedStatus !== 'pending_approval') return;
 
     const diffX = e.changedTouches[0].clientX - touchStartRef.current.x;
     const diffY = Math.abs(e.changedTouches[0].clientY - touchStartRef.current.y);
@@ -276,17 +276,17 @@ export function TaskApprovalList({
       {/* Status Filters */}
       <div className="flex gap-2 mb-2">
         <Button
-          variant={selectedStatus === 'completed' ? 'default' : 'outline'}
+          variant={selectedStatus === 'pending_approval' ? 'default' : 'outline'}
           size="sm"
-          onClick={() => setSelectedStatus('completed')}
+          onClick={() => setSelectedStatus('pending_approval')}
           data-testid="status-filter-pending"
         >
           待审批
         </Button>
         <Button
-          variant={selectedStatus === 'approved' ? 'default' : 'outline'}
+          variant={selectedStatus === 'completed' ? 'default' : 'outline'}
           size="sm"
-          onClick={() => setSelectedStatus('approved')}
+          onClick={() => setSelectedStatus('completed')}
           data-testid="status-filter-approved"
         >
           已批准
@@ -324,7 +324,7 @@ export function TaskApprovalList({
           ))}
         </div>
 
-        {selectedStatus === 'completed' && (
+        {selectedStatus === 'pending_approval' && (
           <div className="flex items-center gap-2">
             <Checkbox
               checked={allSelected}
@@ -363,7 +363,7 @@ export function TaskApprovalList({
             >
               <div className="flex items-start gap-3 pointer-events-none sm:pointer-events-auto">
                 {/* Checkbox (only for completed/pending approval status) */}
-                {selectedStatus === 'completed' && (
+                {selectedStatus === 'pending_approval' && (
                   <div className="pointer-events-auto">
                     <Checkbox
                       checked={isTaskSelected(task.id)}
@@ -393,8 +393,8 @@ export function TaskApprovalList({
                       </div>
                     </div>
 
-                    {/* Action Buttons (only for completed/pending approval status) */}
-                    {selectedStatus === 'completed' ? (
+                    {/* Action Buttons (only for pending_approval status) */}
+                    {selectedStatus === 'pending_approval' ? (
                       <div className="flex gap-2 pointer-events-auto">
                         <Button
                           size="sm"
@@ -416,8 +416,8 @@ export function TaskApprovalList({
                         </Button>
                       </div>
                     ) : (
-                      <Badge variant={selectedStatus === 'approved' ? 'default' : 'destructive'} className="self-start">
-                        {selectedStatus === 'approved' ? '已批准' : '已驳回'}
+                      <Badge variant={selectedStatus === 'completed' ? 'default' : 'destructive'} className="self-start">
+                        {selectedStatus === 'completed' ? '已批准' : '已驳回'}
                       </Badge>
                     )}
                   </div>

@@ -31,15 +31,22 @@ test.describe('Story 2.10: Parent Approves Task Completion - Happy Paths', () =>
     await page.goto(`${BASE_URL}/login`);
     await page.waitForLoadState('domcontentloaded');
 
-    // Login with password
-    await page.locator('text=密码').click();
+    // Click the label containing "密码" text to switch to password mode
+    // This triggers the React state change properly
+    await page.locator('label:has-text("密码")').click();
+    // Wait for password input to be visible
+    await page.waitForSelector('#password', { state: 'visible' });
+
     await page.fill('#phone', TEST_PARENT.phone);
     await page.fill('#password', TEST_PARENT.password);
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(3000);
+
+    // Wait for full navigation after login (login page redirects to dashboard)
+    await page.waitForLoadState('load', { timeout: 10000 });
+    await page.waitForTimeout(1000);
 
     // When: 进入任务审批页面
-    await page.goto(`${BASE_URL}/approval?family_id=family-001`);
+    await page.goto(`${BASE_URL}/approval?family_id=family-001`, { waitUntil: 'load' });
     await page.waitForLoadState('networkidle');
 
     // Then: 显示审批页面
@@ -75,14 +82,20 @@ test.describe('Story 2.10: Parent Approves Task Completion - Happy Paths', () =>
     await page.goto(`${BASE_URL}/login`);
     await page.waitForLoadState('domcontentloaded');
 
-    await page.locator('text=密码').click();
+    // Click the label containing "密码" text to switch to password mode
+    await page.locator('label:has-text("密码")').click();
+    await page.waitForSelector('#password', { state: 'visible' });
+
     await page.fill('#phone', TEST_PARENT.phone);
     await page.fill('#password', TEST_PARENT.password);
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(3000);
+
+    // Wait for full navigation after login (login page redirects to dashboard)
+    await page.waitForLoadState('load', { timeout: 10000 });
+    await page.waitForTimeout(1000);
 
     // When: 进入任务审批页面
-    await page.goto(`${BASE_URL}/approval?family_id=family-001`);
+    await page.goto(`${BASE_URL}/approval?family_id=family-001`, { waitUntil: 'load' });
     await page.waitForLoadState('networkidle');
 
     // Select "待审批" filter
@@ -123,14 +136,20 @@ test.describe('Story 2.10: Parent Approves Task Completion - Happy Paths', () =>
     await page.goto(`${BASE_URL}/login`);
     await page.waitForLoadState('domcontentloaded');
 
-    await page.locator('text=密码').click();
+    // Click the label containing "密码" text to switch to password mode
+    await page.locator('label:has-text("密码")').click();
+    await page.waitForSelector('#password', { state: 'visible' });
+
     await page.fill('#phone', TEST_PARENT.phone);
     await page.fill('#password', TEST_PARENT.password);
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(3000);
+
+    // Wait for full navigation after login (login page redirects to dashboard)
+    await page.waitForLoadState('load', { timeout: 10000 });
+    await page.waitForTimeout(1000);
 
     // When: 进入任务审批页面
-    await page.goto(`${BASE_URL}/approval?family_id=family-001`);
+    await page.goto(`${BASE_URL}/approval?family_id=family-001`, { waitUntil: 'load' });
     await page.waitForLoadState('networkidle');
 
     // Then: 验证审批历史组件存在
@@ -147,6 +166,7 @@ test.describe('Story 2.10: Parent Approves Task Completion - Happy Paths', () =>
       data: {
         phone: TEST_PARENT.phone,
         password: TEST_PARENT.password,
+        authMethod: 'password',
       },
     });
 
@@ -162,8 +182,8 @@ test.describe('Story 2.10: Parent Approves Task Completion - Happy Paths', () =>
     // Get session cookie
     const cookies = loginResponse.headers()['set-cookie'];
 
-    // Try to get a completed task first
-    const tasksResponse = await request.get(`${BASE_URL}/api/tasks?family_id=family-001&status=completed`, {
+    // Try to get a pending_approval task first (child marked complete, waiting parent approval)
+    const tasksResponse = await request.get(`${BASE_URL}/api/tasks?family_id=family-001&status=pending_approval`, {
       headers: {
         cookie: cookies || '',
       },
@@ -201,6 +221,7 @@ test.describe('Story 2.10: Parent Approves Task Completion - Happy Paths', () =>
       data: {
         phone: TEST_PARENT.phone,
         password: TEST_PARENT.password,
+        authMethod: 'password',
       },
     });
 
@@ -214,8 +235,8 @@ test.describe('Story 2.10: Parent Approves Task Completion - Happy Paths', () =>
 
     const cookies = loginResponse.headers()['set-cookie'];
 
-    // Get a completed task
-    const tasksResponse = await request.get(`${BASE_URL}/api/tasks?family_id=family-001&status=completed`, {
+    // Get a pending_approval task (child marked complete, waiting parent approval)
+    const tasksResponse = await request.get(`${BASE_URL}/api/tasks?family_id=family-001&status=pending_approval`, {
       headers: {
         cookie: cookies || '',
       },
@@ -254,6 +275,7 @@ test.describe('Story 2.10: Parent Approves Task Completion - Happy Paths', () =>
       data: {
         phone: TEST_PARENT.phone,
         password: TEST_PARENT.password,
+        authMethod: 'password',
       },
     });
 
@@ -288,6 +310,7 @@ test.describe('Story 2.10: Parent Approves Task Completion - Happy Paths', () =>
       data: {
         phone: TEST_PARENT.phone,
         password: TEST_PARENT.password,
+        authMethod: 'password',
       },
     });
 

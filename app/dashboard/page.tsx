@@ -22,14 +22,16 @@ export default function DashboardRedirect() {
         if (response.ok) {
           const data = await response.json();
           const userRole = data.user?.role;
+          const familyId = data.user?.family_id;
 
           if (userRole === 'child') {
             router.replace('/child-dashboard');
           } else if (userRole === 'parent') {
-            router.replace('/approval');
+            // Redirect to approval page with family_id
+            router.replace(familyId ? `/approval?family_id=${familyId}` : '/approval');
           } else {
             // Admin or other roles
-            router.replace('/approval');
+            router.replace(familyId ? `/approval?family_id=${familyId}` : '/approval');
           }
         } else {
           // Not authenticated, redirect to login

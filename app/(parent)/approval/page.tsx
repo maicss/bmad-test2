@@ -62,11 +62,11 @@ export default async function ApprovalPage({
     redirect('/login');
   }
 
-  // Get data
+  // Get data - fetch tasks waiting for parent approval
   const [tasksResult, familyChildren] = await Promise.all([
     getTasksByFilter({
       family_id: familyId,
-      status: ['completed', 'approved', 'rejected']
+      status: ['pending_approval', 'completed', 'rejected']
     }),
     getFamilyChildren(familyId),
   ]);

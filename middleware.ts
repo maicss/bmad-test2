@@ -17,7 +17,7 @@ import { getUserById } from './lib/db/queries/users';
 
 export const runtime = 'nodejs';
 
-const PROTECTED_ROUTES = ['/dashboard', '/parent', '/settings', '/child-dashboard'];
+const PROTECTED_ROUTES = ['/dashboard', '/parent', '/settings', '/child-dashboard', '/approval'];
 const AUTH_ROUTES = ['/login', '/register', '/pin'];
 
 export async function middleware(request: NextRequest) {
